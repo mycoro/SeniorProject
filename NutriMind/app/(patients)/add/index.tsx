@@ -1,6 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import React from "react";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 
 export default function AddEntry() {
+  const router = useRouter();
+
   const options = [
     { id: "1", label: "Liquid Intake", color: "#81D4FA" },
     { id: "2", label: "Meal", color: "#FFCC80" },
@@ -13,7 +17,14 @@ export default function AddEntry() {
       <Text style={styles.header}>Add New Entry</Text>
 
       {options.map((item) => (
-        <TouchableOpacity key={item.id} style={[styles.option, { backgroundColor: item.color }]}>
+        <TouchableOpacity
+          key={item.id}
+          style={[styles.option, { backgroundColor: item.color }]}
+          onPress={() => {
+            if (item.label === "Meal") router.push("/add/meal-entry");
+            if (item.label === "Liquid Intake") router.push("/add/liquid-entry");
+          }}
+        >
           <Text style={styles.optionText}>{item.label}</Text>
         </TouchableOpacity>
       ))}
