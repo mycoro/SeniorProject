@@ -5,14 +5,160 @@ import { useRouter } from "expo-router";
 export default function HealthcareDashboard() {
   const router = useRouter();
 
-  // Mock data for now
+  // Mock data with meals for each patient
   const mockPatients = [
-    { id: 1, name: "John Doe", age: 45, status: "On Track", weight: 180, goal: 170 },
-    { id: 2, name: "Jane Smith", age: 52, status: "Requiring Attention", weight: 195, goal: 160 },
-    { id: 3, name: "Michael Lee", age: 38, status: "On Track", weight: 165, goal: 160 },
+    { 
+      id: 1, 
+      name: "John Doe", 
+      age: 45, 
+      status: "On Track", 
+      weight: 180, 
+      goal: 170,
+      meals: [
+        {
+          id: 1,
+          mealType: "Breakfast",
+          date: "11/11/2025",
+          calories: 450,
+          protein: 25,
+          carbs: 55,
+          fiber: 8,
+          liquid: 0.35,
+        },
+        {
+          id: 2,
+          mealType: "Lunch",
+          date: "11/11/2025",
+          calories: 620,
+          protein: 35,
+          carbs: 68,
+          fiber: 12,
+          liquid: 0.5,
+        },
+        {
+          id: 3,
+          mealType: "Dinner",
+          date: "11/10/2025",
+          calories: 580,
+          protein: 40,
+          carbs: 52,
+          fiber: 10,
+          liquid: 0.4,
+        },
+        {
+          id: 4,
+          mealType: "Breakfast",
+          date: "11/10/2025",
+          calories: 380,
+          protein: 20,
+          carbs: 48,
+          fiber: 6,
+          liquid: 0.3,
+        },
+      ]
+    },
+    { 
+      id: 2, 
+      name: "Jane Smith", 
+      age: 52, 
+      status: "Requiring Attention", 
+      weight: 195, 
+      goal: 160,
+      meals: [
+        {
+          id: 1,
+          mealType: "Breakfast",
+          date: "11/11/2025",
+          calories: 320,
+          protein: 15,
+          carbs: 42,
+          fiber: 5,
+          liquid: 0.25,
+        },
+        {
+          id: 2,
+          mealType: "Lunch",
+          date: "11/11/2025",
+          calories: 480,
+          protein: 22,
+          carbs: 58,
+          fiber: 7,
+          liquid: 0.3,
+        },
+        {
+          id: 3,
+          mealType: "Snack",
+          date: "11/10/2025",
+          calories: 180,
+          protein: 8,
+          carbs: 24,
+          fiber: 3,
+          liquid: 0.2,
+        },
+      ]
+    },
+    { 
+      id: 3, 
+      name: "Michael Lee", 
+      age: 38, 
+      status: "On Track", 
+      weight: 165, 
+      goal: 160,
+      meals: [
+        {
+          id: 1,
+          mealType: "Breakfast",
+          date: "11/11/2025",
+          calories: 520,
+          protein: 30,
+          carbs: 62,
+          fiber: 10,
+          liquid: 0.4,
+        },
+        {
+          id: 2,
+          mealType: "Lunch",
+          date: "11/11/2025",
+          calories: 680,
+          protein: 42,
+          carbs: 72,
+          fiber: 14,
+          liquid: 0.5,
+        },
+        {
+          id: 3,
+          mealType: "Dinner",
+          date: "11/10/2025",
+          calories: 650,
+          protein: 45,
+          carbs: 60,
+          fiber: 12,
+          liquid: 0.45,
+        },
+        {
+          id: 4,
+          mealType: "Snack",
+          date: "11/10/2025",
+          calories: 200,
+          protein: 10,
+          carbs: 28,
+          fiber: 4,
+          liquid: 0.15,
+        },
+        {
+          id: 5,
+          mealType: "Breakfast",
+          date: "11/09/2025",
+          calories: 480,
+          protein: 28,
+          carbs: 58,
+          fiber: 9,
+          liquid: 0.35,
+        },
+      ]
+    },
   ];
 
-  // Count patients by status
   const requiringAttentionCount = mockPatients.filter(
     (p) => p.status === "Requiring Attention"
   ).length;
