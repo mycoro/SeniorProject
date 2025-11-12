@@ -1,0 +1,4 @@
+# Local only; do not commit
+node_modules/
+.env
+.env.*
