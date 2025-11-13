@@ -2,12 +2,25 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
+interface Meal {
+  id: number;
+  mealType: string;
+  date: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fiber: number;
+  liquid: number;
+}
+
+
 export default function PatientDetails() {
   const { patient } = useLocalSearchParams();
   const parsedPatient = JSON.parse(patient as string);
   const [activeTab, setActiveTab] = useState("overview");
 
-  const mockMeals = parsedPatient.meals || [];
+  const mockMeals: Meal[] = parsedPatient.meals || [];
+
 
   const totalCalories = mockMeals.reduce((sum, meal) => sum + meal.calories, 0);
   const totalProtein = mockMeals.reduce((sum, meal) => sum + meal.protein, 0);
