@@ -23,6 +23,47 @@ export default function LiquidEntry() {
     if (selectedDate) setDate(selectedDate);
   };
 
+  // added function to send data to backend using fetch
+  const handleSave = async () => {
+  if (liquidType === "Select" || !amount) {
+    alert("Please fill out all fields.");
+    return;
+  }
+
+  // convert to mL (if not already)
+  let intakeValue = parseFloat(amount);
+  if (amountUnit === "L") intakeValue *= 1000;
+  else if (amountUnit === "oz") intakeValue *= 29.5735;
+  else if (amountUnit === "cups") intakeValue *= 236.588;
+
+  try {
+    const response = await fetch("http://192.168.1.249:3000/intake", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        patientId: 1, // temporary hardcoded value
+        liquidType,
+        intake: intakeValue,
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      console.error(err);
+      alert("Failed to save record.");
+      return;
+    }
+
+    const data = await response.json();
+    console.log("Saved intake:", data);
+    alert("Liquid intake recorded!");
+    router.back();
+  } catch (error) {
+    console.error(error);
+    alert("Error connecting to server.");
+  }
+};
+
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
@@ -118,7 +159,7 @@ export default function LiquidEntry() {
           <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.saveButtonText}>Save Liquid</Text>
           </TouchableOpacity>
         </View>

@@ -21,8 +21,8 @@ export default function AddEntry() {
           key={item.id}
           style={[styles.option, { backgroundColor: item.color }]}
           onPress={() => {
-            if (item.label === "Meal") router.push("/(tabs)/add/meal-entry");
-            if (item.label === "Liquid Intake") router.push("/(tabs)/add/liquid-entry");
+            if (item.label === "Meal") router.push("/add/meal-entry");
+            if (item.label === "Liquid Intake") router.push("/add/liquid-entry");
           }}
         >
           <Text style={styles.optionText}>{item.label}</Text>

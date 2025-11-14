@@ -1,26 +1,33 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "mysql"
-  url = env("DATABASE_URL")
-
+  url      = env("DATABASE_URL")
 }
 
 model Patient {
   id         Int       @id @default(autoincrement())
+  patientId  String    @unique
   firstName  String    @map("first_name")
   lastName   String    @map("last_name")
   email      String    @unique
   createdAt  DateTime  @default(now()) @map("created_at")
 
   meals      Meal[]
+  liquids    LiquidIntake[]
 }
 
 model Meal {
   id           Int           @id @default(autoincrement())
-  userId       Int           @map("user_id")
+  patientId    String        @map("patient_id")
   mealDate     DateTime      @map("meal_date")
   mealCategory MealCategory  @map("meal_category")
   foodName     String        @map("food_name")
@@ -30,7 +37,17 @@ model Meal {
   fiber        Int?
   createdAt    DateTime      @default(now()) @map("created_at")
 
-  patient      Patient       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patient      Patient       @relation(fields: [patientId], references: [patientId], onDelete: Cascade)
+}
+
+model LiquidIntake {
+  id          Int      @id @default(autoincrement())
+  patientId   String   @map("patient_id")
+  liquidType  String
+  intake      Float
+  recordedAt  DateTime @default(now())
+
+  patient     Patient  @relation(fields: [patientId], references: [patientId], onDelete: Cascade)
 }
 
 enum MealCategory {
