@@ -18,6 +18,7 @@ app.use(express.json());
 //    });
 //    res.json(record);
 // });
+
 app.post("/intake", async (req, res) => {
     try {
         const { patientId, liquidType, intake } = req.body;

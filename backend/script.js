@@ -5,8 +5,8 @@ async function main() {
     const intake = await prisma.liquidIntake.create({
         data: {
             patientId: 1,
-            liquidType: "Water",
-            intake: 150
+            liquidType: "Juice",
+            intake: 100
         },
     });
 
