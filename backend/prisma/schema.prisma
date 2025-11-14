@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url = env("DATABASE_URL")
+
+}
+
+model Patient {
+  id         Int       @id @default(autoincrement())
+  firstName  String    @map("first_name")
+  lastName   String    @map("last_name")
+  email      String    @unique
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  meals      Meal[]
+}
+
+model Meal {
+  id           Int           @id @default(autoincrement())
+  userId       Int           @map("user_id")
+  mealDate     DateTime      @map("meal_date")
+  mealCategory MealCategory  @map("meal_category")
+  foodName     String        @map("food_name")
+  calories     Int
+  protein      Int           @map("protein")
+  carbs        Int?
+  fiber        Int?
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  patient      Patient       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum MealCategory {
+  Breakfast
+  Lunch
+  Dinner
+  Snack
+}
