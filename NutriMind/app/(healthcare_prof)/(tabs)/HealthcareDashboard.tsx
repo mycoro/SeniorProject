@@ -5,7 +5,6 @@ import { useRouter } from "expo-router";
 export default function HealthcareDashboard() {
   const router = useRouter();
 
-  // Mock data with meals for each patient
   const mockPatients = [
     { 
       id: 1, 
@@ -166,24 +165,24 @@ export default function HealthcareDashboard() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.header}>Dashboard</Text>
+      <Text style={styles.header}>Healthcare Dashboard</Text>
 
-      {/* Summary section */}
-      <View style={styles.requireAttentionSection}>
-        <View style={styles.requireAttentionCard}>
-          <Text style={styles.label}>Requiring Attention</Text>
-          <Text style={styles.value}>{requiringAttentionCount}</Text>
+      {/* Summary Cards */}
+      <View style={styles.summaryRow}>
+        <View style={[styles.summaryCard, styles.attentionCard]}>
+          <Text style={styles.summaryLabel}>Requiring Attention</Text>
+          <Text style={styles.summaryValue}>{requiringAttentionCount}</Text>
         </View>
 
-        <View style={styles.requireAttentionCard}>
-          <Text style={styles.label}>On Track</Text>
-          <Text style={styles.value}>{onTrackCount}</Text>
+        <View style={[styles.summaryCard, styles.onTrackCard]}>
+          <Text style={styles.summaryLabel}>On Track</Text>
+          <Text style={styles.summaryValue}>{onTrackCount}</Text>
         </View>
       </View>
 
       {/* Patient List */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Patient List</Text>
+        <Text style={styles.sectionTitle}>Patients</Text>
 
         {mockPatients.map((patient) => (
           <TouchableOpacity
@@ -205,8 +204,8 @@ export default function HealthcareDashboard() {
               style={[
                 styles.statusBadge,
                 patient.status === "On Track"
-                  ? styles.onTrack
-                  : styles.needsAttention,
+                  ? styles.onTrackBadge
+                  : styles.attentionBadge,
               ]}
             >
               <Text
@@ -230,96 +229,107 @@ export default function HealthcareDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#fffdf4",
   },
   content: {
     padding: 16,
   },
   header: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "700",
     color: "#111827",
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  requireAttentionSection: {
+
+  // SUMMARY CARDS
+  summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 24,
+    marginBottom: 28,
   },
-  requireAttentionCard: {
+  summaryCard: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 5,
+    padding: 18,
+    borderRadius: 16,
+    marginHorizontal: 6,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
     elevation: 2,
   },
-  label: {
+  attentionCard: {
+    backgroundColor: "#ffbf48", // soft red
+  },
+  onTrackCard: {
+    backgroundColor: "#bada76", // green (matches AddEntry)
+  },
+  summaryLabel: {
     fontSize: 14,
-    color: "#6B7280",
-  },
-  value: {
-    fontSize: 18,
     fontWeight: "600",
-    color: "#111827",
-    marginTop: 4,
+    color: "#374151",
   },
+  summaryValue: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginTop: 5,
+    color: "#111827",
+  },
+
+  // SECTION HEADER
   section: {
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 12,
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 14,
+    color: "#1F2937",
   },
+
+  // PATIENT CARDS
   patientCard: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
+    backgroundColor: "#FFF8E7",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    borderLeftWidth: 6,
+    borderLeftColor: "#009235", // light blue accent (from AddEntry)
     elevation: 1,
   },
   patientInfo: {
     flex: 1,
   },
   patientName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
     color: "#111827",
   },
   patientSub: {
     fontSize: 13,
     color: "#6B7280",
-    marginVertical: 2,
+    marginTop: 3,
   },
+
+  // BADGES
   statusBadge: {
     borderRadius: 8,
     paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
   },
-  onTrack: {
-    backgroundColor: "#DCFCE7",
+  onTrackBadge: {
+    backgroundColor: "#d4f295ff",
   },
-  needsAttention: {
-    backgroundColor: "#FEE2E2",
+  attentionBadge: {
+    backgroundColor: "#ffcf76ff",
   },
   statusText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   onTrackText: {
     color: "#166534",
   },
   attentionText: {
-    color: "#991B1B",
+    color: "#B91C1C",
   },
 });

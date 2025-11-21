@@ -11,37 +11,37 @@ export default function PatientDashboard() {
       <View style={styles.summarySection}>
 
         {/* Calories Summary */}
-        <View style={[styles.summaryCard, styles.mealCardColor]}>
+        <View style={[styles.summaryCard, styles.caloriesCard]}>
           <CircleProgress
-            current={400}             
+            current={400}
             goal={1200}
             unit="kcal"
-            tintColor="#FB8C00"
-            backgroundColor="#FFE0B2"
+            tintColor="#016024ff"          
+            backgroundColor="rgba(183, 210, 123, 1)"  
             label="Calories"
           />
         </View>
 
         {/* Protein Summary */}
-        <View style={[styles.summaryCard, styles.exerciseCardColor]}>
+        <View style={[styles.summaryCard, styles.proteinCard]}>
           <CircleProgress
             current={30}
             goal={120}
             unit="g"
-            tintColor="#7CB342"
-            backgroundColor="#DCEDC8"
+            tintColor="#df9c1eff"          
+            backgroundColor="#fcd58eff"    
             label="Protein"
           />
         </View>
 
         {/* Liquid Summary */}
-        <View style={[styles.summaryCard, styles.liquidCardColor]}>
+        <View style={[styles.summaryCard, styles.liquidCard]}>
           <CircleProgress
             current={30}
             goal={180}
             unit="L"
-            tintColor="#039BE5"
-            backgroundColor="#B3E5FC"
+            tintColor="#da4f0eff"          // dark green
+            backgroundColor="#fc9f73ff"    // soft pink accent
             label="Liquid"
           />
         </View>
@@ -52,21 +52,21 @@ export default function PatientDashboard() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Meal Logs</Text>
 
-        <View style={[styles.mealCard, styles.mealLogColor]}>
+        <View style={[styles.mealCard, styles.mealLogCard]}>
           <Text style={styles.mealTitle}>Breakfast</Text>
           <Text style={styles.mealDetail}>Calories: -- kcal</Text>
           <Text style={styles.mealDetail}>Protein: -- g</Text>
           <Text style={styles.mealDetail}>Liquid: -- L</Text>
         </View>
 
-        <View style={[styles.mealCard, styles.mealLogColor]}>
+        <View style={[styles.mealCard, styles.mealLogCard]}>
           <Text style={styles.mealTitle}>Lunch</Text>
           <Text style={styles.mealDetail}>Calories: -- kcal</Text>
           <Text style={styles.mealDetail}>Protein: -- g</Text>
           <Text style={styles.mealDetail}>Liquid: -- L</Text>
         </View>
 
-        <View style={[styles.mealCard, styles.mealLogColor]}>
+        <View style={[styles.mealCard, styles.mealLogCard]}>
           <Text style={styles.mealTitle}>Dinner</Text>
           <Text style={styles.mealDetail}>Calories: -- kcal</Text>
           <Text style={styles.mealDetail}>Protein: -- g</Text>
@@ -80,7 +80,7 @@ export default function PatientDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F7F9FB",
+    backgroundColor: "#FFFDF4", // cream/light mode
   },
   content: {
     padding: 16,
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 26,
     fontWeight: "700",
-    color: "#1E293B",
+    color: "#004734", // dark green
     marginBottom: 20,
   },
 
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    borderRadius: 16,
+    borderRadius: 20,
     paddingVertical: 22,
     paddingHorizontal: 8,
     marginHorizontal: 6,
@@ -108,22 +108,23 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  /* Colors */
-  mealCardColor: { backgroundColor: "#FFCC80" },
-  exerciseCardColor: { backgroundColor: "#AED581" },
-  liquidCardColor: { backgroundColor: "#81D4FA" },
-  mealLogColor: { backgroundColor: "#FFE0B2" },
+  /* Updated Card Colors */
+  caloriesCard: { backgroundColor: "#009235" }, 
+  proteinCard: { backgroundColor: "#FFBF48" }, 
+  liquidCard: { backgroundColor: "#ff7739" },  
+  mealLogCard: { backgroundColor: "#FFF8E7" },  
 
   section: { marginBottom: 32 },
+
   sectionTitle: {
     fontSize: 20,
     fontWeight: "700",
     marginBottom: 14,
-    color: "#1E293B",
+    color: "#004734",
   },
 
   mealCard: {
-    borderRadius: 14,
+    borderRadius: 18,
     padding: 18,
     marginBottom: 14,
     elevation: 2,
@@ -131,12 +132,12 @@ const styles = StyleSheet.create({
   mealTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1E293B",
+    color: "#004734",
   },
   mealDetail: {
     fontSize: 14,
     marginTop: 4,
     fontWeight: "500",
-    color: "#374151",
+    color: "#3F5E52", // softer dark green/neutral
   },
 });

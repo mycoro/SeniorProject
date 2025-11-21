@@ -13,14 +13,12 @@ interface Meal {
   liquid: number;
 }
 
-
 export default function PatientDetails() {
   const { patient } = useLocalSearchParams();
   const parsedPatient = JSON.parse(patient as string);
   const [activeTab, setActiveTab] = useState("overview");
 
   const mockMeals: Meal[] = parsedPatient.meals || [];
-
 
   const totalCalories = mockMeals.reduce((sum, meal) => sum + meal.calories, 0);
   const totalProtein = mockMeals.reduce((sum, meal) => sum + meal.protein, 0);
@@ -73,26 +71,26 @@ export default function PatientDetails() {
         <>
           {/* Summary Cards */}
           <View style={styles.macroSummaryContainer}>
-            <View style={styles.macroSummaryCard}>
+            <View style={[styles.macroSummaryCard, { backgroundColor: "#ffbf48" }]}>
               <Text style={styles.macroLabel}>Calories</Text>
               <Text style={styles.macroValue}>{totalCalories} kcal</Text>
             </View>
-            <View style={styles.macroSummaryCard}>
+            <View style={[styles.macroSummaryCard, { backgroundColor: "#BADA76" }]}>
               <Text style={styles.macroLabel}>Protein</Text>
               <Text style={styles.macroValue}>{totalProtein} g</Text>
             </View>
-            <View style={styles.macroSummaryCard}>
+            <View style={[styles.macroSummaryCard, { backgroundColor: "#FF7739" }]}>
               <Text style={styles.macroLabel}>Carbs</Text>
               <Text style={styles.macroValue}>{totalCarbs} g</Text>
             </View>
           </View>
 
           <View style={styles.macroSummaryContainer}>
-            <View style={styles.macroSummaryCard}>
+            <View style={[styles.macroSummaryCard, { backgroundColor: "#009235" }]}>
               <Text style={styles.macroLabel}>Fiber</Text>
               <Text style={styles.macroValue}>{totalFiber} g</Text>
             </View>
-            <View style={styles.macroSummaryCard}>
+            <View style={[styles.macroSummaryCard, { backgroundColor: "#004734" }]}>
               <Text style={styles.macroLabel}>Liquid</Text>
               <Text style={styles.macroValue}>{totalLiquid.toFixed(2)} L</Text>
             </View>
@@ -103,7 +101,7 @@ export default function PatientDetails() {
             <Text style={styles.sectionTitle}>Recent Meals</Text>
 
             {mockMeals.map((meal) => (
-              <View key={meal.id} style={styles.mealCard}>
+              <View key={meal.id} style={[styles.mealCard, { backgroundColor: "#FFFDF4" }]}>
                 <View style={styles.mealHeader}>
                   <Text style={styles.mealType}>{meal.mealType}</Text>
                   <Text style={styles.mealDate}>{meal.date}</Text>
@@ -127,13 +125,13 @@ export default function PatientDetails() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#FFFDF4",
     padding: 16,
   },
   header: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#111827",
+    color: "#004734",
   },
   subHeader: {
     fontSize: 16,
@@ -143,26 +141,26 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: "row",
     marginBottom: 20,
-    backgroundColor: "#E5E7EB",
-    borderRadius: 8,
+    backgroundColor: "#FFBF48",
+    borderRadius: 12,
     padding: 4,
   },
   tab: {
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
-    borderRadius: 6,
+    borderRadius: 8,
   },
   activeTab: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFFDF4",
   },
   tabText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6B7280",
+    color: "#111827",
   },
   activeTabText: {
-    color: "#111827",
+    color: "#004734",
   },
   cardContainer: {
     flexDirection: "row",
@@ -170,24 +168,24 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    backgroundColor: "#BADA76",
+    borderRadius: 16,
     padding: 20,
     marginHorizontal: 5,
     alignItems: "center",
     shadowColor: "#000",
     shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowRadius: 4,
     elevation: 2,
   },
   cardLabel: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "#111827",
   },
   cardValue: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#111827",
+    color: "#004734",
     marginTop: 4,
   },
   macroSummaryContainer: {
@@ -197,24 +195,23 @@ const styles = StyleSheet.create({
   },
   macroSummaryCard: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginHorizontal: 5,
     alignItems: "center",
     shadowColor: "#000",
     shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowRadius: 4,
     elevation: 2,
   },
   macroLabel: {
     fontSize: 13,
-    color: "#6B7280",
+    color: "#FFF",
   },
   macroValue: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#111827",
+    color: "#FFF",
     marginTop: 4,
   },
   section: {
@@ -224,16 +221,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     marginBottom: 12,
-    color: "#111827",
+    color: "#004734",
   },
   mealCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     shadowColor: "#000",
     shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowRadius: 4,
     elevation: 1,
   },
   mealHeader: {
@@ -247,7 +243,7 @@ const styles = StyleSheet.create({
   mealType: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#111827",
+    color: "#004734",
   },
   mealDate: {
     fontSize: 14,
@@ -258,6 +254,6 @@ const styles = StyleSheet.create({
   },
   mealDetail: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "#111827",
   },
 });
