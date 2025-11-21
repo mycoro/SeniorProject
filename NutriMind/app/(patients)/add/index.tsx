@@ -6,10 +6,10 @@ export default function AddEntry() {
   const router = useRouter();
 
   const options = [
-    { id: "1", label: "Liquid Intake", color: "#81D4FA" },
-    { id: "2", label: "Meal", color: "#FFCC80" },
-    { id: "3", label: "Exercise", color: "#AED581" },
-    { id: "4", label: "Sleep", color: "#CE93D8" },
+    { id: "1", label: "Liquid Intake", color: "#BADA76" }, // lime green
+    { id: "2", label: "Meal", color: "#FFBF48" },          // yellow
+    { id: "3", label: "Exercise", color: "#009235" },      // bright green
+    { id: "4", label: "Sleep", color: "#FF7739" },         // orange
   ];
 
   return (
@@ -33,13 +33,29 @@ export default function AddEntry() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16 },
-  header: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
+  container: { 
+    padding: 16, 
+    backgroundColor: "#FFFDF4", // cream background
+  },
+  header: { 
+    fontSize: 22, 
+    fontWeight: "700", 
+    marginBottom: 20, 
+    color: "#004734", // dark green
+  },
   option: {
     padding: 20,
-    borderRadius: 12,
-    marginBottom: 10,
+    borderRadius: 16,
+    marginBottom: 12,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  optionText: { fontSize: 18, fontWeight: "600" },
+  optionText: { 
+    fontSize: 18, 
+    fontWeight: "600",
+    color: "#004734",
+  },
 });

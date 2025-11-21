@@ -25,6 +25,7 @@ export default function LiquidEntry() {
 
   return (
     <ScrollView style={styles.container}>
+      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -35,6 +36,7 @@ export default function LiquidEntry() {
 
       {/* Form */}
       <View style={styles.form}>
+        
         {/* Date */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Date</Text>
@@ -54,10 +56,14 @@ export default function LiquidEntry() {
         {/* Liquid Type */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Liquid Type</Text>
-          <TouchableOpacity style={styles.dropdown} onPress={() => setShowLiquidDropdown(!showLiquidDropdown)}>
+          <TouchableOpacity
+            style={styles.dropdown}
+            onPress={() => setShowLiquidDropdown(!showLiquidDropdown)}
+          >
             <Text style={styles.dropdownText}>{liquidType}</Text>
             <Text style={styles.dropdownArrow}>▼</Text>
           </TouchableOpacity>
+
           {showLiquidDropdown && (
             <View style={styles.dropdownMenu}>
               {liquidTypes.map((type) => (
@@ -79,6 +85,7 @@ export default function LiquidEntry() {
         {/* Amount */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Amount</Text>
+
           <View style={styles.amountRow}>
             <TextInput
               style={styles.amountInput}
@@ -87,6 +94,7 @@ export default function LiquidEntry() {
               onChangeText={setAmount}
               keyboardType="numeric"
             />
+
             <TouchableOpacity
               style={styles.unitDropdown}
               onPress={() => setShowAmountDropdown(!showAmountDropdown)}
@@ -95,6 +103,7 @@ export default function LiquidEntry() {
               <Text style={styles.dropdownArrow}>▼</Text>
             </TouchableOpacity>
           </View>
+
           {showAmountDropdown && (
             <View style={styles.dropdownMenu}>
               {units.map((unit) => (
@@ -118,40 +127,41 @@ export default function LiquidEntry() {
           <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
+
           <TouchableOpacity style={styles.saveButton} onPress={() => router.back()}>
             <Text style={styles.saveButtonText}>Save Liquid</Text>
           </TouchableOpacity>
         </View>
+
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC" },
+  container: { flex: 1, backgroundColor: "#FFFDF4" },
   header: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFF", padding: 16, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
   backButton: { marginRight: 12 },
-  backArrow: { fontSize: 24, fontWeight: "bold" },
-  headerTitle: { fontSize: 20, fontWeight: "700" },
+  backArrow: { fontSize: 24, fontWeight: "700", color: "#004734" },
+  headerTitle: { fontSize: 20, fontWeight: "700", color: "#004734" },
   form: { padding: 16 },
   inputGroup: { marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
-  textInput: { backgroundColor: "#FFF", borderRadius: 12, padding: 12, fontSize: 14, borderWidth: 1, borderColor: "#E5E7EB" },
-  dateDisplay: { backgroundColor: "#FFF", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
-  dateText: { fontSize: 14, color: "#111827" },
-  dropdown: { backgroundColor: "#FFF", borderRadius: 12, padding: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#E5E7EB" },
-  dropdownText: { fontSize: 14, color: "#111827" },
-  dropdownArrow: { fontSize: 12, color: "#6B7280" },
-  dropdownMenu: { backgroundColor: "#FFF", borderRadius: 12, borderWidth: 1, borderColor: "#E5E7EB", marginTop: 4 },
+  label: { fontSize: 14, fontWeight: "600", marginBottom: 8, color: "#004734" },
+  dateDisplay: { backgroundColor: "#BADA76", borderRadius: 16, padding: 12, borderWidth: 1, borderColor: "#009235" },
+  dateText: { fontSize: 14, color: "#004734" },
+  dropdown: { backgroundColor: "#FFF", borderRadius: 16, padding: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#009235" },
+  dropdownText: { fontSize: 14, color: "#004734" },
+  dropdownArrow: { fontSize: 12, color: "#004734" },
+  dropdownMenu: { backgroundColor: "#FFF", borderRadius: 12, borderWidth: 1, borderColor: "#009235", marginTop: 4 },
   dropdownItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
-  dropdownItemText: { fontSize: 14, color: "#111827" },
+  dropdownItemText: { fontSize: 14, color: "#004734" },
   amountRow: { flexDirection: "row", gap: 8 },
-  amountInput: { flex: 1, backgroundColor: "#F9FAFB", borderRadius: 12, padding: 12, fontSize: 14, borderWidth: 1, borderColor: "#E5E7EB" },
-  unitDropdown: { minWidth: 80, backgroundColor: "#F9FAFB", borderRadius: 12, padding: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#E5E7EB" },
-  unitText: { fontSize: 14, color: "#111827" },
+  amountInput: { flex: 1, backgroundColor: "#FFFDF4", borderRadius: 16, padding: 12, fontSize: 14, borderWidth: 1, borderColor: "#009235" },
+  unitDropdown: { minWidth: 80, backgroundColor: "#FFFDF4", borderRadius: 16, padding: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#009235" },
+  unitText: { fontSize: 14, color: "#004734" },
   buttonContainer: { flexDirection: "row", gap: 12, marginTop: 24 },
-  cancelButton: { flex: 1, backgroundColor: "#FFF", borderRadius: 12, padding: 16, alignItems: "center", borderWidth: 1, borderColor: "#E5E7EB" },
-  cancelButtonText: { fontSize: 16, fontWeight: "600", color: "#111827" },
-  saveButton: { flex: 1, backgroundColor: "#4A4A4A", borderRadius: 12, padding: 16, alignItems: "center" },
+  cancelButton: { flex: 1, backgroundColor: "#FFBF48", borderRadius: 16, padding: 16, alignItems: "center" },
+  cancelButtonText: { fontSize: 16, fontWeight: "600", color: "#004734" },
+  saveButton: { flex: 1, backgroundColor: "#004734", borderRadius: 16, padding: 16, alignItems: "center" },
   saveButtonText: { fontSize: 16, fontWeight: "600", color: "#FFF" },
 });

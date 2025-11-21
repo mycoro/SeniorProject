@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
+import CircleProgress from "../../components/CircleProgress"; 
 
 export default function PatientDashboard() {
   return (
@@ -8,42 +9,64 @@ export default function PatientDashboard() {
 
       {/* Summary Section */}
       <View style={styles.summarySection}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.label}>Calories</Text>
-          <Text style={styles.value}>-- kcal</Text>
+
+        {/* Calories Summary */}
+        <View style={[styles.summaryCard, styles.caloriesCard]}>
+          <CircleProgress
+            current={400}
+            goal={1200}
+            unit="kcal"
+            tintColor="#016024ff"          
+            backgroundColor="rgba(183, 210, 123, 1)"  
+            label="Calories"
+          />
         </View>
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.label}>Protein</Text>
-          <Text style={styles.value}>-- g</Text>
+        {/* Protein Summary */}
+        <View style={[styles.summaryCard, styles.proteinCard]}>
+          <CircleProgress
+            current={30}
+            goal={120}
+            unit="g"
+            tintColor="#df9c1eff"          
+            backgroundColor="#fcd58eff"    
+            label="Protein"
+          />
         </View>
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.label}>Liquid</Text>
-          <Text style={styles.value}>-- L</Text>
+        {/* Liquid Summary */}
+        <View style={[styles.summaryCard, styles.liquidCard]}>
+          <CircleProgress
+            current={30}
+            goal={180}
+            unit="L"
+            tintColor="#da4f0eff"          // dark green
+            backgroundColor="#fc9f73ff"    // soft pink accent
+            label="Liquid"
+          />
         </View>
+
       </View>
 
       {/* Meal Log Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Meal Logs</Text>
 
-        {/* Meal Cards */}
-        <View style={styles.mealCard}>
+        <View style={[styles.mealCard, styles.mealLogCard]}>
           <Text style={styles.mealTitle}>Breakfast</Text>
           <Text style={styles.mealDetail}>Calories: -- kcal</Text>
           <Text style={styles.mealDetail}>Protein: -- g</Text>
           <Text style={styles.mealDetail}>Liquid: -- L</Text>
         </View>
 
-        <View style={styles.mealCard}>
+        <View style={[styles.mealCard, styles.mealLogCard]}>
           <Text style={styles.mealTitle}>Lunch</Text>
           <Text style={styles.mealDetail}>Calories: -- kcal</Text>
           <Text style={styles.mealDetail}>Protein: -- g</Text>
           <Text style={styles.mealDetail}>Liquid: -- L</Text>
         </View>
 
-        <View style={styles.mealCard}>
+        <View style={[styles.mealCard, styles.mealLogCard]}>
           <Text style={styles.mealTitle}>Dinner</Text>
           <Text style={styles.mealDetail}>Calories: -- kcal</Text>
           <Text style={styles.mealDetail}>Protein: -- g</Text>
@@ -57,69 +80,64 @@ export default function PatientDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#FFFDF4", // cream/light mode
   },
   content: {
     padding: 16,
   },
   header: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: "700",
-    color: "#111827",
-    marginBottom: 16,
+    color: "#004734", // dark green
+    marginBottom: 20,
   },
+
+  /* Summary Section */
   summarySection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 24,
+    marginBottom: 28,
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 5,
+    borderRadius: 20,
+    paddingVertical: 22,
+    paddingHorizontal: 8,
+    marginHorizontal: 6,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    elevation: 3,
+  },
+
+  /* Updated Card Colors */
+  caloriesCard: { backgroundColor: "#009235" }, 
+  proteinCard: { backgroundColor: "#FFBF48" }, 
+  liquidCard: { backgroundColor: "#ff7739" },  
+  mealLogCard: { backgroundColor: "#FFF8E7" },  
+
+  section: { marginBottom: 32 },
+
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 14,
+    color: "#004734",
+  },
+
+  mealCard: {
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
     elevation: 2,
   },
-  label: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  value: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#111827",
-    marginTop: 4,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 12,
-  },
-  mealCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
   mealTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#004734",
   },
   mealDetail: {
     fontSize: 14,
-    color: "#6B7280",
-    marginTop: 2,
+    marginTop: 4,
+    fontWeight: "500",
+    color: "#3F5E52", // softer dark green/neutral
   },
 });
