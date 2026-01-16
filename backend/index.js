@@ -6,19 +6,6 @@ const app = express();
 
 app.use(express.json());
 
-// add liquid intake into liquidintake database
-// app.post("/intake", async (req, res) => {
-//    const { patientId, liquidType, intake } = req.body;
-//    const record = await prisma.liquidIntake.create({
-//        data: {
-//            patientId,
-//            liquidType,
-//            intake,
-//        },
-//    });
-//    res.json(record);
-// });
-
 app.post("/intake", async (req, res) => {
     try {
         const { patientId, liquidType, intake } = req.body;
@@ -47,4 +34,8 @@ app.get("/patient/:id/intakes", async (req, res) => {
     res.json(intakes);
 });
 
-app.listen(3000, () => console.log("Server running on http://localhost:3000"));
+//app.listen(3000, () => console.log("Server running on http://localhost:3000"));
+const PORT = 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://172.16.60.211:${PORT}`);
+});

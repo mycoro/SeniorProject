@@ -3,9 +3,20 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 
 import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
+//for firebase
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "@/config/firebase";
+
+
+
 export default function LiquidEntry() {
   const router = useRouter();
 
+  //for firebase UI state
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+//form state
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [liquidType, setLiquidType] = useState("Select");
@@ -22,48 +33,44 @@ export default function LiquidEntry() {
     setShowDatePicker(false);
     if (selectedDate) setDate(selectedDate);
   };
+  const handleSaveLiquid = async () => {
+    setError(null);
 
-  // added function to send data to backend using fetch
-  const handleSave = async () => {
-  if (liquidType === "Select" || !amount) {
-    alert("Please fill out all fields.");
-    return;
-  }
-
-  // convert to mL (if not already)
-  let intakeValue = parseFloat(amount);
-  if (amountUnit === "L") intakeValue *= 1000;
-  else if (amountUnit === "oz") intakeValue *= 29.5735;
-  else if (amountUnit === "cups") intakeValue *= 236.588;
-
-  try {
-    const response = await fetch("http://192.168.1.249:3000/intake", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        patientId: 1, // temporary hardcoded value
-        liquidType,
-        intake: intakeValue,
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json();
-      console.error(err);
-      alert("Failed to save record.");
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      setError("You must be logged in to save a drink.");
       return;
     }
 
-    const data = await response.json();
-    console.log("Saved intake:", data);
-    alert("Liquid intake recorded!");
-    router.back();
-  } catch (error) {
-    console.error(error);
-    alert("Error connecting to server.");
-  }
-};
+    if (liquidType === "Select") {
+      setError("Please select a liquid type.");
+      return;
+    }
 
+    const amountNum = Number(amount);
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      setError("Enter a valid amount.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await addDoc(collection(db, "patients", uid, "liquids"), {
+        date: date.toISOString(),
+        liquidType,
+        amount: { value: amountNum, unit: amountUnit },
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      router.back();
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to save liquid.");
+    } finally {
+      setSaving(false);
+    }
+  };
+ 
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
@@ -155,12 +162,19 @@ export default function LiquidEntry() {
         </View>
 
         {/* Buttons */}
+        {error ? <Text style={{ color: "red", marginBottom: 12 }}>{error}</Text> : null}
+
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Save Liquid</Text>
+
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleSaveLiquid}
+            disabled={saving}
+          >
+            <Text style={styles.saveButtonText}>{saving ? "Saving..." : "Save"}</Text>
           </TouchableOpacity>
         </View>
       </View>
