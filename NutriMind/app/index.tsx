@@ -1,39 +1,36 @@
-import { useEffect, useState } from "react";
 import { Redirect } from "expo-router";
-import { onAuthStateChanged } from "firebase/auth";
+import { useUser } from "@/context/UserContext";
 import { auth } from "@/config/firebase";
-import { ensureUserDoc, getUserRole, UserRole } from "@/config/users";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
 
 export default function Index() {
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const { isOnboarded, userProfile, loading } = useUser();
+  const user = auth.currentUser;
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      try {
-        if (!user) {
-          setUserRole(null);
-          return;
-        }
-
-        await ensureUserDoc(user.uid, user.email);
-        const role = await getUserRole(user.uid);
-        setUserRole(role);
-      } finally {
-        setLoading(false);
-      }
-    });
-
-    return () => unsub();
-  }, []);
-
-  if (loading) return null;
-
-  if (!userRole) return <Redirect href="/(auth)/login" />;
-
-  if (userRole === "healthcare_prof") {
-    return <Redirect href="/(healthcare_prof)/(tabs)/HealthcareDashboard" />;
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color="#003366" />
+      </View>
+    );
   }
 
-  return <Redirect href="/(patients)/PatientDashboard" />;
+  if (!user) {
+    return <Redirect href="/auth" />;
+  }
+
+  if (!isOnboarded || !userProfile?.surgeryDate) {
+    return <Redirect href="/onboarding" />;
+  }
+
+  return <Redirect href="/(tabs)/dashboard" />;
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
+  },
+});
