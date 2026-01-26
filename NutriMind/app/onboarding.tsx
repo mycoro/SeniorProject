@@ -22,7 +22,8 @@ import {
 import { router } from "expo-router";
 import { useUser, UserProfile } from "@/context/UserContext";
 import { auth } from "@/config/firebase";
-import { setUserProfile } from "@/config/users";
+import { setUserProfile as saveUserProfile } from "@/config/users";
+
 
 const surgeryTypes = ["Gastric Sleeve", "Gastric Bypass", "Duodenal Switch"];
 const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
@@ -63,9 +64,10 @@ export default function Onboarding() {
   
   const getInitialProfile = (): UserProfile => {
     if (existingProfile && existingProfile.surgeryDate) {
-      const formattedDate = existingProfile.surgeryDate.includes("/")
-        ? existingProfile.surgeryDate
-        : formatDateUS(new Date(existingProfile.surgeryDate));
+      const rawDate = existingProfile.surgeryDate ?? "";
+      const formattedDate = rawDate.includes("/")
+          ? rawDate
+          : formatDateUS(new Date(rawDate));
       return {
         name: existingProfile.name || "",
         isPreOp: existingProfile.isPreOp ?? false,
@@ -73,7 +75,7 @@ export default function Onboarding() {
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
         hasDiabetes: existingProfile.hasDiabetes ?? false,
         hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
-        intolerances: existingProfile.intolerances || [],
+        intolerances: [],
         proteinGoal: existingProfile.proteinGoal,
         fluidGoal: existingProfile.fluidGoal,
         calorieGoal: existingProfile.calorieGoal,
@@ -94,9 +96,11 @@ export default function Onboarding() {
 
   useEffect(() => {
     if (existingProfile && existingProfile.surgeryDate) {
-      const formattedDate = existingProfile.surgeryDate.includes("/")
-        ? existingProfile.surgeryDate
-        : formatDateUS(new Date(existingProfile.surgeryDate));
+      const rawDate = existingProfile.surgeryDate ?? "";
+      const formattedDate = rawDate.includes("/")
+        ? rawDate
+        : formatDateUS(new Date(rawDate));
+
       setProfile({
         name: existingProfile.name || "",
         isPreOp: existingProfile.isPreOp ?? false,
@@ -104,7 +108,7 @@ export default function Onboarding() {
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
         hasDiabetes: existingProfile.hasDiabetes ?? false,
         hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
-        intolerances: existingProfile.intolerances || [],
+        intolerances: existingProfile.intolerances ?? [],
         proteinGoal: existingProfile.proteinGoal,
         fluidGoal: existingProfile.fluidGoal,
         calorieGoal: existingProfile.calorieGoal,
@@ -147,7 +151,7 @@ export default function Onboarding() {
         Alert.alert("Required", "Please enter your surgery date.");
         return;
       }
-      const parsed = parseUSDate(profile.surgeryDate);
+      const parsed = parseUSDate(profile.surgeryDate ?? "");
       if (!parsed) {
         Alert.alert("Invalid Date", "Please enter a valid date in MM/DD/YYYY format.");
         return;
@@ -164,18 +168,19 @@ export default function Onboarding() {
       const user = auth.currentUser;
       if (user) {
         try {
-          const parsedDate = parseUSDate(profile.surgeryDate);
+          const parsedDate = parseUSDate(profile.surgeryDate ?? "");
           const isoDate = parsedDate ? parsedDate.toISOString().split("T")[0] : profile.surgeryDate;
           
-          await setUserProfile(user.uid, {
-            name: profile.name,
+          await saveUserProfile(user.uid, {
+            name: profile.name ?? "",
             isPreOp: profile.isPreOp,
             surgeryDate: isoDate,
             surgeryType: profile.surgeryType,
             hasDiabetes: profile.hasDiabetes,
             hasDumpingSyndrome: profile.hasDumpingSyndrome,
-            intolerances: profile.intolerances,
-          });
+            intolerances: profile.intolerances ?? [],
+});
+
           setUserProfile(profile);
           setIsOnboarded(true);
           router.replace("/(tabs)/dashboard");
@@ -195,13 +200,17 @@ export default function Onboarding() {
   };
 
   const toggleIntolerance = (intolerance: string) => {
-    setProfile((prev) => ({
+  setProfile((prev) => {
+    const current = prev.intolerances ?? [];
+
+    return {
       ...prev,
-      intolerances: prev.intolerances.includes(intolerance)
-        ? prev.intolerances.filter((i) => i !== intolerance)
-        : [...prev.intolerances, intolerance],
-    }));
-  };
+      intolerances: current.includes(intolerance)
+        ? current.filter((i) => i !== intolerance)
+        : [...current, intolerance],
+    };
+  });
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -485,18 +494,20 @@ export default function Onboarding() {
                     onPress={() => toggleIntolerance(item)}
                     style={[
                       styles.intoleranceButton,
-                      profile.intolerances.includes(item) &&
-                        styles.intoleranceButtonActive,
+                      (profile.intolerances?.includes(item) ?? false) &&
+                      styles.intoleranceButtonActive,
                     ]}
+
                   >
                     <Text
                       style={[
                         styles.intoleranceButtonText,
-                        profile.intolerances.includes(item) &&
-                          styles.intoleranceButtonTextActive,
+                        (profile.intolerances?.includes(item) ?? false) &&
+                        styles.intoleranceButtonTextActive,
                       ]}
+
                     >
-                      {profile.intolerances.includes(item) && "✓ "}
+                      {(profile.intolerances?.includes(item) ?? false) && "✓ "}
                       {item}
                     </Text>
                   </Pressable>
@@ -808,5 +819,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
     color: "#009235",
+  },
+  datePickerCancel: {
+    padding: 6,
+  },
+
+  datePickerDone: {
+    padding: 6,
   },
 });

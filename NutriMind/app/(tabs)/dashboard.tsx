@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
 
-  /* Header */
+  /* header */
   header: {
     marginBottom: 12,
   },
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  /* Phase banner */
+  /* phase banner */
   phaseBanner: {
     backgroundColor: "#009235",
     borderRadius: 20,
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  /* Progress */
+  /* progress */
   progressCard: {
     backgroundColor: "#FFF8E7",
     borderRadius: 20,
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  /* Sections */
+  /* sections */
   section: {
     marginBottom: 24,
   },
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 
-  /* Quick actions */
+  /* quick actions */
   actionsRow: {
     flexDirection: "row",
     gap: 12,
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     color: "#3F5E52",
   },
 
-  /* Meals */
+  /* meals */
   mealsCard: {
     backgroundColor: "#FFF8E7",
     borderRadius: 18,
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     color: "#ff7739",
   },
 
-  /* Empty state */
+  /* empty state */
   emptyState: {
     padding: 32,
     alignItems: "center",
