@@ -1,0 +1,872 @@
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  ScrollView,
+  SafeAreaView,
+  StyleSheet,
+  Modal,
+  Animated,
+} from "react-native";
+import { Camera, Timer, X, Loader2 } from "lucide-react-native";
+import { useUser } from "@/context/UserContext";
+import { auth } from "@/config/firebase";
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import { API_BASE_URL } from "@/config/api";
+
+type MealType = "Breakfast" | "Lunch" | "Dinner" | "Snack";
+type EntryMode = "manual" | "camera";
+
+export default function LogMeal() {
+  const { addMealLog, userProfile } = useUser();
+  const user = auth.currentUser;
+  const [mealType, setMealType] = useState<MealType>("Breakfast");
+  const [entryMode, setEntryMode] = useState<EntryMode>("manual");
+  const [isScanning, setIsScanning] = useState(false);
+  const [showBiteTimer, setShowBiteTimer] = useState(false);
+  const [timerPhase, setTimerPhase] = useState<"chew" | "swallow" | "wait">("chew");
+  const [scanResult, setScanResult] = useState<{
+    name: string;
+    protein: number;
+    calories: number;
+    carbs?: number;
+  } | null>(null);
+  const [protein, setProtein] = useState("");
+  const [calories, setCalories] = useState("");
+  const [carbs, setCarbs] = useState("");
+  const [foodName, setFoodName] = useState("");
+
+  const pulseAnim = new Animated.Value(1);
+
+  useEffect(() => {
+    if (showBiteTimer) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.2,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    }
+  }, [showBiteTimer]);
+
+  useEffect(() => {
+    if (!showBiteTimer) return;
+
+    const phases: ("chew" | "swallow" | "wait")[] = ["chew", "swallow", "wait"];
+    const durations = { chew: 3000, swallow: 2000, wait: 5000 };
+    let currentIndex = 0;
+
+    const runPhase = () => {
+      setTimerPhase(phases[currentIndex]);
+      currentIndex = (currentIndex + 1) % phases.length;
+    };
+
+    runPhase();
+    const interval = setInterval(runPhase, durations[timerPhase]);
+
+    return () => clearInterval(interval);
+  }, [showBiteTimer, timerPhase]);
+
+  const handleScan = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissionResult.granted) {
+      alert("Camera permission is required!");
+      return;
+    }
+
+    setIsScanning(true);
+    setScanResult(null);
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        quality: 0.5,
+        base64: true,
+        allowsMultipleSelection: false,
+      });
+
+      if (result.canceled || !result.assets[0]) {
+        setIsScanning(false);
+        return;
+      }
+
+      const imageUri = result.assets[0].uri;
+      const base64 = result.assets[0].base64;
+
+      if (!base64) {
+        const fileContent = await FileSystem.readAsStringAsync(imageUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        await analyzePhoto(fileContent);
+      } else {
+        await analyzePhoto(base64);
+      }
+    } catch (error: any) {
+      console.error("Photo scan error:", error);
+      alert("Failed to scan photo. Please try again.");
+      setIsScanning(false);
+    }
+  };
+
+  const analyzePhoto = async (imageBase64: string) => {
+    if (!userProfile?.surgeryDate) {
+      alert("Please complete your profile setup first. You can do this in Settings.");
+      setIsScanning(false);
+      return;
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+      const response = await fetch(`${API_BASE_URL}/api/analyze-photo`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          imageBase64,
+          userProfile: {
+            surgeryDate: userProfile.surgeryDate,
+            surgeryType: userProfile.surgeryType,
+            hasDumpingSyndrome: userProfile.hasDumpingSyndrome,
+            intolerances: userProfile.intolerances || [],
+          },
+        }),
+        signal: controller.signal,
+      }).catch((fetchError) => {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error("Request timed out. The analysis is taking longer than expected. Please try again.");
+        }
+        throw new Error(`Network error: ${fetchError.message}`);
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.status === 413) {
+        throw new Error("Image is too large. Please take a smaller photo or reduce image quality.");
+      }
+
+      const contentType = response.headers.get("content-type");
+      let result;
+      
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        throw new Error(`Server returned non-JSON response (${response.status}). Check if backend is running.`);
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: `Server error: ${response.status}` }));
+        throw new Error(errorData.error || `Server returned ${response.status}`);
+      }
+
+      result = await response.json();
+
+      if (result.error) {
+        alert(`Analysis Error: ${result.error}`);
+        setIsScanning(false);
+        return;
+      }
+
+      setIsScanning(false);
+      setScanResult({
+        name: result.name || "Food Item",
+        protein: result.protein || 0,
+        calories: result.calories || 0,
+        carbs: result.carbs || 0,
+      });
+
+      if (result.recommendation && !result.isAppropriate) {
+        alert(`Warning: ${result.recommendation}`);
+      }
+    } catch (error: any) {
+      console.error("Photo analysis error:", error);
+      let errorMessage = "Failed to analyze photo. ";
+      
+      if (error.message && error.message.includes("too large")) {
+        errorMessage = "Image is too large. Please try again with a smaller photo.";
+      } else if (error.message && (error.message.includes("Network request failed") || error.message.includes("Network error"))) {
+        errorMessage = "Cannot connect to server. Please check your network connection.";
+      } else if (error.message && (error.message.includes("JSON Parse") || error.message.includes("non-JSON"))) {
+        errorMessage = "Server returned invalid response. Please try again.";
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += "Unknown error occurred.";
+      }
+      
+      alert(errorMessage);
+      setIsScanning(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!foodName.trim() || !protein || !calories) {
+      alert("Please fill in all required fields (Food Name, Protein, and Calories)");
+      return;
+    }
+
+    const proteinValue = parseFloat(protein);
+    const caloriesValue = parseFloat(calories);
+    const carbsValue = carbs ? parseFloat(carbs) : 0;
+
+    if (isNaN(proteinValue) || isNaN(caloriesValue) || proteinValue < 0 || caloriesValue < 0) {
+      alert("Please enter valid numbers for protein and calories");
+      return;
+    }
+
+    await addMealLog({
+      id: Date.now().toString(),
+      name: foodName.trim(),
+      protein: proteinValue,
+      calories: caloriesValue,
+      carbs: carbsValue > 0 ? carbsValue : undefined,
+      mealType,
+      timestamp: new Date(),
+    });
+
+    setFoodName("");
+    setProtein("");
+    setCalories("");
+    setCarbs("");
+    setScanResult(null);
+    alert("Meal logged successfully!");
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+      <Text style={styles.title}>Log Food</Text>
+
+      <View style={styles.mealTypeRow}>
+        {(["Breakfast", "Lunch", "Dinner", "Snack"] as MealType[]).map((type) => (
+          <Pressable
+            key={type}
+            onPress={() => setMealType(type)}
+            style={[
+              styles.mealTypeButton,
+              mealType === type && styles.mealTypeButtonActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.mealTypeText,
+                mealType === type && styles.mealTypeTextActive,
+              ]}
+            >
+              {type}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <View style={styles.modeRow}>
+        <Pressable
+          onPress={() => setEntryMode("manual")}
+          style={[
+            styles.modeButton,
+            entryMode === "manual" && styles.modeButtonActive,
+          ]}
+        >
+          <Text
+            style={[
+              styles.modeButtonText,
+              entryMode === "manual" && styles.modeButtonTextActive,
+            ]}
+          >
+            Manual Entry
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setEntryMode("camera")}
+          style={[
+            styles.modeButton,
+            entryMode === "camera" && styles.modeButtonActive,
+          ]}
+        >
+          <Text
+            style={[
+              styles.modeButtonText,
+              entryMode === "camera" && styles.modeButtonTextActive,
+            ]}
+          >
+            AI Camera
+          </Text>
+        </Pressable>
+      </View>
+
+      <Pressable
+        onPress={() => setShowBiteTimer(true)}
+        style={styles.biteTimerButton}
+      >
+        <Timer size={16} color="#008080" />
+        <Text style={styles.biteTimerText}>Smart Bite Timer</Text>
+      </Pressable>
+
+      {entryMode === "camera" ? (
+        <View style={styles.scanCard}>
+          <Text style={styles.scanTitle}>AI Food Scanner</Text>
+          <Text style={styles.scanSubtitle}>
+            Take a photo of your meal for instant analysis
+          </Text>
+
+          {!isScanning && !scanResult && (
+            <Pressable onPress={handleScan} style={styles.scanButton}>
+              <Camera size={32} color="white" />
+              <Text style={styles.scanButtonText}>Snap a Photo</Text>
+            </Pressable>
+          )}
+
+          {isScanning && (
+            <View style={styles.scanningContainer}>
+              <Loader2 size={32} color="#008080" />
+              <Text style={styles.scanningText}>Analyzing your food...</Text>
+            </View>
+          )}
+
+          {scanResult && (
+            <View style={styles.scanResult}>
+              <Text style={styles.scanResultTitle}>AI Analysis Results</Text>
+              <Text style={styles.scanResultName}>{scanResult.name}</Text>
+              <View style={styles.scanResultRow}>
+                <Text style={styles.scanResultProtein}>
+                  {scanResult.protein}g Protein
+                </Text>
+                <Text style={styles.scanResultCalories}>
+                  {scanResult.calories} Cal
+                </Text>
+                {scanResult.carbs !== undefined && scanResult.carbs > 0 && (
+                  <Text style={styles.scanResultCarbs}>
+                    {scanResult.carbs}g Carbs
+                  </Text>
+                )}
+              </View>
+              <Pressable
+                onPress={() => {
+                  setFoodName(scanResult.name);
+                  setProtein(scanResult.protein.toString());
+                  setCalories(scanResult.calories.toString());
+                  setCarbs(scanResult.carbs?.toString() || "");
+                  setEntryMode("manual");
+                  setScanResult(null);
+                }}
+                style={styles.confirmButton}
+              >
+                <Text style={styles.confirmButtonText}>Confirm & Log</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      ) : (
+        <View style={styles.manualCard}>
+          <Text style={styles.manualTitle}>Manual Entry</Text>
+
+          <View style={styles.proteinInput}>
+            <Text style={styles.proteinLabel}>Protein Grams</Text>
+            <View style={styles.proteinInputRow}>
+              <TextInput
+                style={styles.proteinInputText}
+                placeholder="25"
+                value={protein}
+                onChangeText={setProtein}
+                keyboardType="numeric"
+              />
+              <Text style={styles.proteinUnit}>g</Text>
+            </View>
+          </View>
+
+          <View style={styles.macrosRow}>
+            <View style={styles.macroInput}>
+              <Text style={styles.macroLabel}>Calories</Text>
+              <View style={styles.macroInputRow}>
+                <TextInput
+                  style={styles.macroInputText}
+                  placeholder="180"
+                  value={calories}
+                  onChangeText={setCalories}
+                  keyboardType="numeric"
+                />
+                <Text style={styles.macroUnit}>kcal</Text>
+              </View>
+            </View>
+            <View style={styles.macroInput}>
+              <Text style={styles.macroLabel}>Carbs</Text>
+              <View style={styles.macroInputRow}>
+                <TextInput
+                  style={styles.macroInputText}
+                  placeholder="15"
+                  value={carbs}
+                  onChangeText={setCarbs}
+                  keyboardType="numeric"
+                />
+                <Text style={styles.macroUnit}>g</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.foodNameInput}>
+            <Text style={styles.foodNameLabel}>Food Name</Text>
+            <TextInput
+              style={styles.foodNameTextInput}
+              placeholder="e.g., Greek Yogurt"
+              value={foodName}
+              onChangeText={setFoodName}
+            />
+          </View>
+
+          <Pressable onPress={handleSave} style={styles.saveButton}>
+            <Text style={styles.saveButtonText}>Save Entry</Text>
+          </Pressable>
+        </View>
+      )}
+
+      <Modal
+        visible={showBiteTimer}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowBiteTimer(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Pressable
+              onPress={() => setShowBiteTimer(false)}
+              style={styles.closeButton}
+            >
+              <X size={20} color="#64748b" />
+            </Pressable>
+
+            <Text style={styles.modalTitle}>Smart Bite Timer</Text>
+
+            <Animated.View
+              style={[
+                styles.pulseCircle,
+                {
+                  backgroundColor:
+                    timerPhase === "chew"
+                      ? "#008080"
+                      : timerPhase === "swallow"
+                      ? "#3b82f6"
+                      : "#f97316",
+                  transform: [{ scale: pulseAnim }],
+                },
+              ]}
+            >
+              <Text style={styles.pulseText}>
+                {timerPhase === "chew" && "Chew..."}
+                {timerPhase === "swallow" && "Swallow"}
+                {timerPhase === "wait" && "Wait..."}
+              </Text>
+            </Animated.View>
+
+            <Text style={styles.pulseInstruction}>
+              {timerPhase === "chew" && "Chew your food thoroughly"}
+              {timerPhase === "swallow" && "Take a small swallow"}
+              {timerPhase === "wait" && "Wait before next bite"}
+            </Text>
+
+            <View style={styles.phaseIndicators}>
+              <View
+                style={[
+                  styles.phaseDot,
+                  timerPhase === "chew" && styles.phaseDotActive,
+                  { backgroundColor: timerPhase === "chew" ? "#008080" : "#e2e8f0" },
+                ]}
+              />
+              <View
+                style={[
+                  styles.phaseDot,
+                  timerPhase === "swallow" && styles.phaseDotActive,
+                  {
+                    backgroundColor:
+                      timerPhase === "swallow" ? "#3b82f6" : "#e2e8f0",
+                  },
+                ]}
+              />
+              <View
+                style={[
+                  styles.phaseDot,
+                  timerPhase === "wait" && styles.phaseDotActive,
+                  {
+                    backgroundColor: timerPhase === "wait" ? "#f97316" : "#e2e8f0",
+                  },
+                ]}
+              />
+            </View>
+
+            <Pressable
+              onPress={() => setShowBiteTimer(false)}
+              style={styles.doneButton}
+            >
+              <Text style={styles.doneButtonText}>Done Eating</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+  },
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 80,
+    flexGrow: 1,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#003366",
+    textAlign: "center",
+    marginBottom: 16,
+    marginTop: 8,
+  },
+  mealTypeRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+    flexWrap: "wrap",
+  },
+  mealTypeButton: {
+    flex: 1,
+    minWidth: "22%",
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#f1f5f9",
+    alignItems: "center",
+  },
+  mealTypeButtonActive: {
+    backgroundColor: "#008080",
+  },
+  mealTypeText: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: "#475569",
+    textAlign: "center",
+  },
+  mealTypeTextActive: {
+    color: "white",
+  },
+  modeRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+    flexWrap: "wrap",
+  },
+  modeButton: {
+    flex: 1,
+    minWidth: "45%",
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    alignItems: "center",
+    backgroundColor: "white",
+  },
+  modeButtonActive: {
+    backgroundColor: "#003366",
+    borderColor: "#003366",
+  },
+  modeButtonText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#334155",
+  },
+  modeButtonTextActive: {
+    color: "white",
+  },
+  biteTimerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "#008080",
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  biteTimerText: {
+    color: "#008080",
+    fontWeight: "500",
+  },
+  scanCard: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 16,
+    gap: 16,
+    marginBottom: 16,
+  },
+  scanTitle: {
+    fontWeight: "600",
+    color: "#1e293b",
+    textAlign: "center",
+  },
+  scanSubtitle: {
+    fontSize: 14,
+    color: "#64748b",
+    textAlign: "center",
+  },
+  scanButton: {
+    height: 128,
+    backgroundColor: "#008080",
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  scanButtonText: {
+    color: "white",
+    fontWeight: "500",
+  },
+  scanningContainer: {
+    height: 128,
+    backgroundColor: "#f1f5f9",
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  scanningText: {
+    fontSize: 14,
+    color: "#475569",
+  },
+  scanResult: {
+    backgroundColor: "#008080",
+    borderRadius: 8,
+    padding: 16,
+    gap: 12,
+  },
+  scanResultTitle: {
+    fontWeight: "600",
+    color: "#1e293b",
+  },
+  scanResultName: {
+    fontSize: 14,
+    color: "#334155",
+  },
+  scanResultRow: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  scanResultProtein: {
+    color: "#008080",
+    fontWeight: "500",
+    fontSize: 14,
+  },
+  scanResultCalories: {
+    color: "#475569",
+    fontSize: 14,
+  },
+  scanResultCarbs: {
+    color: "#64748b",
+    fontSize: 14,
+  },
+  confirmButton: {
+    width: "100%",
+    backgroundColor: "#008080",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  confirmButtonText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  manualCard: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+    marginBottom: 16,
+  },
+  manualTitle: {
+    fontWeight: "600",
+    color: "#1e293b",
+  },
+  proteinInput: {
+    backgroundColor: "#fef2f2",
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+  },
+  proteinLabel: {
+    fontSize: 14,
+    color: "#64748b",
+    marginBottom: 8,
+  },
+  proteinInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  proteinInputText: {
+    fontSize: 32,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#1e293b",
+    minWidth: 60,
+  },
+  proteinUnit: {
+    fontSize: 16,
+    color: "#64748b",
+  },
+  macrosRow: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  macroInput: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+    borderRadius: 8,
+    padding: 12,
+  },
+  macroLabel: {
+    fontSize: 12,
+    color: "#64748b",
+    marginBottom: 4,
+  },
+  macroInputRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 4,
+  },
+  macroInputText: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#1e293b",
+    flex: 1,
+  },
+  macroUnit: {
+    fontSize: 12,
+    color: "#64748b",
+  },
+  foodNameInput: {
+    gap: 8,
+  },
+  foodNameLabel: {
+    fontSize: 14,
+    color: "#475569",
+  },
+  foodNameTextInput: {
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+  },
+  saveButton: {
+    width: "100%",
+    backgroundColor: "#003366",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveButtonText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderRadius: 24,
+    padding: 24,
+    width: "100%",
+    maxWidth: 360,
+    alignItems: "center",
+    position: "relative",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    padding: 4,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#003366",
+    marginBottom: 24,
+  },
+  pulseCircle: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 24,
+  },
+  pulseText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 20,
+    textTransform: "capitalize",
+  },
+  pulseInstruction: {
+    fontSize: 14,
+    color: "#475569",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  phaseIndicators: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 24,
+  },
+  phaseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  phaseDotActive: {
+    width: 8,
+    height: 8,
+  },
+  doneButton: {
+    width: "100%",
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  doneButtonText: {
+    color: "#334155",
+    fontWeight: "500",
+  },
+});
+

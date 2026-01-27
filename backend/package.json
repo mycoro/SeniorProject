@@ -1,24 +1,21 @@
 {
-  "name": "nutrimind-backend",
+  "name": "backend",
   "version": "1.0.0",
-  "description": "NutriMindAI Iteration 1 backend (Node.js + MySQL)",
-  "main": "server.js",
-  "type": "commonjs",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "server": "node server.js"
+    "dev": "node index.js",
+    "seed": "node prisma/seed.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "nutrimind",
-    "mysql",
-    "node"
-  ],
+  "keywords": [],
   "author": "",
-  "license": "MIT",
+  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.2",
-    "mysql2": "^3.11.3"
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "openai": "^6.16.0"
   }
 }
