@@ -177,7 +177,7 @@ export default function Auth() {
                     <Lock size={16} color="#94a3b8" />
                   </View>
                   <TextInput
-                    placeholder="Enter your password"
+                    placeholder="Enter your Password"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
@@ -231,7 +231,7 @@ export default function Auth() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#FFFDF4", // cream
   },
   keyboardView: {
     flex: 1,
@@ -244,6 +244,8 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     minHeight: "100%",
   },
+
+  /* logo */
   logoContainer: {
     alignItems: "center",
     marginBottom: 32,
@@ -251,29 +253,34 @@ const styles = StyleSheet.create({
   logoBox: {
     width: 64,
     height: 64,
-    backgroundColor: "#003366",
-    borderRadius: 16,
+    backgroundColor: "#009235", // green
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
   },
   appName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#003366",
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#004734",
   },
   tagline: {
-    color: "#64748b",
+    color: "#3F5E52",
     fontSize: 14,
     marginTop: 4,
   },
+
+  /* card */
   card: {
     width: "100%",
     maxWidth: 384,
-    backgroundColor: "white",
-    borderRadius: 12,
+    backgroundColor: "#FFF8E7", // soft cream
+    borderRadius: 20,
     padding: 24,
+    elevation: 3,
   },
+
+  /* tabs */
   tabs: {
     flexDirection: "row",
     gap: 8,
@@ -281,25 +288,28 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
+    borderColor: "#E6DDC8",
     alignItems: "center",
+    backgroundColor: "#FFFDF4",
   },
   tabActive: {
-    backgroundColor: "#003366",
-    borderColor: "#003366",
+    backgroundColor: "#009235",
+    borderColor: "#009235",
   },
   tabText: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#334155",
+    fontWeight: "600",
+    color: "#3F5E52",
   },
   tabTextActive: {
     color: "white",
   },
+
+  /* form */
   form: {
     gap: 16,
   },
@@ -307,10 +317,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    color: "#334155",
+    color: "#004734",
     fontSize: 14,
-    marginBottom: 4,
+    fontWeight: "600",
   },
+
   inputWrapper: {
     position: "relative",
   },
@@ -327,39 +338,48 @@ const styles = StyleSheet.create({
     top: "50%",
     marginTop: -8,
   },
+
   input: {
     paddingLeft: 40,
     paddingRight: 40,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 8,
+    borderColor: "#E6DDC8",
+    borderRadius: 14,
     fontSize: 14,
+    backgroundColor: "#FFFDF4",
+    color: "#004734",
   },
+
   forgotPassword: {
     fontSize: 14,
-    color: "#008080",
+    color: "#ff7739", // orange
+    fontWeight: "600",
   },
+
+  /* button */
   submitButton: {
     width: "100%",
-    backgroundColor: "#003366",
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: "#009235",
+    paddingVertical: 14,
+    borderRadius: 18,
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 12,
   },
   submitButtonDisabled: {
     opacity: 0.6,
   },
   submitButtonText: {
     color: "white",
-    fontWeight: "600",
-    fontSize: 14,
+    fontWeight: "700",
+    fontSize: 15,
   },
+
+  /* legal */
   legal: {
     textAlign: "center",
     fontSize: 12,
-    color: "#64748b",
-    marginTop: 16,
+    color: "#3F5E52",
+    marginTop: 18,
   },
 });

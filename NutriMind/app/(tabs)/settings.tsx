@@ -250,7 +250,7 @@ export default function Settings() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#FFFDF4",
   },
   container: {
     flex: 1,
@@ -260,131 +260,147 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
     flexGrow: 1,
   },
+
+  /* sections */
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 14,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: "600",
-    color: "#003366",
+    fontWeight: "700",
+    color: "#004734",
   },
+
   editButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: "#f0fdfa",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 14,
+    backgroundColor: "#FFF8E7",
     borderWidth: 1,
-    borderColor: "#008080",
+    borderColor: "#009235",
   },
   editButtonText: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#008080",
+    fontWeight: "700",
+    color: "#009235",
   },
+
+  /* warning */
   warningCard: {
-    backgroundColor: "#fffbeb",
+    backgroundColor: "#FFF3D6",
     borderWidth: 1,
-    borderColor: "#fde68a",
-    borderRadius: 12,
+    borderColor: "#FFBF48",
+    borderRadius: 18,
     padding: 16,
     flexDirection: "row",
     gap: 12,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   warningContent: {
     flex: 1,
   },
   warningTitle: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#92400e",
+    fontWeight: "700",
+    color: "#9A5C00",
     marginBottom: 4,
   },
   warningText: {
     fontSize: 14,
-    color: "#b45309",
+    color: "#B26A00",
     lineHeight: 20,
   },
+
+  /* profile cards */
   profileCard: {
-    backgroundColor: "white",
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: "#FFF8E7",
+    padding: 18,
+    borderRadius: 18,
     marginBottom: 12,
+    elevation: 2,
   },
   label: {
-    fontSize: 14,
-    color: "#64748b",
+    fontSize: 13,
+    color: "#3F5E52",
     marginBottom: 4,
+    fontWeight: "600",
   },
   value: {
     fontSize: 16,
-    fontWeight: "500",
-    color: "#1e293b",
+    fontWeight: "600",
+    color: "#004734",
   },
+
+  /* logout */
   logoutButton: {
-    backgroundColor: "#dc2626",
+    backgroundColor: "#ff7739",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 8,
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 18,
     marginTop: "auto",
+    elevation: 3,
   },
   logoutButtonText: {
     color: "white",
-    fontWeight: "600",
+    fontWeight: "700",
     fontSize: 16,
   },
+
+  /* modal */
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   modalContent: {
-    backgroundColor: "white",
-    borderRadius: 16,
+    backgroundColor: "#FFFDF4",
+    borderRadius: 22,
     padding: 24,
     width: "100%",
     maxWidth: 400,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#003366",
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#004734",
     marginBottom: 20,
     textAlign: "center",
   },
+
   inputGroup: {
     marginBottom: 16,
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#334155",
+    fontWeight: "600",
+    color: "#004734",
     marginBottom: 8,
   },
   textInput: {
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderColor: "#E6DDC8",
+    borderRadius: 14,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: "#1e293b",
-    backgroundColor: "white",
+    color: "#004734",
+    backgroundColor: "#FFF8E7",
   },
+
   modalButtons: {
     flexDirection: "row",
     gap: 12,
@@ -392,27 +408,28 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 16,
     alignItems: "center",
   },
+
   cancelButton: {
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#FFF8E7",
     borderWidth: 1,
-    borderColor: "#cbd5e1",
+    borderColor: "#E6DDC8",
   },
   cancelButtonText: {
-    color: "#475569",
-    fontWeight: "600",
+    color: "#3F5E52",
+    fontWeight: "700",
     fontSize: 16,
   },
+
   saveButtonModal: {
-    backgroundColor: "#003366",
+    backgroundColor: "#009235",
   },
   saveButtonText: {
     color: "white",
-    fontWeight: "600",
+    fontWeight: "700",
     fontSize: 16,
   },
 });
-
