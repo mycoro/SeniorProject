@@ -296,16 +296,18 @@ export default function Chat() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#FFFDF4",
   },
   container: {
     flex: 1,
   },
+
+  /* Header */
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
-    backgroundColor: "white",
+    borderBottomColor: "#F2E8C9",
+    backgroundColor: "#FFF8E7",
   },
   headerLeft: {
     flexDirection: "row",
@@ -315,27 +317,29 @@ const styles = StyleSheet.create({
   botIcon: {
     width: 40,
     height: 40,
-    backgroundColor: "#003366",
+    backgroundColor: "#009235",
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitle: {
     fontWeight: "600",
-    color: "#003366",
+    color: "#004734",
     fontSize: 16,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: "#64748b",
+    color: "#6B8F7A",
   },
+
+  /* Alert */
   alertBanner: {
     margin: 16,
     padding: 12,
-    backgroundColor: "#fffbeb",
+    backgroundColor: "#FFF3C4",
     borderWidth: 1,
-    borderColor: "#fde68a",
-    borderRadius: 8,
+    borderColor: "#FFB703",
+    borderRadius: 12,
     flexDirection: "row",
     gap: 8,
   },
@@ -344,14 +348,16 @@ const styles = StyleSheet.create({
   },
   alertTitle: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#92400e",
+    fontWeight: "600",
+    color: "#9A6700",
     marginBottom: 2,
   },
   alertText: {
     fontSize: 12,
-    color: "#b45309",
+    color: "#9A6700",
   },
+
+  /* Messages */
   messagesContainer: {
     flex: 1,
   },
@@ -370,46 +376,50 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     maxWidth: "80%",
-    borderRadius: 16,
+    borderRadius: 18,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
   messageBubbleUser: {
-    backgroundColor: "#008080",
-    borderBottomRightRadius: 4,
+    backgroundColor: "#FF7A2F",
+    borderBottomRightRadius: 6,
   },
   messageBubbleAI: {
-    backgroundColor: "#f1f5f9",
-    borderBottomLeftRadius: 4,
+    backgroundColor: "#FFF8E7",
+    borderBottomLeftRadius: 6,
   },
   messageText: {
     fontSize: 14,
+    lineHeight: 20,
   },
   messageTextUser: {
     color: "white",
   },
   messageTextAI: {
-    color: "#1e293b",
+    color: "#004734",
   },
   messageTime: {
-    fontSize: 12,
+    fontSize: 11,
     marginTop: 4,
   },
   messageTimeUser: {
     color: "rgba(255,255,255,0.7)",
   },
   messageTimeAI: {
-    color: "#94a3b8",
+    color: "#7A9C8A",
   },
+
   loadingWrapper: {
     alignItems: "center",
     padding: 8,
   },
+
+  /* Input */
   inputContainer: {
     padding: 16,
-    backgroundColor: "white",
+    backgroundColor: "#FFF8E7",
     borderTopWidth: 1,
-    borderTopColor: "#f1f5f9",
+    borderTopColor: "#F2E8C9",
     flexDirection: "row",
     gap: 8,
     alignItems: "flex-end",
@@ -417,18 +427,19 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 20,
+    borderColor: "#D6C89A",
+    borderRadius: 22,
     paddingHorizontal: 16,
     paddingVertical: 10,
     maxHeight: 100,
     fontSize: 14,
-    backgroundColor: "white",
+    backgroundColor: "#FFFDF4",
+    color: "#004734",
   },
   sendButton: {
     width: 40,
     height: 40,
-    backgroundColor: "#008080",
+    backgroundColor: "#009235",
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",

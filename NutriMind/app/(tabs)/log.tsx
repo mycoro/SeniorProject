@@ -108,7 +108,7 @@ export default function LogMeal() {
 
       if (!base64) {
         const fileContent = await FileSystem.readAsStringAsync(imageUri, {
-          encoding: FileSystem.EncodingType.Base64,
+         encoding: "base64",
         });
         await analyzePhoto(fileContent);
       } else {
@@ -529,7 +529,7 @@ export default function LogMeal() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#FFFDF4",
   },
   container: {
     flex: 1,
@@ -539,14 +539,17 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
     flexGrow: 1,
   },
+
   title: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#003366",
+    color: "#004734",
     textAlign: "center",
     marginBottom: 16,
     marginTop: 8,
   },
+
+  /* meal type */
   mealTypeRow: {
     flexDirection: "row",
     gap: 8,
@@ -559,21 +562,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#FFF8E7",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E6D8A8",
   },
   mealTypeButtonActive: {
-    backgroundColor: "#008080",
+    backgroundColor: "#009235",
+    borderColor: "#009235",
   },
   mealTypeText: {
     fontSize: 11,
     fontWeight: "500",
-    color: "#475569",
+    color: "#6B8F7A",
     textAlign: "center",
   },
   mealTypeTextActive: {
     color: "white",
   },
+
+  /* mode */
   modeRow: {
     flexDirection: "row",
     gap: 8,
@@ -584,24 +592,26 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: "45%",
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
+    borderColor: "#E6D8A8",
     alignItems: "center",
-    backgroundColor: "white",
+    backgroundColor: "#FFF8E7",
   },
   modeButtonActive: {
-    backgroundColor: "#003366",
-    borderColor: "#003366",
+    backgroundColor: "#004734",
+    borderColor: "#004734",
   },
   modeButtonText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#334155",
+    color: "#004734",
   },
   modeButtonTextActive: {
     color: "white",
   },
+
+  /* bite timer */
   biteTimerButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -609,117 +619,127 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: "#008080",
-    borderRadius: 8,
+    borderColor: "#009235",
+    borderRadius: 12,
     marginBottom: 16,
+    backgroundColor: "#F1F8F4",
   },
   biteTimerText: {
-    color: "#008080",
-    fontWeight: "500",
+    color: "#009235",
+    fontWeight: "600",
   },
+
+  /* cards */
   scanCard: {
-    backgroundColor: "white",
-    borderRadius: 12,
+    backgroundColor: "#FFF8E7",
+    borderRadius: 16,
     padding: 16,
     gap: 16,
     marginBottom: 16,
   },
+  manualCard: {
+    backgroundColor: "#FFF8E7",
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    marginBottom: 16,
+  },
+
   scanTitle: {
     fontWeight: "600",
-    color: "#1e293b",
+    color: "#004734",
     textAlign: "center",
   },
   scanSubtitle: {
     fontSize: 14,
-    color: "#64748b",
+    color: "#6B8F7A",
     textAlign: "center",
   },
+
   scanButton: {
     height: 128,
-    backgroundColor: "#008080",
-    borderRadius: 8,
+    backgroundColor: "#FF7A2F",
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
   scanButtonText: {
     color: "white",
-    fontWeight: "500",
+    fontWeight: "600",
   },
+
   scanningContainer: {
     height: 128,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 8,
+    backgroundColor: "#F1F8F4",
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
   scanningText: {
     fontSize: 14,
-    color: "#475569",
+    color: "#6B8F7A",
   },
+
   scanResult: {
-    backgroundColor: "#008080",
-    borderRadius: 8,
+    backgroundColor: "#F1F8F4",
+    borderRadius: 12,
     padding: 16,
     gap: 12,
   },
   scanResultTitle: {
     fontWeight: "600",
-    color: "#1e293b",
+    color: "#004734",
   },
   scanResultName: {
     fontSize: 14,
-    color: "#334155",
+    color: "#004734",
   },
   scanResultRow: {
     flexDirection: "row",
     gap: 16,
   },
   scanResultProtein: {
-    color: "#008080",
-    fontWeight: "500",
+    color: "#009235",
+    fontWeight: "600",
     fontSize: 14,
   },
   scanResultCalories: {
-    color: "#475569",
+    color: "#004734",
     fontSize: 14,
   },
   scanResultCarbs: {
-    color: "#64748b",
+    color: "#6B8F7A",
     fontSize: 14,
   },
+
   confirmButton: {
     width: "100%",
-    backgroundColor: "#008080",
+    backgroundColor: "#009235",
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: "center",
   },
   confirmButtonText: {
     color: "white",
     fontWeight: "600",
   },
-  manualCard: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-    marginBottom: 16,
-  },
+
   manualTitle: {
     fontWeight: "600",
-    color: "#1e293b",
+    color: "#004734",
   },
+
   proteinInput: {
-    backgroundColor: "#fef2f2",
-    borderRadius: 8,
+    backgroundColor: "#FFF3C4",
+    borderRadius: 12,
     padding: 16,
     alignItems: "center",
   },
   proteinLabel: {
     fontSize: 14,
-    color: "#64748b",
+    color: "#9A6700",
     marginBottom: 8,
   },
   proteinInputRow: {
@@ -732,26 +752,27 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
     textAlign: "center",
-    color: "#1e293b",
+    color: "#004734",
     minWidth: 60,
   },
   proteinUnit: {
     fontSize: 16,
-    color: "#64748b",
+    color: "#9A6700",
   },
+
   macrosRow: {
     flexDirection: "row",
     gap: 16,
   },
   macroInput: {
     flex: 1,
-    backgroundColor: "#f8fafc",
-    borderRadius: 8,
+    backgroundColor: "#F1F8F4",
+    borderRadius: 12,
     padding: 12,
   },
   macroLabel: {
     fontSize: 12,
-    color: "#64748b",
+    color: "#6B8F7A",
     marginBottom: 4,
   },
   macroInputRow: {
@@ -762,38 +783,44 @@ const styles = StyleSheet.create({
   macroInputText: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#1e293b",
+    color: "#004734",
     flex: 1,
   },
   macroUnit: {
     fontSize: 12,
-    color: "#64748b",
+    color: "#6B8F7A",
   },
+
   foodNameInput: {
     gap: 8,
   },
   foodNameLabel: {
     fontSize: 14,
-    color: "#475569",
+    color: "#004734",
   },
   foodNameTextInput: {
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 8,
+    borderColor: "#E6D8A8",
+    borderRadius: 12,
     padding: 12,
     fontSize: 14,
+    backgroundColor: "#FFFDF4",
+    color: "#004734",
   },
+
   saveButton: {
     width: "100%",
-    backgroundColor: "#003366",
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: "#FF7A2F",
+    paddingVertical: 14,
+    borderRadius: 14,
     alignItems: "center",
   },
   saveButtonText: {
     color: "white",
-    fontWeight: "600",
+    fontWeight: "700",
   },
+
+  /* modal */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",
@@ -802,7 +829,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: "white",
+    backgroundColor: "#FFF8E7",
     borderRadius: 24,
     padding: 24,
     width: "100%",
@@ -819,9 +846,10 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#003366",
+    color: "#004734",
     marginBottom: 24,
   },
+
   pulseCircle: {
     width: 160,
     height: 160,
@@ -838,10 +866,11 @@ const styles = StyleSheet.create({
   },
   pulseInstruction: {
     fontSize: 14,
-    color: "#475569",
+    color: "#6B8F7A",
     marginBottom: 16,
     textAlign: "center",
   },
+
   phaseIndicators: {
     flexDirection: "row",
     gap: 8,
@@ -851,22 +880,22 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+    backgroundColor: "#E6D8A8",
   },
   phaseDotActive: {
-    width: 8,
-    height: 8,
+    backgroundColor: "#009235",
   },
+
   doneButton: {
     width: "100%",
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 8,
+    borderColor: "#E6D8A8",
+    borderRadius: 12,
     alignItems: "center",
   },
   doneButtonText: {
-    color: "#334155",
-    fontWeight: "500",
+    color: "#004734",
+    fontWeight: "600",
   },
 });
-

@@ -468,11 +468,11 @@ export default function History() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#FFFDF4",
   },
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#FFFDF4",
   },
   content: {
     padding: 16,
@@ -480,6 +480,8 @@ const styles = StyleSheet.create({
     gap: 16,
     flexGrow: 1,
   },
+
+  /* header */
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -487,46 +489,51 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: "600",
-    color: "#003366",
+    fontWeight: "700",
+    color: "#004734",
   },
+
+  /* toggle */
   viewToggle: {
     flexDirection: "row",
     gap: 8,
   },
   toggleButton: {
     flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 10,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
+    borderColor: "#E6DDC8",
     alignItems: "center",
+    backgroundColor: "#FFFDF4",
   },
   toggleButtonActive: {
-    backgroundColor: "#008080",
-    borderColor: "#008080",
+    backgroundColor: "#009235",
+    borderColor: "#009235",
   },
   toggleButtonText: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#334155",
+    fontWeight: "700",
+    color: "#004734",
   },
   toggleButtonTextActive: {
     color: "white",
   },
+
+  /* calendar */
   calendarNav: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
   monthYear: {
-    fontWeight: "600",
-    color: "#003366",
+    fontWeight: "700",
+    color: "#004734",
     fontSize: 16,
   },
   calendarCard: {
-    backgroundColor: "white",
-    borderRadius: 12,
+    backgroundColor: "#FFF8E7",
+    borderRadius: 20,
     padding: 16,
   },
   weekDaysRow: {
@@ -540,9 +547,10 @@ const styles = StyleSheet.create({
   },
   weekDayText: {
     fontSize: 12,
-    fontWeight: "500",
-    color: "#64748b",
+    fontWeight: "600",
+    color: "#3F5E52",
   },
+
   calendarGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -552,28 +560,29 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 8,
+    borderRadius: 12,
   },
   dayCellSelected: {
-    backgroundColor: "#008080",
+    backgroundColor: "#009235",
   },
   dayCellToday: {
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#FFB70333",
   },
   dayText: {
     fontSize: 12,
-    fontWeight: "500",
-    color: "#334155",
+    fontWeight: "600",
+    color: "#004734",
   },
   dayTextSelected: {
-    color: "#008080",
+    color: "white",
   },
   dayTextToday: {
-    color: "#003366",
+    color: "#004734",
   },
+
   dayIndicators: {
     flexDirection: "row",
-    gap: 2,
+    gap: 3,
     marginTop: 2,
   },
   dayDot: {
@@ -581,9 +590,11 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
+
+  /* selected day */
   selectedDayCard: {
-    backgroundColor: "white",
-    borderRadius: 12,
+    backgroundColor: "#FFF8E7",
+    borderRadius: 20,
     padding: 16,
   },
   selectedDayHeader: {
@@ -593,32 +604,36 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   selectedDayTitle: {
-    fontWeight: "600",
-    color: "#003366",
+    fontWeight: "700",
+    color: "#004734",
     fontSize: 16,
   },
   todayBadge: {
-    backgroundColor: "#008080",
-    paddingHorizontal: 8,
+    backgroundColor: "#FFB703",
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 14,
   },
   todayBadgeText: {
     fontSize: 12,
-    color: "white",
+    color: "#004734",
+    fontWeight: "700",
   },
+
   progressRow: {
     flexDirection: "row",
     justifyContent: "space-around",
     marginBottom: 16,
   },
+
+  /* meals */
   mealsSection: {
     gap: 8,
   },
   mealsTitle: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#475569",
+    fontWeight: "700",
+    color: "#004734",
   },
   mealsList: {
     gap: 8,
@@ -628,8 +643,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 12,
-    backgroundColor: "#f8fafc",
-    borderRadius: 8,
+    backgroundColor: "#FFFDF4",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E6DDC8",
   },
   mealLeft: {
     flexDirection: "row",
@@ -638,12 +655,12 @@ const styles = StyleSheet.create({
   },
   mealName: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#1e293b",
+    fontWeight: "600",
+    color: "#004734",
   },
   mealDetails: {
     fontSize: 12,
-    color: "#64748b",
+    color: "#3F5E52",
     marginTop: 2,
   },
   mealRight: {
@@ -651,19 +668,21 @@ const styles = StyleSheet.create({
   },
   mealProtein: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#008080",
+    fontWeight: "700",
+    color: "#009235",
   },
   mealCalories: {
     fontSize: 12,
-    color: "#64748b",
+    color: "#3F5E52",
   },
+
+  /* list View */
   listView: {
     gap: 12,
   },
   listCard: {
-    backgroundColor: "white",
-    borderRadius: 12,
+    backgroundColor: "#FFF8E7",
+    borderRadius: 20,
     padding: 16,
   },
   listCardHeader: {
@@ -673,13 +692,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   listCardTitle: {
-    fontWeight: "600",
-    color: "#003366",
+    fontWeight: "700",
+    color: "#004734",
     fontSize: 16,
   },
   listCardSubtitle: {
     fontSize: 12,
-    color: "#64748b",
+    color: "#3F5E52",
     marginTop: 2,
   },
   listMeals: {
@@ -689,32 +708,35 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    fontSize: 14,
   },
   listMealName: {
     fontSize: 14,
-    color: "#475569",
+    color: "#004734",
   },
   listMealProtein: {
     fontSize: 14,
-    color: "#64748b",
+    color: "#009235",
+    fontWeight: "600",
   },
   listMoreMeals: {
     fontSize: 12,
-    color: "#008080",
+    color: "#FF7A2F",
     marginTop: 4,
+    fontWeight: "700",
   },
+
+  /* empty */
   emptyMeals: {
     padding: 24,
     alignItems: "center",
   },
   emptyMealsText: {
     fontSize: 14,
-    color: "#94a3b8",
+    color: "#3F5E52",
   },
   listEmptyMeals: {
     fontSize: 14,
-    color: "#94a3b8",
+    color: "#3F5E52",
     fontStyle: "italic",
   },
 });

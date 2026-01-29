@@ -150,7 +150,7 @@ export default function LogVitamins() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#FFFDF4",
   },
   container: {
     flex: 1,
@@ -160,6 +160,8 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
     flexGrow: 1,
   },
+
+  /* header */
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -172,37 +174,43 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#003366",
+    color: "#004734",
   },
   placeholder: {
     width: 36,
   },
+
+  /* info */
   infoCard: {
-    backgroundColor: "#fff7ed",
-    borderRadius: 12,
+    backgroundColor: "#FFF3C4",
+    borderRadius: 16,
     padding: 16,
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: "#fed7aa",
+    borderColor: "#FFB703",
   },
   infoText: {
     flex: 1,
     fontSize: 14,
-    color: "#9a3412",
+    color: "#9A6700",
     lineHeight: 20,
   },
+
+  /* sections */
   section: {
     marginBottom: 24,
   },
   sectionLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#003366",
+    color: "#004734",
     marginBottom: 12,
   },
+
+  /* vitamins grid */
   vitaminsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -213,15 +221,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    backgroundColor: "white",
+    borderColor: "#D6C89A",
+    backgroundColor: "#FFFDF4",
     minWidth: "45%",
   },
   vitaminButtonActive: {
-    backgroundColor: "#f97316",
-    borderColor: "#f97316",
+    backgroundColor: "#009235",
+    borderColor: "#009235",
   },
   checkIcon: {
     marginRight: 6,
@@ -229,29 +237,33 @@ const styles = StyleSheet.create({
   vitaminButtonText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#475569",
+    color: "#004734",
   },
   vitaminButtonTextActive: {
     color: "white",
   },
+
+  /* inputs */
   textInput: {
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 8,
+    borderColor: "#D6C89A",
+    borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: "#1e293b",
-    backgroundColor: "white",
+    color: "#004734",
+    backgroundColor: "#FFFDF4",
   },
   notesInput: {
     minHeight: 80,
     textAlignVertical: "top",
   },
+
+  /* save */
   saveButton: {
-    backgroundColor: "#003366",
-    paddingVertical: 14,
-    borderRadius: 8,
+    backgroundColor: "#009235",
+    paddingVertical: 16,
+    borderRadius: 16,
     alignItems: "center",
     marginTop: 20,
   },
@@ -261,4 +273,3 @@ const styles = StyleSheet.create({
     color: "white",
   },
 });
-

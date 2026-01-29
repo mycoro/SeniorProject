@@ -281,7 +281,7 @@ export default function LogFluid() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#FFFDF4",
   },
   container: {
     flex: 1,
@@ -291,6 +291,8 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
     flexGrow: 1,
   },
+
+  /* header */
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -303,14 +305,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#003366",
+    color: "#004734",
   },
   placeholder: {
     width: 28,
   },
+
+  /* summary */
   summaryCard: {
-    backgroundColor: "white",
-    borderRadius: 12,
+    backgroundColor: "#FFF8E7",
+    borderRadius: 16,
     padding: 16,
     marginBottom: 20,
   },
@@ -325,34 +329,38 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 12,
-    color: "#64748b",
+    color: "#7A9C8A",
     marginBottom: 4,
   },
   summaryValue: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#003366",
+    fontWeight: "700",
+    color: "#004734",
   },
   summaryDivider: {
     width: 1,
     height: 40,
-    backgroundColor: "#e2e8f0",
+    backgroundColor: "#E6DCC2",
     marginHorizontal: 4,
   },
+
+  /* sections */
   section: {
     marginBottom: 20,
   },
   sectionLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#003366",
+    color: "#004734",
     marginBottom: 4,
   },
   sectionHint: {
     fontSize: 14,
-    color: "#64748b",
+    color: "#7A9C8A",
     marginBottom: 12,
   },
+
+  /* fluid type buttons */
   fluidTypesGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -364,47 +372,50 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#008080",
-    backgroundColor: "white",
+    borderColor: "#D6C89A",
+    backgroundColor: "#FFFDF4",
     minWidth: "47%",
   },
   fluidTypeButtonActive: {
-    backgroundColor: "#008080",
-    borderColor: "#008080",
+    backgroundColor: "#009235",
+    borderColor: "#009235",
   },
   fluidTypeText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#008080",
+    color: "#004734",
   },
   fluidTypeTextActive: {
     color: "white",
   },
+
+  /* amount input */
   amountContainer: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 12,
+    borderColor: "#D6C89A",
+    borderRadius: 16,
     paddingHorizontal: 16,
-    backgroundColor: "white",
+    backgroundColor: "#FFFDF4",
     marginBottom: 12,
   },
   amountInput: {
     flex: 1,
     paddingVertical: 16,
     fontSize: 32,
-    fontWeight: "bold",
-    color: "#003366",
+    fontWeight: "700",
+    color: "#004734",
     textAlign: "center",
   },
   amountUnit: {
     fontSize: 18,
-    color: "#64748b",
+    color: "#7A9C8A",
     fontWeight: "500",
   },
+
   quickAmounts: {
     flexDirection: "row",
     gap: 8,
@@ -413,55 +424,62 @@ const styles = StyleSheet.create({
   quickAmountButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#008080",
-    backgroundColor: "white",
+    borderColor: "#FF7A2F",
+    backgroundColor: "#FFF8E7",
   },
   quickAmountText: {
     fontSize: 14,
-    color: "#008080",
-    fontWeight: "500",
+    color: "#FF7A2F",
+    fontWeight: "600",
   },
+
+  /* inputs */
   textInput: {
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 8,
+    borderColor: "#D6C89A",
+    borderRadius: 12,
     padding: 12,
     fontSize: 14,
-    backgroundColor: "white",
+    backgroundColor: "#FFFDF4",
+    color: "#004734",
   },
   notesInput: {
     minHeight: 80,
     textAlignVertical: "top",
   },
+
+  /* warning */
   warningBox: {
-    backgroundColor: "#fffbeb",
+    backgroundColor: "#FFF3C4",
     borderWidth: 1,
-    borderColor: "#fde68a",
-    borderRadius: 8,
+    borderColor: "#FFB703",
+    borderRadius: 12,
     padding: 12,
     marginBottom: 20,
   },
   warningTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#92400e",
+    color: "#9A6700",
     marginBottom: 4,
   },
   warningText: {
     fontSize: 13,
-    color: "#b45309",
+    color: "#9A6700",
     lineHeight: 18,
   },
+
+  /* save */
   saveButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#008080",
+    backgroundColor: "#009235",
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     marginTop: 8,
   },
   saveButtonText: {
@@ -470,4 +488,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-
