@@ -68,7 +68,7 @@ function buildSystemPrompt(phaseInfo) {
   return prompt;
 }
 
-export async function getDietResponse(userId, userMessage, userProfile) {
+export async function getDietResponse(userMessage, userProfile) {
   if (!userProfile || !userProfile.surgeryDate) {
     return {
       error: "User profile missing surgery date. Please update your profile with your surgery date.",
@@ -77,19 +77,48 @@ export async function getDietResponse(userId, userMessage, userProfile) {
 
   const daysPostOp = calculateDaysPostOp(userProfile.surgeryDate);
   const phaseInfo = getPostOpPhase(daysPostOp);
+
   let systemPrompt = buildSystemPrompt(phaseInfo);
-  
+
   if (userProfile.name) {
     systemPrompt += ` The patient's name is ${userProfile.name}. Use their name naturally in conversation.`;
   }
-  
   if (userProfile.hasDumpingSyndrome) {
     systemPrompt += ` IMPORTANT: This patient has dumping syndrome. Always warn against high-sugar foods and explain why.`;
   }
-  
   if (userProfile.intolerances && userProfile.intolerances.length > 0) {
     systemPrompt += ` The patient has food intolerances: ${userProfile.intolerances.join(", ")}. Avoid recommending these foods.`;
   }
+
+  // This tells the model to output strict JSON with BOTH the chat reply + optional meal extraction.
+  const jsonInstruction = `
+You must respond with ONLY valid JSON (no markdown, no backticks, no extra text).
+Schema:
+{
+  "reply": string,                // what you would say to the patient
+  "mealLog": null | {
+    "mealName": string,
+    "ingredients": string[],
+    "totals": {
+      "calories": number | null,
+      "protein_g": number | null,
+      "carbs_g": number | null,
+      "fat_g": number | null,
+      "fiber_g": number | null,
+      "sugar_g": number | null,
+      "sodium_mg": number | null
+    },
+    "confidence": "low" | "medium" | "high",
+    "notes": string
+  }
+}
+
+Rules for mealLog:
+- mealLog MUST be null unless the user clearly described food/drink they consumed or plan to consume as a meal/snack (e.g., "I ate...", "for breakfast I had...", "I drank...").
+- If it's a general nutrition question (e.g., "Can I have rice?") set mealLog to null.
+- If portion sizes are missing, estimate cautiously and set confidence to "low" or "medium" with notes saying what you assumed.
+- If user describes something forbidden in their phase, still set mealLog if it was a meal description, but the reply must warn them and suggest alternatives.
+`.trim();
 
   try {
     const OpenAI = await import("openai");
@@ -100,34 +129,41 @@ export async function getDietResponse(userId, userMessage, userProfile) {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        {
-          role: "user",
-          content: userMessage,
-        },
+        { role: "system", content: systemPrompt },
+        { role: "system", content: jsonInstruction },
+        { role: "user", content: userMessage },
       ],
-      temperature: 0.7,
-      presence_penalty: 0.6,
-      frequency_penalty: 0.5,
+      temperature: 0.4,
+      presence_penalty: 0.2,
+      frequency_penalty: 0.2,
     });
 
-    let responseText = completion.choices[0]?.message?.content || "I apologize, but I couldn't generate a response.";
-    
-    responseText = responseText
-      .replace(/#{1,6}\s+/gm, "")
-      .replace(/\*\*/g, "")
-      .replace(/\*([^*\n]+)\*/g, "$1")
-      .replace(/\*/g, "")
-      .replace(/```[\s\S]*?```/g, "")
-      .replace(/`/g, "")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
+    const raw = completion.choices[0]?.message?.content || "{}";
+
+    // Parse JSON safely
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      // If the model ever violates JSON-only, fail gracefully
+      return {
+        reply: "Sorry — I had trouble formatting that. Can you try again with what you ate and approximate portions?",
+        mealLog: null,
+        phaseInfo,
+        daysPostOp,
+      };
+    }
+
+    // Basic shape guards
+    const reply = typeof parsed.reply === "string" && parsed.reply.trim()
+      ? parsed.reply.trim()
+      : "I can help with that. What did you eat and about how much?";
+
+    const mealLog = parsed.mealLog && typeof parsed.mealLog === "object" ? parsed.mealLog : null;
 
     return {
-      response: responseText,
+      reply,
+      mealLog,
       phaseInfo,
       daysPostOp,
     };
@@ -139,3 +175,4 @@ export async function getDietResponse(userId, userMessage, userProfile) {
     };
   }
 }
+

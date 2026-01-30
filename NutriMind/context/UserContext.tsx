@@ -87,7 +87,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
                   calories: data.calories,
                   carbs: data.carbs,
                   mealType: data.mealType,
-                  timestamp: data.timestamp?.toDate() || new Date(),
+                  timestamp:
+                    data.timestamp?.toDate?.() ??
+                    (data.createdAtClient ? new Date(data.createdAtClient) : new Date()),
+
                 });
               });
               setDailyLogs(loadedLogs);

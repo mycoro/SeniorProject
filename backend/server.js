@@ -9,10 +9,10 @@ app.use(cors());
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { userId, userMessage, userProfile } = req.body;
+    const { userMessage, userProfile } = req.body;
 
-    if (!userId || !userMessage) {
-      return res.status(400).json({ error: "userId and userMessage are required" });
+    if (!userMessage) {
+    return res.status(400).json({ error: "userMessage is required" });
     }
 
     if (!userProfile) {
@@ -20,7 +20,7 @@ app.post("/api/chat", async (req, res) => {
     }
 
     const { getDietResponse } = await import("./services/aiService.js");
-    const result = await getDietResponse(userId, userMessage, userProfile);
+    const result = await getDietResponse(userMessage, userProfile);
 
     if (result.error) {
       return res.status(400).json(result);

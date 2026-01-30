@@ -13,8 +13,9 @@ import {
 } from "react-native";
 import { Send, AlertTriangle, Bot } from "lucide-react-native";
 import { useUser } from "@/context/UserContext";
-import { auth } from "@/config/firebase";
+import { auth, db } from "@/config/firebase";
 import { API_BASE_URL } from "@/config/api";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 interface Message {
   id: string;
@@ -22,6 +23,22 @@ interface Message {
   isUser: boolean;
   timestamp: string;
 }
+type PendingMealLog = {
+  mealName: string;
+  ingredients?: string[];
+  totals: {
+    calories?: number | null;
+    protein_g?: number | null;
+    carbs_g?: number | null;
+    fat_g?: number | null;
+    fiber_g?: number | null;
+    sugar_g?: number | null;
+    sodium_mg?: number | null;
+  };
+  confidence?: "low" | "medium" | "high";
+  notes?: string;
+};
+
 
 export default function Chat() {
   const { userProfile } = useUser();
@@ -93,6 +110,12 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  //pending meal (only saved when user confirms)
+  const [pendingMeal, setPendingMeal] = useState<PendingMealLog | null>(null);
+  const [savingMeal, setSavingMeal] = useState(false);
+
+
+
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -101,7 +124,63 @@ export default function Chat() {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
-  }, [messages]);
+  }, [messages, loading, pendingMeal]);
+
+  const handleSaveMeal = async () => {
+    try {
+      if (!user?.uid) throw new Error("You must be logged in to save a meal.");
+      if (!pendingMeal) throw new Error("No meal to save.");
+
+      setSavingMeal(true);
+
+      await addDoc(collection(db, "users", user.uid, "mealLogs"), {
+        name: pendingMeal.mealName || "Meal",
+        calories: Number(pendingMeal.totals?.calories ?? 0),
+        protein: Number(pendingMeal.totals?.protein_g ?? 0),
+        carbs: Number(pendingMeal.totals?.carbs_g ?? 0),
+        mealType: "Snack", // default; you can improve later
+        timestamp: serverTimestamp(), // matches UserContext orderBy("timestamp")
+        createdAtClient: Date.now(),
+        source: "chat",
+        // optional: keep the structured fields too (nice for later)
+        ingredients: pendingMeal.ingredients ?? [],
+        totals: pendingMeal.totals ?? {},
+        confidence: pendingMeal.confidence ?? "low",
+        notes: pendingMeal.notes ?? "",
+      }); 
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 2).toString(),
+          text: "Saved to your meal log.",
+          isUser: false,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ]);
+
+      setPendingMeal(null);
+    } catch (error: any) {
+      console.error("Save meal error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 3).toString(),
+          text: error?.message ?? "Could not save meal.",
+          isUser: false,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ]);
+    } finally {
+      setSavingMeal(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -162,7 +241,7 @@ export default function Chat() {
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: result.response || "I apologize, but I couldn't generate a response.",
+        text: result.reply ||  "I apologize, but I couldn't generate a response.",
         isUser: false,
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
@@ -170,6 +249,13 @@ export default function Chat() {
         }),
       };
       setMessages((prev) => [...prev, aiResponse]);
+      // Handle pending meal (only if AI detected a meal)
+      if (result.mealLog) {
+        setPendingMeal(result.mealLog);
+      } else {
+        setPendingMeal(null);
+      }
+
     } catch (error: any) {
       console.error("Chat API error:", error);
       let errorText = "Failed to get response. Please check your connection and try again.";
@@ -192,6 +278,8 @@ export default function Chat() {
         }),
       };
       setMessages((prev) => [...prev, errorMsg]);
+       // If chat fails, don't keep a stale pending meal
+      setPendingMeal(null);
     } finally {
       setLoading(false);
     }
@@ -274,6 +362,47 @@ export default function Chat() {
           </View>
         )}
       </ScrollView>
+      {/*Save meal confirmation UI */}
+        {pendingMeal && (
+          <View style={styles.saveContainer}>
+            <View style={styles.saveCard}>
+              <Text style={styles.saveTitle}>Ready to log this meal?</Text>
+              <Text style={styles.saveSubtitle}>
+                {pendingMeal.mealName || "Meal"}
+                {pendingMeal.confidence ? ` • Confidence: ${pendingMeal.confidence}` : ""}
+              </Text>
+
+              <View style={styles.saveButtonsRow}>
+                <Pressable
+                  onPress={handleSaveMeal}
+                  disabled={savingMeal}
+                  style={[
+                    styles.saveButtonPrimary,
+                    savingMeal ? styles.saveButtonDisabled : null,
+                  ]}
+                >
+                  {savingMeal ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Text style={styles.saveButtonPrimaryText}>Save this meal</Text>
+                  )}
+                </Pressable>
+
+                <Pressable
+                  onPress={() => setPendingMeal(null)}
+                  disabled={savingMeal}
+                  style={styles.saveButtonSecondary}
+                >
+                  <Text style={styles.saveButtonSecondaryText}>Not now</Text>
+                </Pressable>
+              </View>
+
+              {!!pendingMeal.notes && (
+                <Text style={styles.saveNotes}>{pendingMeal.notes}</Text>
+              )}
+            </View>
+          </View>
+        )}
 
       <View style={styles.inputContainer}>
         <TextInput
@@ -413,7 +542,69 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 8,
   },
-
+  /* Save Meal */
+  saveContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  saveCard: {
+    backgroundColor: "#FFF8E7",
+    borderWidth: 1,
+    borderColor: "#F2E8C9",
+    borderRadius: 14,
+    padding: 12,
+  },
+  saveTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#004734",
+  },
+  saveSubtitle: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "#6B8F7A",
+  },
+  saveButtonsRow: {
+    marginTop: 10,
+    flexDirection: "row",
+    gap: 10,
+  },
+  saveButtonPrimary: {
+    flex: 1,
+    backgroundColor: "#009235",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  saveButtonDisabled: {
+    opacity: 0.7,
+  },
+  saveButtonPrimaryText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  saveButtonSecondary: {
+    flex: 1,
+    backgroundColor: "#FFFDF4",
+    borderWidth: 1,
+    borderColor: "#D6C89A",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  saveButtonSecondaryText: {
+    color: "#004734",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  saveNotes: {
+    marginTop: 10,
+    fontSize: 11,
+    color: "#7A9C8A",
+  },
   /* Input */
   inputContainer: {
     padding: 16,
