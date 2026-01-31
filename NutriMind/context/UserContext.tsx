@@ -5,6 +5,15 @@ import { getUserProfile } from "@/config/users";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, addDoc, query, where, orderBy, getDocs, Timestamp, onSnapshot } from "firebase/firestore";
 
+
+export interface TastePreferences {
+  sweet: number;
+  spicy: number;
+  savory: number;
+  bitter: number;
+  sour: number;
+}
+
 export interface UserProfile {
   name?: string;
   isPreOp?: boolean;
@@ -16,6 +25,10 @@ export interface UserProfile {
   proteinGoal?: number;
   fluidGoal?: number;
   calorieGoal?: number;
+
+  tastePreferences?: TastePreferences;
+  dislikedFoods?: string;
+  favoriteCuisines?: string[];
 }
 
 interface UserContextType {
@@ -174,4 +187,3 @@ export function useUser() {
   }
   return context;
 }
-
