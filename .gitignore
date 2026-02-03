@@ -1,0 +1,15 @@
+# env files - never commit keys
+.env
+.env.local
+.env.*.local
+backend/.env
+NutriMind/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea
+*.swp
+*.swo
