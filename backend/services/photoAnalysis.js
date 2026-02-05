@@ -201,9 +201,16 @@ In your "recommendation" field, tailor the message to the patient's phase and an
     };
   } catch (error) {
     console.error("Photo analysis error:", error);
+    const msg = error?.message || String(error);
+    if (msg.includes("API key") || msg.includes("api_key") || msg.includes("Incorrect API key") || msg.includes("Invalid API key")) {
+      return { error: "OpenAI API key is missing or invalid. Check backend/.env and restart the server.", details: msg };
+    }
+    if (msg.includes("rate") || msg.includes("quota") || msg.includes("limit")) {
+      return { error: "OpenAI rate limit or quota exceeded. Try again later.", details: msg };
+    }
     return {
       error: "Failed to analyze photo. Please try again.",
-      details: error.message,
+      details: msg,
     };
   }
 }
