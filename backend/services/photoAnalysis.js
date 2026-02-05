@@ -54,7 +54,7 @@ export async function analyzeFoodPhoto(imageBase64, userProfile) {
 
     const daysPostOp = calculateDaysPostOp(userProfile?.surgeryDate);
     const phaseInfo = getPostOpPhase(daysPostOp);
-    
+
     let phaseContext = "";
     if (phaseInfo?.phase === 1) {
       phaseContext = "The patient is in Full Liquids phase (Days 0-14). Only liquid foods are allowed.";
@@ -65,6 +65,26 @@ export async function analyzeFoodPhoto(imageBase64, userProfile) {
     } else {
       phaseContext = "The patient is in Stabilization phase. Solid foods are allowed, but avoid starches if less than 6 months post-op.";
     }
+
+    const personalizationParts = [];
+    if (userProfile?.hasDumpingSyndrome) {
+      personalizationParts.push("Patient has dumping syndrome: avoid high-sugar and simple carbs in recommendations.");
+    }
+    if (userProfile?.hasDiabetes) {
+      personalizationParts.push("Patient has diabetes: note carb content and suggest low-glycemic options when relevant.");
+    }
+    if (userProfile?.intolerances && userProfile.intolerances.length > 0) {
+      personalizationParts.push(`Patient cannot tolerate: ${userProfile.intolerances.join(", ")}. Warn if the food contains these.`);
+    }
+    if (userProfile?.dislikedFoods && String(userProfile.dislikedFoods).trim()) {
+      personalizationParts.push(`Patient dislikes: ${String(userProfile.dislikedFoods).trim()}. Note if the meal contains these.`);
+    }
+    if (userProfile?.favoriteCuisines && userProfile.favoriteCuisines.length > 0) {
+      personalizationParts.push(`Patient likes cuisines: ${userProfile.favoriteCuisines.join(", ")}. Mention if the meal fits these preferences.`);
+    }
+    const personalizationContext = personalizationParts.length
+      ? `Personalization: ${personalizationParts.join(" ")}`
+      : "";
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -101,8 +121,9 @@ Be extremely thorough - do not miss any visible food items. If you see vegetable
               text: `Carefully analyze this food image and identify EVERY food item visible on the plate. Look at the entire image - check for proteins, vegetables, fruits, grains, and any other food items. Provide accurate nutritional estimates for the complete meal including ALL items you can see. Consider portion sizes visible in the image.
 
 Patient phase context: ${phaseContext}
+${personalizationContext ? `\n${personalizationContext}\n` : ""}
 
-Be thorough and detailed. If you see multiple items (like chicken AND vegetables AND salad), make sure to identify and account for ALL of them in your nutritional calculations.`,
+In your "recommendation" field, tailor the message to the patient's phase and any personalization above (e.g. warn about intolerances or sugar if relevant). Be thorough and detailed. If you see multiple items (like chicken AND vegetables AND salad), make sure to identify and account for ALL of them in your nutritional calculations.`,
             },
             {
               type: "image_url",
@@ -180,9 +201,16 @@ Be thorough and detailed. If you see multiple items (like chicken AND vegetables
     };
   } catch (error) {
     console.error("Photo analysis error:", error);
+    const msg = error?.message || String(error);
+    if (msg.includes("API key") || msg.includes("api_key") || msg.includes("Incorrect API key") || msg.includes("Invalid API key")) {
+      return { error: "OpenAI API key is missing or invalid. Check backend/.env and restart the server.", details: msg };
+    }
+    if (msg.includes("rate") || msg.includes("quota") || msg.includes("limit")) {
+      return { error: "OpenAI rate limit or quota exceeded. Try again later.", details: msg };
+    }
     return {
       error: "Failed to analyze photo. Please try again.",
-      details: error.message,
+      details: msg,
     };
   }
 }

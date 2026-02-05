@@ -10,6 +10,8 @@ import { updateUserProfile } from "@/config/users";
 export default function Settings() {
   const { userProfile, setUserProfile } = useUser();
   const [showGoalsModal, setShowGoalsModal] = useState(false);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [nameInput, setNameInput] = useState("");
   const [proteinGoal, setProteinGoal] = useState("");
   const [fluidGoal, setFluidGoal] = useState("");
   const [calorieGoal, setCalorieGoal] = useState("");
@@ -68,6 +70,26 @@ export default function Settings() {
     }
   };
 
+  const handleSaveName = async () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed) {
+      Alert.alert("Required", "Please enter your name.");
+      return;
+    }
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await updateUserProfile(user.uid, { name: trimmed });
+      setUserProfile({ ...userProfile, name: trimmed } as any);
+      setShowNameModal(false);
+      setNameInput("");
+      Alert.alert("Saved", "Your name has been updated.");
+    } catch (e) {
+      console.error("Error saving name:", e);
+      Alert.alert("Error", "Failed to save name. Please try again.");
+    }
+  };
+
   const handleLogout = () => {
     Alert.alert(
       "Logout",
@@ -114,7 +136,7 @@ export default function Settings() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Profile</Text>
           <Pressable
-            onPress={() => router.push("/onboarding")}
+            onPress={() => router.push("/edit-profile")}
             style={styles.editButton}
           >
             <Edit3 size={16} color="#008080" />
@@ -123,9 +145,21 @@ export default function Settings() {
             </Text>
           </Pressable>
         </View>
-        <View style={styles.profileCard}>
+        <Pressable
+          style={styles.profileCard}
+          onPress={() => {
+            setNameInput(userProfile?.name || "");
+            setShowNameModal(true);
+          }}
+        >
           <Text style={styles.label}>Name</Text>
           <Text style={styles.value}>{userProfile?.name || "Not set"}</Text>
+        </Pressable>
+        <View style={styles.profileCard}>
+          <Text style={styles.label}>Status</Text>
+          <Text style={styles.value}>
+            {userProfile?.isPreOp === true ? "Pre-Op" : userProfile?.isPreOp === false ? "Post-Op" : "Not set"}
+          </Text>
         </View>
         <View style={styles.profileCard}>
           <Text style={styles.label}>Surgery Date</Text>
@@ -176,6 +210,42 @@ export default function Settings() {
           </Text>
         </View>
       </View>
+
+      <Modal
+        visible={showNameModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowNameModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Your name</Text>
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="e.g. Alex"
+                value={nameInput}
+                onChangeText={setNameInput}
+                autoCapitalize="words"
+              />
+            </View>
+            <View style={styles.modalButtons}>
+              <Pressable
+                onPress={() => setShowNameModal(false)}
+                style={[styles.modalButton, styles.cancelButton]}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleSaveName}
+                style={[styles.modalButton, styles.saveButtonModal]}
+              >
+                <Text style={styles.saveButtonText}>Save</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={showGoalsModal}

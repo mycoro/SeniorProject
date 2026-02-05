@@ -108,7 +108,7 @@ Scan the QR code with Expo Go app on your phone, or press `i` for iOS simulator 
 ### API Connection Issues
 - Make sure backend is running on port 3000
 - Ensure your phone/laptop are on the same WiFi network
-- Check that `EXPO_PUBLIC_API_URL` in `.env` matches your backend URL (or leave empty for auto-detection)
+- For physical devices, set `EXPO_PUBLIC_API_URL` in NutriMind/.env to your machine's IP and port (e.g. http://YOUR_IP:3000). Leave empty for auto-detection when using simulator.
 
 ### Firebase Errors
 - Verify all Firebase config values are correct in `.env`
@@ -127,4 +127,5 @@ If you encounter issues:
 2. Verify all dependencies are installed
 3. Make sure both backend and frontend are running
 4. Check the console for error messages
+
 

@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Plus, MessageCircle, Clock, Settings, HeartPulse } from "lucide-react-native";
+import { Home, Plus, MessageCircle, Clock, Settings } from "lucide-react-native";
 import { Platform } from "react-native";
 
 export default function TabsLayout() {
@@ -7,12 +7,12 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#009235",
-        tabBarInactiveTintColor: "#7A9C8A",
+        tabBarActiveTintColor: "#008080",
+        tabBarInactiveTintColor: "#94a3b8",
         tabBarStyle: {
-          backgroundColor: "#FFF8E7",
+          backgroundColor: "#ffffff",
           borderTopWidth: 1,
-          borderTopColor: "#E6DDC8",
+          borderTopColor: "#e2e8f0",
           elevation: 8,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: -2 },
@@ -70,16 +70,6 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Doctor Dashboard Tab */}
-      <Tabs.Screen
-        name="doctorDashboard"
-        options={{
-          title: "Patients",
-          tabBarIcon: ({ color, size }) => <HeartPulse size={size} color={color} />,
-        }}
-      />
-
-      {/* Hidden Screens */}
       <Tabs.Screen
         name="log-fluid"
         options={{

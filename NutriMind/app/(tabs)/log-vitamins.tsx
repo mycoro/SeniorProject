@@ -86,7 +86,7 @@ export default function LogVitamins() {
         <View style={styles.infoCard}>
           <Pill size={24} color="#f97316" />
           <Text style={styles.infoText}>
-            Select all vitamins you've taken today. This helps track your supplement intake.
+            Select all vitamins you’ve taken today. This helps track your supplement intake.
           </Text>
         </View>
 
