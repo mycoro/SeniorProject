@@ -14,6 +14,7 @@ export interface TastePreferences {
 }
 
 export interface UserProfile {
+  role?: "patient" | "healthcare_prof";
   name?: string;
   dateOfBirth?: string;
   isPreOp?: boolean;
@@ -34,6 +35,7 @@ export type MealLogUpdate = Partial<Omit<MealLog, "id">>;
 
 interface UserContextType {
   userProfile: UserProfile | null;
+  userRole: "patient" | "healthcare_prof" | null;
   setUserProfile: (profile: UserProfile | null) => void;
   isOnboarded: boolean;
   setIsOnboarded: (value: boolean) => void;
@@ -51,7 +53,7 @@ export interface MealLog {
   carbs?: number;
   fat?: number;
   sugar?: number;
-  mealType: "Breakfast" | "Lunch" | "Dinner" | "Snack";
+  mealType: "Breakfast" | "Lunch" | "Dinner" | "Snack" | "Fluid";
   timestamp: Date;
 }
 
@@ -59,6 +61,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userRole, setUserRole] = useState<"patient" | "healthcare_prof" | null>(null);
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dailyLogs, setDailyLogs] = useState<MealLog[]>([]);
@@ -97,15 +100,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
               tastePreferences: (rawProfile as UserProfile).tastePreferences,
               dislikedFoods: (rawProfile as UserProfile).dislikedFoods,
               favoriteCuisines: (rawProfile as UserProfile).favoriteCuisines,
+              role: (rawProfile as any).role,
             };
             const hasOnboardingData = Boolean(
               profile.surgeryDate && profile.surgeryType && profile.name
             );
             setUserProfile(profile);
+            setUserRole(((rawProfile as any).role === "healthcare_prof") ? "healthcare_prof" : "patient");
             setIsOnboarded(hasOnboardingData);
           } else {
             setUserProfile(null);
             setIsOnboarded(false);
+            setUserRole(null);
           }
 
           const logsRef = collection(db, "users", user.uid, "mealLogs");
@@ -126,7 +132,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                     : new Date(ts);
                 const mealType = data.mealType;
                 const validMealType =
-                  mealType === "Breakfast" || mealType === "Lunch" || mealType === "Dinner" || mealType === "Snack"
+                  mealType === "Breakfast" || mealType === "Lunch" || mealType === "Dinner" || mealType === "Snack" || mealType === "Fluid"
                     ? mealType
                     : "Snack";
                 loadedLogs.push({
@@ -158,6 +164,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setUserProfile(null);
         setIsOnboarded(false);
         setDailyLogs([]);
+        setUserRole(null);
       }
       setLoading(false);
     });
@@ -223,6 +230,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     <UserContext.Provider
       value={{
         userProfile,
+        userRole,
         setUserProfile,
         isOnboarded,
         setIsOnboarded,

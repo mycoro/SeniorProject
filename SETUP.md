@@ -51,6 +51,24 @@ cp .env.example .env
    - Paste it in `backend/.env`:
      ```
      OPENAI_API_KEY=sk-your-key-here
+
+3. Firebase Admin (server) credentials (team setup)
+
+For local development we recommend each developer use their own service account JSON and point to it with `GOOGLE_APPLICATION_CREDENTIALS`.
+
+Steps:
+
+- Download a service account JSON from Firebase Console → Project Settings → Service accounts → "Generate new private key".
+- Save it somewhere local (for example `backend/service-account.json`). DO NOT commit this file.
+- Add `backend/service-account.json` to your `.gitignore`.
+- Start the server with:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="$PWD/backend/service-account.json"
+node backend/server.js
+```
+
+If you prefer not to set `GOOGLE_APPLICATION_CREDENTIALS`, you can also provide the JSON via the `FIREBASE_SERVICE_ACCOUNT` environment variable (not recommended for VCS).
      ```
 
 ### Frontend Setup
@@ -127,5 +145,46 @@ If you encounter issues:
 2. Verify all dependencies are installed
 3. Make sure both backend and frontend are running
 4. Check the console for error messages
+
+## Additional Developer Notes
+
+- Expo clipboard support:
+   - The app uses `expo-clipboard` for copying invite codes. Install it in the `NutriMind` folder with one of the following (prefer `expo` to match native modules):
+      ```bash
+      cd NutriMind
+      expo install expo-clipboard
+      # or
+      npm install expo-clipboard
+      ```
+   - After installing, restart the Metro bundler / TypeScript server (close and `npm start` / `expo start`).
+   - If TypeScript still reports missing types for `expo-clipboard`, add a small declaration file at `NutriMind/declarations.d.ts` with:
+      ```ts
+      declare module 'expo-clipboard';
+      ```
+
+- Backend Firebase Admin credentials:
+   - Recommended: set `GOOGLE_APPLICATION_CREDENTIALS` to point to your local service account JSON (do NOT commit this file).
+      ```bash
+      export GOOGLE_APPLICATION_CREDENTIALS="$PWD/backend/service-account.json"
+      node backend/server.js
+      ```
+   - Alternative (team/shared CI): set `FIREBASE_SERVICE_ACCOUNT` to the raw JSON contents of the service account. This is less secure and not recommended for code repositories.
+
+- Restarting dev tooling:
+   - After changing native modules or TypeScript declarations, restart the packager and your editor's TypeScript server.
+      ```bash
+      # in one terminal
+      cd NutriMind
+      npm start
+
+      # in another terminal (backend)
+      cd backend
+      node server.js
+      ```
+
+- Developer convenience scripts:
+   - There is a helper script in `backend/create_doctor_and_token.js` used during development to create test accounts and obtain ID tokens. Use only with local service account credentials.
+
+If you'd like, I can add the `declarations.d.ts` file automatically and update `NutriMind/package.json` with a `postinstall` script to ensure `expo-clipboard` is installed. Want me to add either of those?
 
 

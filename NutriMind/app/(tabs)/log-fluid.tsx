@@ -56,7 +56,7 @@ export default function LogFluid() {
       "Electrolyte Drink": 8,
       "Other": 5,
     };
-    return Math.round((caloriesPerOz[type] || 5) * ounces);
+    return Math.round((caloriesPerOz[type] ?? 5) * ounces);
   };
 
   const getProteinForFluid = (type: string, ounces: number): number => {
@@ -129,7 +129,7 @@ export default function LogFluid() {
       carbs,
       fat,
       sugar,
-      mealType: "Snack",
+      mealType: "Fluid",
       timestamp: new Date(),
     };
 

@@ -20,8 +20,11 @@ import {
   Target,
 } from "lucide-react-native";
 import { router } from "expo-router";
+import UserTypeSelector from "@/components/UserTypeSelector";
+import OnboardingFooter from "../components/OnboardingFooter";
 import { useUser, UserProfile } from "@/context/UserContext";
 import { auth } from "@/config/firebase";
+import { API_BASE_URL } from "@/config/api";
 import { updateProfile } from "firebase/auth";
 import { setUserProfile as saveUserProfile } from "@/config/users";
 
@@ -32,7 +35,12 @@ const defaultTastePreferences = { sweet: 3, spicy: 3, savory: 3, bitter: 3, sour
 
 export default function Onboarding() {
   const { userProfile: existingProfile, setUserProfile, setIsOnboarded } = useUser();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
+  const [userType, setUserType] = useState<'patient' | 'doctor' | null>(null);
+
+  useEffect(() => {
+    console.log('Onboarding mounted — step:', step, 'userType:', userType);
+  }, [step, userType]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
 
@@ -191,6 +199,21 @@ export default function Onboarding() {
   };
 
   const handleNext = async () => {
+    // User type selection
+    if (step === 0) {
+      if (!userType) {
+        Alert.alert("Required", "Please select whether you're a patient or doctor.");
+        return;
+      }
+      // If doctor, redirect to doctor onboarding
+      if (userType === "doctor") {
+        router.replace("/doctorOnboarding");
+        return;
+      }
+      // Otherwise continue to patient onboarding
+      setStep(1);
+      return;
+    }
     if (step === 1) {
       const hasNameFromSignup = !!existingProfile?.name?.trim();
       if (!hasNameFromSignup && !profile.name?.trim()) {
@@ -280,6 +303,85 @@ export default function Onboarding() {
     if (step > 1) setStep(step - 1);
   };
 
+  // Invite code (optional for patients)
+  const [inviteCodeInput, setInviteCodeInput] = useState<string>("");
+  const [inviteApplying, setInviteApplying] = useState(false);
+  const [inviteApplied, setInviteApplied] = useState(false);
+  const [inviteMessage, setInviteMessage] = useState<string | null>(null);
+
+  const handleApplyInvite = async () => {
+    const code = (inviteCodeInput || "").trim();
+    if (!code) {
+      setInviteMessage("Enter a code to verify (optional).");
+      return;
+    }
+    setInviteApplying(true);
+    setInviteMessage(null);
+    try {
+      // Verify code first
+      const v = await fetch(`${API_BASE_URL}/api/invites/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code.toUpperCase() }),
+      });
+      const jv = await v.json();
+      if (!v.ok || !jv?.inviteId) {
+        setInviteMessage(jv?.error || "Invalid invite code");
+        setInviteApplying(false);
+        return;
+      }
+
+      const inviteId = jv.inviteId;
+
+      // Claim invite using current user's ID token
+      const user = auth.currentUser;
+      if (!user) {
+        setInviteMessage("You must be signed in to claim an invite.");
+        setInviteApplying(false);
+        return;
+      }
+      const idToken = await user.getIdToken();
+      const r = await fetch(`${API_BASE_URL}/api/invites/claim`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ inviteId }),
+      });
+      const jr = await r.json();
+      if (!r.ok) {
+        setInviteMessage(jr?.error || "Failed to claim invite");
+        setInviteApplying(false);
+        return;
+      }
+
+      // Refresh token to pick up any server-side claims
+      try {
+        await user.getIdToken(true);
+      } catch (e) {
+        console.warn("Failed to refresh ID token after claiming invite", e);
+      }
+
+      setInviteApplied(true);
+      setInviteMessage("Invite applied successfully.");
+    } catch (err: any) {
+      console.error("Invite apply error:", err);
+      setInviteMessage(err?.message || "Failed to apply invite");
+    } finally {
+      setInviteApplying(false);
+    }
+  };
+
+  const handleSkipInvite = () => {
+    setInviteCodeInput("");
+    setInviteApplying(false);
+    setInviteApplied(false);
+    setInviteMessage(null);
+    // Advance to the next onboarding step when skipping
+    setStep((s) => Math.min(s + 1, 3));
+  };
+
   const toggleIntolerance = (intolerance: string) => {
     setProfile((prev) => {
       const list = prev.intolerances ?? [];
@@ -301,7 +403,7 @@ export default function Onboarding() {
           </View>
           <View>
             <Text style={styles.headerTitle}>NutriMind Setup</Text>
-                <Text style={styles.headerSubtitle}>Step {step} of 3</Text>
+                  <Text style={styles.headerSubtitle}>{step === 0 ? 'Account Type' : `Step ${step} of 3`}</Text>
           </View>
         </View>
         <View style={styles.progressBar}>
@@ -329,6 +431,39 @@ export default function Onboarding() {
                 <Text style={styles.cardSubtitle}>Tell us about your procedure</Text>
               </View>
             </View>
+
+            {/* Optional invite code for patients */}
+            {userType !== "doctor" && (
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>Invitation Code (optional)</Text>
+                <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+                  <TextInput
+                    placeholder="Enter code"
+                    value={inviteCodeInput}
+                    onChangeText={setInviteCodeInput}
+                    style={[styles.textInput, { flex: 1 }]}
+                    autoCapitalize="characters"
+                    editable={!inviteApplying && !inviteApplied}
+                  />
+                  <Pressable
+                    onPress={handleSkipInvite}
+                    style={[styles.backButton, { paddingHorizontal: 12, paddingVertical: 10 }]}
+                  >
+                    <Text style={styles.backButtonText}>Skip</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleApplyInvite}
+                    style={[styles.nextButton, { paddingHorizontal: 12, paddingVertical: 10 }]}
+                    disabled={inviteApplying || inviteApplied}
+                  >
+                    <Text style={styles.nextButtonText}>{inviteApplied ? "Applied" : "Apply"}</Text>
+                  </Pressable>
+                </View>
+                {inviteMessage ? (
+                  <Text style={{ marginTop: 8, color: inviteApplied ? "#0f5132" : "#b02a37" }}>{inviteMessage}</Text>
+                ) : null}
+              </View>
+            )}
 
             {!existingProfile?.name?.trim() && (
               <View style={styles.section}>
@@ -551,6 +686,10 @@ export default function Onboarding() {
               </View>
             </View>
           </View>
+        )}
+
+        {step === 0 && (
+          <UserTypeSelector userType={userType} setUserType={setUserType} />
         )}
 
         {step === 2 && (
@@ -777,22 +916,11 @@ export default function Onboarding() {
 
       </ScrollView>
 
-      <View style={styles.footer}>
-        <View style={styles.footerButtons}>
-          {step > 1 && (
-            <Pressable onPress={handleBack} style={styles.backButton}>
-              <ChevronLeft size={16} color="#475569" />
-              <Text style={styles.backButtonText}>Back</Text>
-            </Pressable>
-          )}
-          <Pressable onPress={handleNext} style={styles.nextButton}>
-            <Text style={styles.nextButtonText}>
-              {step === 3 ? "Complete Setup" : "Continue"}
-            </Text>
-            {step < 3 && <ChevronRight size={16} color="white" />}
-          </Pressable>
-        </View>
-      </View>
+      <OnboardingFooter
+        step={step}
+        onBack={handleBack}
+        onNext={handleNext}
+      />
     </SafeAreaView>
   );
 }
@@ -847,6 +975,31 @@ const styles = StyleSheet.create({
   },
   progressDotActive: {
     backgroundColor: "#FFB703",
+  },
+
+  typeOption: {
+    backgroundColor: '#FFFDF4',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E8E3D4',
+  },
+  typeOptionActive: {
+    backgroundColor: '#009235',
+    borderColor: '#009235',
+  },
+  typeOptionText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#004734',
+  },
+  typeOptionTextActive: {
+    color: '#fff',
+  },
+  typeOptionHint: {
+    fontSize: 13,
+    color: '#3F5E52',
+    marginTop: 6,
   },
 
   /* Body */

@@ -5,6 +5,9 @@
 backend/.env
 NutriMind/.env
 
+# Local Firebase admin key (per-developer)
+backend/service-account.json
+
 # OS
 .DS_Store
 Thumbs.db

@@ -27,6 +27,7 @@ export default function Auth() {
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
+  
   const [loading, setLoading] = useState(false);
   const { setIsOnboarded } = useUser();
 
@@ -63,9 +64,9 @@ export default function Auth() {
           .filter(Boolean)
           .join(" ");
         await updateProfile(userCredential.user, { displayName: fullName });
-        await setUserProfile(userCredential.user.uid, { name: fullName });
-        setIsOnboarded(false);
-        router.replace("/onboarding");
+          await setUserProfile(userCredential.user.uid, { name: fullName });
+          // After signup, always route to the generic onboarding which will branch by user type
+          router.replace("/onboarding");
       }
     } catch (error: any) {
       console.error("Auth error:", error);
@@ -143,10 +144,10 @@ export default function Auth() {
                 </Text>
               </Pressable>
             </View>
-
             <View style={styles.form}>
               {!isLogin && (
                 <>
+                  {/* Account type selection removed; onboarding will ask user type after signup */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>First Name</Text>
                     <View style={styles.inputWrapper}>
@@ -248,6 +249,8 @@ export default function Auth() {
                   <Text style={styles.forgotPassword}>Forgot password?</Text>
                 </Pressable>
               )}
+
+              
 
               <Pressable
                 onPress={handleSubmit}
@@ -355,6 +358,8 @@ const styles = StyleSheet.create({
     color: "white",
   },
 
+  
+
   /* form */
   form: {
     gap: 16,
@@ -395,6 +400,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     backgroundColor: "#FFFDF4",
     color: "#004734",
+  },
+  roleToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFDF4',
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E6DDC8',
+  },
+  roleOption: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  roleSelected: {
+    backgroundColor: '#009235',
+  },
+  roleText: {
+    color: '#004734',
+    fontWeight: '600',
+  },
+  roleTextSelected: {
+    color: '#fff',
   },
   forgotPassword: {
     fontSize: 14,
