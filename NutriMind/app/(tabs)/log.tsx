@@ -361,7 +361,7 @@ export default function LogMeal() {
         <Text style={styles.biteTimerText}>Smart Bite Timer</Text>
       </Pressable>
 
-
+      
       {entryMode === "camera" ? (
         <View style={styles.scanCard}>
           <Text style={styles.scanTitle}>AI Food Scanner</Text>
