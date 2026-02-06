@@ -87,10 +87,19 @@ export default function Onboarding() {
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
         hasDiabetes: existingProfile.hasDiabetes ?? false,
         hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
-        intolerances: [],
+        intolerances: existingProfile.intolerances ?? [],
         proteinGoal: existingProfile.proteinGoal,
         fluidGoal: existingProfile.fluidGoal,
         calorieGoal: existingProfile.calorieGoal,
+        tastePreferences: existingProfile.tastePreferences ?? {
+          sweet: 3,
+          spicy: 3,
+          savory: 3,
+          bitter: 3,
+          sour: 3,
+        },
+        dislikedFoods: existingProfile.dislikedFoods ?? "",
+        favoriteCuisines: existingProfile.favoriteCuisines ?? [],
       };
     }
     return {
@@ -133,6 +142,15 @@ export default function Onboarding() {
         proteinGoal: existingProfile.proteinGoal,
         fluidGoal: existingProfile.fluidGoal,
         calorieGoal: existingProfile.calorieGoal,
+        tastePreferences: existingProfile.tastePreferences ?? {
+          sweet: 3,
+          spicy: 3,
+          savory: 3,
+          bitter: 3,
+          sour: 3,
+        },
+        dislikedFoods: existingProfile.dislikedFoods ?? "",
+        favoriteCuisines: existingProfile.favoriteCuisines ?? [],
       });
       if (formattedDate) {
         const parsed = parseUSDate(formattedDate);
@@ -186,6 +204,10 @@ export default function Onboarding() {
     }
 
     if (step === 1) {
+      if (!profile.name || profile.name.trim() === "") {
+        Alert.alert("Required", "Please enter your preferred name.");
+        return;
+      }
       if (!profile.surgeryDate) {
         Alert.alert("Required", "Please enter your surgery date.");
         return;
@@ -351,6 +373,17 @@ export default function Onboarding() {
                 <Text style={styles.cardTitle}>Surgery Details</Text>
                 <Text style={styles.cardSubtitle}>Tell us about your procedure</Text>
               </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Your Name</Text>
+              <TextInput
+                placeholder="Enter your preferred name"
+                value={profile.name}
+                onChangeText={(text) => setProfile({ ...profile, name: text })}
+                style={styles.textInput}
+                autoCapitalize="words"
+              />
             </View>
 
             <View style={styles.section}>
