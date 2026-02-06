@@ -20,6 +20,16 @@ export type UserProfile = {
   tastePreferences?: { sweet: number; spicy: number; savory: number; bitter: number; sour: number };
   dislikedFoods?: string;
   favoriteCuisines?: string[];
+
+
+
+    // Doctor-specific fields
+    isDoctor?: boolean;
+    specialty?: string;
+    licenseNumber?: string | null;
+    yearsExperience?: string | null;
+    practiceType?: string | null;
+
   createdAt: any;
   updatedAt: any;
 };

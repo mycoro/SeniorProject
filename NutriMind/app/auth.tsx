@@ -1,21 +1,9 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { Leaf, Mail, Lock, User, Eye, EyeOff } from "lucide-react-native";
 import { router } from "expo-router";
 import { auth } from "@/config/firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "firebase/auth";
 import { ensureUserDoc, setUserProfile } from "@/config/users";
 import { useUser } from "@/context/UserContext";
 
@@ -105,6 +93,46 @@ export default function Auth() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      Alert.alert(
+        "Enter Email", 
+        "Please enter your email address first.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Reset Password",
+      `Send password reset email to ${email}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Send",
+          onPress: async () => {
+            try {
+              await sendPasswordResetEmail(auth, email.trim());
+              Alert.alert(
+                "Email Sent!", 
+                "Check your email for password reset instructions.",
+                [{ text: "OK" }]
+              );
+            } catch (error: any) {
+              let errorMessage = "Failed to send reset email.";
+              if (error.code === "auth/user-not-found") {
+                errorMessage = "No account found with this email.";
+              } else if (error.code === "auth/invalid-email") {
+                errorMessage = "Invalid email address.";
+              }
+              Alert.alert("Error", errorMessage);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -245,7 +273,7 @@ export default function Auth() {
               </View>
 
               {isLogin && (
-                <Pressable>
+                <Pressable onPress={handleForgotPassword}>
                   <Text style={styles.forgotPassword}>Forgot password?</Text>
                 </Pressable>
               )}

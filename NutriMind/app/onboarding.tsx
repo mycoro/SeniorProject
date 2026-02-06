@@ -104,9 +104,6 @@ export default function Onboarding() {
         proteinGoal: existingProfile.proteinGoal,
         fluidGoal: existingProfile.fluidGoal,
         calorieGoal: existingProfile.calorieGoal,
-        tastePreferences: existingProfile.tastePreferences ?? defaultTastePreferences,
-        dislikedFoods: existingProfile.dislikedFoods ?? "",
-        favoriteCuisines: existingProfile.favoriteCuisines ?? [],
       };
     }
     return {
@@ -133,44 +130,29 @@ export default function Onboarding() {
   });
 
   useEffect(() => {
-    if (existingProfile) {
-      if (existingProfile.surgeryDate) {
-        const formattedDate = existingProfile.surgeryDate.includes("/")
-          ? existingProfile.surgeryDate
-          : formatDateUS(new Date(existingProfile.surgeryDate));
-        const dobRaw = (existingProfile as UserProfile).dateOfBirth ?? "";
-        if (dobRaw && dobRaw.length >= 10) {
-          const dobParsed = new Date(dobRaw.slice(0, 10));
-          if (!isNaN(dobParsed.getTime())) setTempDobDate(dobParsed);
+    if (existingProfile && existingProfile.surgeryDate) {
+      const rawDate = existingProfile.surgeryDate ?? "";
+      const formattedDate = rawDate.includes("/")
+        ? rawDate
+        : formatDateUS(new Date(rawDate));
+
+      setProfile({
+        name: existingProfile.name || "",
+        isPreOp: existingProfile.isPreOp ?? false,
+        surgeryDate: formattedDate,
+        surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
+        hasDiabetes: existingProfile.hasDiabetes ?? false,
+        hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
+        intolerances: existingProfile.intolerances ?? [],
+        proteinGoal: existingProfile.proteinGoal,
+        fluidGoal: existingProfile.fluidGoal,
+        calorieGoal: existingProfile.calorieGoal,
+      });
+      if (formattedDate) {
+        const parsed = parseUSDate(formattedDate);
+        if (parsed) {
+          setTempDate(parsed);
         }
-        setProfile({
-          name: existingProfile.name || "",
-          dateOfBirth: dobRaw,
-          isPreOp: existingProfile.isPreOp ?? false,
-          surgeryDate: formattedDate,
-          surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
-          hasDiabetes: existingProfile.hasDiabetes ?? false,
-          hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
-          intolerances: existingProfile.intolerances || [],
-          proteinGoal: existingProfile.proteinGoal,
-          fluidGoal: existingProfile.fluidGoal,
-          calorieGoal: existingProfile.calorieGoal,
-          tastePreferences: existingProfile.tastePreferences ?? defaultTastePreferences,
-          dislikedFoods: existingProfile.dislikedFoods ?? "",
-          favoriteCuisines: existingProfile.favoriteCuisines ?? [],
-        });
-        if (formattedDate) {
-          const parsed = parseUSDate(formattedDate);
-          if (parsed) {
-            setTempDate(parsed);
-          }
-        }
-      } else {
-        setProfile((prev) => ({
-          ...prev,
-          name: existingProfile.name || prev.name || "",
-          dateOfBirth: (existingProfile as UserProfile).dateOfBirth ?? prev.dateOfBirth ?? "",
-        }));
       }
     }
   }, [existingProfile]);
@@ -215,28 +197,6 @@ export default function Onboarding() {
       return;
     }
     if (step === 1) {
-      const hasNameFromSignup = !!existingProfile?.name?.trim();
-      if (!hasNameFromSignup && !profile.name?.trim()) {
-        Alert.alert("Required", "Please enter your name.");
-        return;
-      }
-      if (!profile.dateOfBirth?.trim()) {
-        Alert.alert("Required", "Please select your date of birth.");
-        return;
-      }
-      const birth = new Date(profile.dateOfBirth.slice(0, 10));
-      if (isNaN(birth.getTime())) {
-        Alert.alert("Invalid Date", "Please select a valid date of birth.");
-        return;
-      }
-      const today = new Date();
-      let age = today.getFullYear() - birth.getFullYear();
-      const m = today.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-      if (age < 13 || age > 120) {
-        Alert.alert("Invalid Date", "You must be 13–120 years old.");
-        return;
-      }
       if (!profile.surgeryDate) {
         Alert.alert("Required", "Please enter your surgery date.");
         return;
@@ -550,6 +510,17 @@ export default function Onboarding() {
                   )}
                 </>
               )}
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Your Name</Text>
+              <TextInput
+                placeholder="Enter your preferred name"
+                value={profile.name}
+                onChangeText={(text) => setProfile({ ...profile, name: text })}
+                style={styles.textInput}
+                autoCapitalize="words"
+              />
             </View>
 
             <View style={styles.section}>
