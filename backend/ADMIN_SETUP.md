@@ -1,4 +1,5 @@
-# Backend local setup
+````markdown
+# Admin / Backend local setup
 
 This backend uses the Firebase Admin SDK for server-side operations (setting custom claims, managing invites, reading/writing Firestore).
 
@@ -50,3 +51,5 @@ curl http://localhost:3000/health
 ```
 
 If admin is initialized, you'll see the initialization log in server output.
+
+````

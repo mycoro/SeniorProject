@@ -170,6 +170,8 @@ If you encounter issues:
       ```
    - Alternative (team/shared CI): set `FIREBASE_SERVICE_ACCOUNT` to the raw JSON contents of the service account. This is less secure and not recommended for code repositories.
 
+   - Admin service-account key: if you created an admin/service-account JSON specifically for admin-level server operations, store it securely and point `GOOGLE_APPLICATION_CREDENTIALS` to that file before starting the server. Never commit admin keys to the repository.
+
 - Restarting dev tooling:
    - After changing native modules or TypeScript declarations, restart the packager and your editor's TypeScript server.
       ```bash
@@ -182,9 +184,5 @@ If you encounter issues:
       node server.js
       ```
 
-- Developer convenience scripts:
-   - There is a helper script in `backend/create_doctor_and_token.js` used during development to create test accounts and obtain ID tokens. Use only with local service account credentials.
-
-If you'd like, I can add the `declarations.d.ts` file automatically and update `NutriMind/package.json` with a `postinstall` script to ensure `expo-clipboard` is installed. Want me to add either of those?
 
 

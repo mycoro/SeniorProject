@@ -4,7 +4,7 @@ Small team project: Expo + React Native frontend and an Express backend using Fi
 
 Quick links
 - Setup guide: [SETUP.md](SETUP.md)
-- Backend details: [backend/README.md](backend/README.md)
+- Backend details: [backend/ADMIN_SETUP.md](backend/ADMIN_SETUP.md)
 - Firestore rules: [firestore.rules](firestore.rules)
 
 Quick start (local)
@@ -36,7 +36,7 @@ npx expo start
 ```
 
 Notes
-- Team recommended workflow: each developer keeps their own `backend/service-account.json` and sets `GOOGLE_APPLICATION_CREDENTIALS` before starting the server. See [backend/README.md](backend/README.md) for details.
+- Team recommended workflow: each developer keeps their own `backend/service-account.json` and sets `GOOGLE_APPLICATION_CREDENTIALS` before starting the server. See [backend/ADMIN_SETUP.md](backend/ADMIN_SETUP.md) for details.
 - Do not commit service account JSON to git; `backend/service-account.json` is added to `.gitignore`.
 
 If you want, I can open a PR with these changes or add a short contributor checklist. 
