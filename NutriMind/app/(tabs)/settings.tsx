@@ -143,10 +143,12 @@ export default function Settings() {
           <Text style={styles.sectionTitle}>Profile</Text>
           <Pressable
             onPress={() => {
+              console.log("Settings: edit pressed", { isDoctor, isProfileComplete, userProfile });
               if (!isProfileComplete) {
                 router.push(isDoctor ? "/doctorOnboarding" : "/onboarding");
               } else {
-                router.push("/edit-profile");
+                // If the user is a doctor, open the single-page editor; patients use edit-profile.
+                router.push(isDoctor ? "/edit-doctor" : "/edit-profile");
               }
             }}
             style={styles.editButton}

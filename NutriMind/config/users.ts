@@ -21,12 +21,14 @@ export type UserProfile = {
   dislikedFoods?: string;
   favoriteCuisines?: string[];
 
-  // Doctor-specific fields
-  isDoctor?: boolean;
-  specialty?: string;
-  licenseNumber?: string | null;
-  yearsExperience?: string | null;
-  practiceType?: string | null;
+
+
+    // Doctor-specific fields
+    isDoctor?: boolean;
+    specialty?: string;
+    licenseNumber?: string | null;
+    yearsExperience?: string | null;
+    practiceType?: string | null;
 
   createdAt: any;
   updatedAt: any;

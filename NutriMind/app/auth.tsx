@@ -1,25 +1,13 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { Leaf, Mail, Lock, User, Eye, EyeOff } from "lucide-react-native";
 import { router } from "expo-router";
 import { auth } from "@/config/firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "firebase/auth";
 import { ensureUserDoc, setUserProfile } from "@/config/users";
-  import { auth } from "@/config/firebase";
-  import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "firebase/auth";
-  import { ensureUserDoc, setUserProfile } from "@/config/users";
+import { useUser } from "@/context/UserContext";
+
+export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");

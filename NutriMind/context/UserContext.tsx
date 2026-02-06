@@ -107,11 +107,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
               tastePreferences: (rawProfile as UserProfile).tastePreferences,
               dislikedFoods: (rawProfile as UserProfile).dislikedFoods,
               favoriteCuisines: (rawProfile as UserProfile).favoriteCuisines,
+              // Doctor-specific fields
+              isDoctor: (rawProfile as any).isDoctor,
+              specialty: (rawProfile as any).specialty,
+              licenseNumber: (rawProfile as any).licenseNumber,
+              yearsExperience: (rawProfile as any).yearsExperience,
+              practiceType: (rawProfile as any).practiceType,
               role: (rawProfile as any).role,
             };
+
             const hasOnboardingData = Boolean(
-              profile.surgeryDate && profile.surgeryType && profile.name
+              ((profile.role === "healthcare_prof" || profile.isDoctor) 
+                ? (profile.name && profile.specialty && profile.practiceType)
+                : (profile.surgeryDate && profile.surgeryType && profile.name))
             );
+
             setUserProfile(profile);
             setUserRole(((rawProfile as any).role === "healthcare_prof") ? "healthcare_prof" : "patient");
             setIsOnboarded(hasOnboardingData);
