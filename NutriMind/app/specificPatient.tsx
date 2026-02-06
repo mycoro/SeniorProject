@@ -12,50 +12,165 @@ import {
 } from "react-native";
 import { ChevronLeft, Activity, Target, TrendingUp } from "lucide-react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { auth } from "@/config/firebase";
+import { API_BASE_URL } from "@/config/api";
 
-// Mock patient data - replace with actual data fetching
-const MOCK_PATIENT_DATA = {
-  id: "1",
-  name: "Jane Doe",
-  gender: "Female",
-  age: 33,
-  surgery: "Gastric Sleeve",
-  surgeryDate: "March 9, 2026",
-  daysPostOp: 45,
-  currentWeight: 210,
-  startingWeight: 280,
-  goalWeight: 180,
-  proteinGoal: 60,
-  fluidGoal: 64,
-  calorieGoal: 800,
-  todayProtein: 52,
-  todayFluids: 48,
-  todayCalories: 650,
-  notes: "Patient is doing well. Mentioned some nausea in the mornings. Recommended smaller, more frequent meals.",
+type PatientData = {
+  id: string;
+  name: string | null;
+  gender?: string | null;
+  dateOfBirth?: string | null;
+  surgeryType?: string | null;
+  surgeryDate?: string | null;
+  currentWeight?: number | null;
+  startingWeight?: number | null;
+  goalWeight?: number | null;
+  proteinGoal?: number | null;
+  fluidGoal?: number | null;
+  calorieGoal?: number | null;
+  notes?: string | null;
 };
 
 export default function SpecificPatient() {
   const { id } = useLocalSearchParams();
-  const [patient, setPatient] = useState(MOCK_PATIENT_DATA);
-  const [loading, setLoading] = useState(false);
-  const [notes, setNotes] = useState(MOCK_PATIENT_DATA.notes);
+  const patientId = String(id || "");
+  const [patient, setPatient] = useState<PatientData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notes, setNotes] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [todayProtein, setTodayProtein] = useState<number | null>(null);
+  const [todayCalories, setTodayCalories] = useState<number | null>(null);
+  const [todayFluids, setTodayFluids] = useState<number | null>(null);
 
   const handleBack = () => {
     router.back();
   };
 
   const handleSaveNotes = async () => {
+    if (!patientId) return;
     setIsSaving(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('Not authenticated');
+      const idToken = await user.getIdToken();
+      const res = await fetch(`${API_BASE_URL}/api/doctor/patient/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ patientId, notes: notes ?? null }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(j?.error || 'Failed to save notes');
+      }
+      Alert.alert('Success', 'Notes saved successfully!');
+    } catch (err: any) {
+      console.error('Failed to save notes:', err);
+      Alert.alert('Error', err?.message || 'Failed to save notes');
+    } finally {
       setIsSaving(false);
-      Alert.alert("Success", "Notes saved successfully!");
-    }, 500);
+    }
   };
 
-  const weightLoss = patient.startingWeight - patient.currentWeight;
-  const weightLossPercentage = ((weightLoss / patient.startingWeight) * 100).toFixed(1);
+  const weightLoss =
+    (patient?.startingWeight != null && patient?.currentWeight != null)
+      ? (patient.startingWeight - patient.currentWeight)
+      : null;
+  const weightLossPercentage =
+    weightLoss != null && patient && patient.startingWeight
+      ? ((weightLoss / (patient.startingWeight || 1)) * 100).toFixed(1)
+      : null;
+
+  // compute days post-op
+  const daysPostOp = (() => {
+    try {
+      if (patient?.surgeryDate) {
+        const d = new Date(patient.surgeryDate);
+        if (!isNaN(d.getTime())) {
+          const diff = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+          return diff;
+        }
+      }
+    } catch {}
+    return null;
+  })();
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        if (!patientId) {
+          setPatient(null);
+          setNotes(null);
+          setTodayProtein(null);
+          setTodayCalories(null);
+          setTodayFluids(null);
+          setLoading(false);
+          return;
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+          setPatient(null);
+          setNotes(null);
+          setTodayProtein(null);
+          setTodayCalories(null);
+          setTodayFluids(null);
+          setLoading(false);
+          return;
+        }
+        const idToken = await user.getIdToken();
+        const resp = await fetch(`${API_BASE_URL}/api/doctor/patient?patientId=${encodeURIComponent(patientId)}`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+        if (!resp.ok) {
+          let errJson = null;
+          try { errJson = await resp.json(); } catch {}
+          console.error('Failed to fetch patient', errJson);
+          setPatient(null);
+          setNotes(null);
+          setTodayProtein(null);
+          setTodayCalories(null);
+          setTodayFluids(null);
+          setLoading(false);
+          return;
+        }
+        const j = await resp.json();
+        const p = j.patient || {};
+        if (mounted) {
+          setPatient({
+            id: p.uid,
+            name: p.name ?? null,
+            gender: p.gender ?? null,
+            dateOfBirth: p.dateOfBirth ?? null,
+            surgeryType: p.surgeryType ?? null,
+            surgeryDate: p.surgeryDate ?? null,
+            currentWeight: p.currentWeight ?? null,
+            startingWeight: p.startingWeight ?? null,
+            goalWeight: p.goalWeight ?? null,
+            proteinGoal: p.proteinGoal ?? null,
+            fluidGoal: p.fluidGoal ?? null,
+            calorieGoal: p.calorieGoal ?? null,
+            notes: p.notes ?? null,
+          });
+          setNotes(p.notes ?? null);
+          const today = j.today || {};
+          setTodayProtein(today.protein ?? null);
+          setTodayCalories(today.calories ?? null);
+          setTodayFluids(today.fluids ?? null);
+        }
+      } catch (err) {
+        console.error("Failed to load patient or logs:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [patientId]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -68,7 +183,7 @@ export default function SpecificPatient() {
           <Pressable onPress={handleBack} style={styles.backButton}>
             <ChevronLeft size={24} color="#004734" />
           </Pressable>
-          <Text style={styles.title}>{patient.name}</Text>
+          <Text style={styles.title}>{patient?.name ?? ""}</Text>
           <View style={styles.placeholder} />
         </View>
 
@@ -83,23 +198,33 @@ export default function SpecificPatient() {
               <Text style={styles.cardTitle}>Patient Details</Text>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Age</Text>
-                <Text style={styles.detailValue}>{patient.age} years</Text>
+                <Text style={styles.detailValue}>{patient?.dateOfBirth ? (() => {
+                    const dob = new Date(patient.dateOfBirth as string);
+                    if (!isNaN(dob.getTime())) {
+                      const today = new Date();
+                      let age = today.getFullYear() - dob.getFullYear();
+                      const m = today.getMonth() - dob.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+                      return `${age} years`;
+                    }
+                    return "n/a";
+                  })() : "n/a"}</Text>
               </View>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Gender</Text>
-                <Text style={styles.detailValue}>{patient.gender}</Text>
+                <Text style={styles.detailValue}>{patient?.gender ?? "n/a"}</Text>
               </View>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Surgery</Text>
-                <Text style={styles.detailValue}>{patient.surgery}</Text>
+                <Text style={styles.detailValue}>{patient?.surgeryType ?? "n/a"}</Text>
               </View>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Surgery Date</Text>
-                <Text style={styles.detailValue}>{patient.surgeryDate}</Text>
+                <Text style={styles.detailValue}>{patient?.surgeryDate ?? "n/a"}</Text>
               </View>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Days Post-Op</Text>
-                <Text style={styles.detailValue}>{patient.daysPostOp} days</Text>
+                <Text style={styles.detailValue}>{daysPostOp != null ? `${daysPostOp} days` : "n/a"}</Text>
               </View>
             </View>
 
@@ -109,18 +234,18 @@ export default function SpecificPatient() {
               <View style={styles.statsRow}>
                 <View style={styles.statCard}>
                   <Activity size={20} color="#FF7A2F" />
-                  <Text style={styles.statValue}>{patient.currentWeight}</Text>
+                  <Text style={styles.statValue}>{patient?.currentWeight ?? "n/a"}</Text>
                   <Text style={styles.statLabel}>Current</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Target size={20} color="#009235" />
-                  <Text style={styles.statValue}>{patient.goalWeight}</Text>
+                  <Text style={styles.statValue}>{patient?.goalWeight ?? "n/a"}</Text>
                   <Text style={styles.statLabel}>Goal</Text>
                 </View>
                 <View style={styles.statCard}>
                   <TrendingUp size={20} color="#3b82f6" />
-                  <Text style={styles.statValue}>-{weightLoss}</Text>
-                  <Text style={styles.statLabel}>Lost ({weightLossPercentage}%)</Text>
+                  <Text style={styles.statValue}>{weightLoss != null ? `-${weightLoss}` : "n/a"}</Text>
+                  <Text style={styles.statLabel}>Lost ({weightLossPercentage ?? "n/a"}%)</Text>
                 </View>
               </View>
             </View>
@@ -131,18 +256,18 @@ export default function SpecificPatient() {
               <View style={styles.macrosGrid}>
                 <View style={styles.macroCard}>
                   <Text style={styles.macroLabel}>Protein</Text>
-                  <Text style={styles.macroValue}>{patient.todayProtein}g</Text>
-                  <Text style={styles.macroGoal}>Goal: {patient.proteinGoal}g</Text>
+                  <Text style={styles.macroValue}>{todayProtein != null ? `${todayProtein}g` : "n/a"}</Text>
+                  <Text style={styles.macroGoal}>Goal: {patient?.proteinGoal ?? "n/a"}g</Text>
                 </View>
                 <View style={styles.macroCard}>
                   <Text style={styles.macroLabel}>Fluids</Text>
-                  <Text style={styles.macroValue}>{patient.todayFluids}oz</Text>
-                  <Text style={styles.macroGoal}>Goal: {patient.fluidGoal}oz</Text>
+                  <Text style={styles.macroValue}>{todayFluids != null ? `${todayFluids}oz` : "n/a"}</Text>
+                  <Text style={styles.macroGoal}>Goal: {patient?.fluidGoal ?? "n/a"}oz</Text>
                 </View>
                 <View style={styles.macroCard}>
                   <Text style={styles.macroLabel}>Calories</Text>
-                  <Text style={styles.macroValue}>{patient.todayCalories}</Text>
-                  <Text style={styles.macroGoal}>Goal: {patient.calorieGoal}</Text>
+                  <Text style={styles.macroValue}>{todayCalories != null ? `${todayCalories}` : "n/a"}</Text>
+                  <Text style={styles.macroGoal}>Goal: {patient?.calorieGoal ?? "n/a"}</Text>
                 </View>
               </View>
             </View>
@@ -152,7 +277,7 @@ export default function SpecificPatient() {
               <Text style={styles.cardTitle}>Clinical Notes</Text>
               <TextInput
                 style={styles.notesInput}
-                value={notes}
+                value={notes ?? ""}
                 onChangeText={setNotes}
                 placeholder="Add notes about this patient..."
                 placeholderTextColor="#7A9C8A"

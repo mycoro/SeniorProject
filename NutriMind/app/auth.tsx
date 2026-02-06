@@ -15,16 +15,19 @@ import {
 import { Leaf, Mail, Lock, User, Eye, EyeOff } from "lucide-react-native";
 import { router } from "expo-router";
 import { auth } from "@/config/firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { ensureUserDoc } from "@/config/users";
-import { useUser } from "@/context/UserContext";
-
-export default function Auth() {
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "firebase/auth";
+import { ensureUserDoc, setUserProfile } from "@/config/users";
+  import { auth } from "@/config/firebase";
+  import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "firebase/auth";
+  import { ensureUserDoc, setUserProfile } from "@/config/users";
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
+  
   const [loading, setLoading] = useState(false);
   const { setIsOnboarded } = useUser();
 
@@ -34,8 +37,12 @@ export default function Auth() {
       return;
     }
 
-    if (!isLogin && !name.trim()) {
-      Alert.alert("Error", "Please enter your name");
+    if (!isLogin && !firstName.trim()) {
+      Alert.alert("Error", "Please enter at least your first name");
+      return;
+    }
+    if (!isLogin && !lastName.trim()) {
+      Alert.alert("Error", "Please enter your last name");
       return;
     }
 
@@ -53,8 +60,13 @@ export default function Auth() {
           password
         );
         await ensureUserDoc(userCredential.user.uid, email.trim());
-        setIsOnboarded(false);
-        router.replace("/onboarding");
+        const fullName = [firstName.trim(), middleName.trim(), lastName.trim()]
+          .filter(Boolean)
+          .join(" ");
+        await updateProfile(userCredential.user, { displayName: fullName });
+          await setUserProfile(userCredential.user.uid, { name: fullName });
+          // After signup, always route to the generic onboarding which will branch by user type
+          router.replace("/onboarding");
       }
     } catch (error: any) {
       console.error("Auth error:", error);
@@ -172,24 +184,59 @@ export default function Auth() {
                 </Text>
               </Pressable>
             </View>
-
             <View style={styles.form}>
               {!isLogin && (
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Full Name</Text>
-                  <View style={styles.inputWrapper}>
-                    <View style={styles.iconLeft}>
-                      <User size={16} color="#94a3b8" />
+                <>
+                  {/* Account type selection removed; onboarding will ask user type after signup */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>First Name</Text>
+                    <View style={styles.inputWrapper}>
+                      <View style={styles.iconLeft}>
+                        <User size={16} color="#94a3b8" />
+                      </View>
+                      <TextInput
+                        placeholder="John"
+                        value={firstName}
+                        onChangeText={setFirstName}
+                        style={styles.input}
+                        editable={!loading}
+                        autoCapitalize="words"
+                      />
                     </View>
-                    <TextInput
-                      placeholder="John Doe"
-                      value={name}
-                      onChangeText={setName}
-                      style={styles.input}
-                      editable={!loading}
-                    />
                   </View>
-                </View>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Middle Name (optional)</Text>
+                    <View style={styles.inputWrapper}>
+                      <View style={styles.iconLeft}>
+                        <User size={16} color="#94a3b8" />
+                      </View>
+                      <TextInput
+                        placeholder="Michael"
+                        value={middleName}
+                        onChangeText={setMiddleName}
+                        style={styles.input}
+                        editable={!loading}
+                        autoCapitalize="words"
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Last Name</Text>
+                    <View style={styles.inputWrapper}>
+                      <View style={styles.iconLeft}>
+                        <User size={16} color="#94a3b8" />
+                      </View>
+                      <TextInput
+                        placeholder="Doe"
+                        value={lastName}
+                        onChangeText={setLastName}
+                        style={styles.input}
+                        editable={!loading}
+                        autoCapitalize="words"
+                      />
+                    </View>
+                  </View>
+                </>
               )}
 
               <View style={styles.inputGroup}>
@@ -242,6 +289,8 @@ export default function Auth() {
                   <Text style={styles.forgotPassword}>Forgot password?</Text>
                 </Pressable>
               )}
+
+              
 
               <Pressable
                 onPress={handleSubmit}
@@ -349,6 +398,8 @@ const styles = StyleSheet.create({
     color: "white",
   },
 
+  
+
   /* form */
   form: {
     gap: 16,
@@ -390,7 +441,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFDF4",
     color: "#004734",
   },
-
+  roleToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFDF4',
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E6DDC8',
+  },
+  roleOption: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  roleSelected: {
+    backgroundColor: '#009235',
+  },
+  roleText: {
+    color: '#004734',
+    fontWeight: '600',
+  },
+  roleTextSelected: {
+    color: '#fff',
+  },
   forgotPassword: {
     fontSize: 14,
     color: "#ff7739", // orange

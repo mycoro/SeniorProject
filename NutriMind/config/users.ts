@@ -7,6 +7,7 @@ export type UserProfile = {
   email: string | null;
   role: UserRole;
   name?: string;
+  dateOfBirth?: string;
   isPreOp?: boolean;
   surgeryDate?: string;
   surgeryType?: string;
@@ -16,14 +17,7 @@ export type UserProfile = {
   proteinGoal?: number;
   fluidGoal?: number;
   calorieGoal?: number;
-
-  tastePreferences?: {
-    sweet: number;
-    spicy: number;
-    savory: number;
-    bitter: number;
-    sour: number;
-  };
+  tastePreferences?: { sweet: number; spicy: number; savory: number; bitter: number; sour: number };
   dislikedFoods?: string;
   favoriteCuisines?: string[];
 

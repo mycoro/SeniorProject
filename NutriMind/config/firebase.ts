@@ -1,7 +1,9 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getAuth } from "firebase/auth";
+import { getAuth, initializeAuth } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -14,6 +16,20 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
+let authInstance;
+
+if (Platform.OS === "web") {
+  authInstance = getAuth(app);
+} else {
+  // In React Native, use AsyncStorage so the user stays logged in between app restarts.
+  try {
+    // initializeAuth without explicit persistence; fall back to getAuth if it fails
+    authInstance = initializeAuth(app);
+  } catch (error) {
+    authInstance = getAuth(app);
+  }
+}
+
+export const auth = authInstance;
 export const db = getFirestore(app);
 export const storage = getStorage(app);

@@ -1,36 +1,8 @@
 import { Redirect } from "expo-router";
-import { useUser } from "@/context/UserContext";
-import { auth } from "@/config/firebase";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
 
+// For now, always start on the login/signup screen.
+// From there, the user can sign in or create an account,
+// and the rest of the navigation is handled by the auth/onboarding flow.
 export default function Index() {
-  const { isOnboarded, userProfile, loading } = useUser();
-  const user = auth.currentUser;
-
-  if (loading) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#003366" />
-      </View>
-    );
-  }
-
-  if (!user) {
-    return <Redirect href="/auth" />;
-  }
-
-  if (!isOnboarded || !userProfile?.surgeryDate) {
-    return <Redirect href="/onboarding" />;
-  }
-
-  return <Redirect href="/(tabs)/dashboard" />;
+  return <Redirect href="/auth" />;
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f8fafc",
-  },
-});

@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { auth } from "@/config/firebase";
 import { db } from "@/config/firebase";
-import { getUserProfile } from "@/config/users";
+import { getUserProfile, updateUserProfile } from "@/config/users";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, addDoc, query, where, orderBy, getDocs, Timestamp, onSnapshot } from "firebase/firestore";
-
+import { collection, addDoc, doc, updateDoc, query, orderBy, Timestamp, onSnapshot } from "firebase/firestore";
 
 export interface TastePreferences {
   sweet: number;
@@ -15,7 +14,9 @@ export interface TastePreferences {
 }
 
 export interface UserProfile {
+  role?: "patient" | "healthcare_prof";
   name?: string;
+  dateOfBirth?: string;
   isPreOp?: boolean;
   surgeryDate?: string;
   surgeryType?: "Gastric Sleeve" | "Gastric Bypass" | "Duodenal Switch";
@@ -25,7 +26,6 @@ export interface UserProfile {
   proteinGoal?: number;
   fluidGoal?: number;
   calorieGoal?: number;
-
   tastePreferences?: TastePreferences;
   dislikedFoods?: string;
   favoriteCuisines?: string[];
@@ -38,13 +38,17 @@ export interface UserProfile {
   practiceType?: string | null;
 }
 
+export type MealLogUpdate = Partial<Omit<MealLog, "id">>;
+
 interface UserContextType {
   userProfile: UserProfile | null;
+  userRole: "patient" | "healthcare_prof" | null;
   setUserProfile: (profile: UserProfile | null) => void;
   isOnboarded: boolean;
   setIsOnboarded: (value: boolean) => void;
   dailyLogs: MealLog[];
   addMealLog: (meal: MealLog) => void;
+  updateMealLog: (logId: string, updates: MealLogUpdate) => Promise<void>;
   loading: boolean;
 }
 
@@ -54,7 +58,9 @@ export interface MealLog {
   protein: number;
   calories: number;
   carbs?: number;
-  mealType: "Breakfast" | "Lunch" | "Dinner" | "Snack";
+  fat?: number;
+  sugar?: number;
+  mealType: "Breakfast" | "Lunch" | "Dinner" | "Snack" | "Fluid";
   timestamp: Date;
 }
 
@@ -62,6 +68,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userRole, setUserRole] = useState<"patient" | "healthcare_prof" | null>(null);
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dailyLogs, setDailyLogs] = useState<MealLog[]>([]);
@@ -77,18 +84,41 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (user) {
         try {
-          const profile = await getUserProfile(user.uid);
-          if (profile) {
+          const rawProfile = await getUserProfile(user.uid);
+          if (rawProfile) {
+            const nameToUse = (rawProfile as UserProfile).name?.trim() || user.displayName?.trim();
+            if (nameToUse && !(rawProfile as UserProfile).name?.trim()) {
+              try {
+                await updateUserProfile(user.uid, { name: nameToUse });
+              } catch (_) {}
+            }
+            const profile: UserProfile = {
+              name: (rawProfile as UserProfile).name?.trim() || nameToUse || undefined,
+              dateOfBirth: (rawProfile as UserProfile).dateOfBirth,
+              isPreOp: rawProfile.isPreOp,
+              surgeryDate: rawProfile.surgeryDate,
+              surgeryType: rawProfile.surgeryType as UserProfile["surgeryType"],
+              hasDiabetes: rawProfile.hasDiabetes,
+              hasDumpingSyndrome: rawProfile.hasDumpingSyndrome,
+              intolerances: rawProfile.intolerances,
+              proteinGoal: rawProfile.proteinGoal,
+              fluidGoal: rawProfile.fluidGoal,
+              calorieGoal: rawProfile.calorieGoal,
+              tastePreferences: (rawProfile as UserProfile).tastePreferences,
+              dislikedFoods: (rawProfile as UserProfile).dislikedFoods,
+              favoriteCuisines: (rawProfile as UserProfile).favoriteCuisines,
+              role: (rawProfile as any).role,
+            };
             const hasOnboardingData = Boolean(
-              profile.surgeryDate &&
-              profile.surgeryType &&
-              profile.name
+              profile.surgeryDate && profile.surgeryType && profile.name
             );
-            setUserProfile(profile as UserProfile);
+            setUserProfile(profile);
+            setUserRole(((rawProfile as any).role === "healthcare_prof") ? "healthcare_prof" : "patient");
             setIsOnboarded(hasOnboardingData);
           } else {
             setUserProfile(null);
             setIsOnboarded(false);
+            setUserRole(null);
           }
 
           const logsRef = collection(db, "users", user.uid, "mealLogs");
@@ -98,16 +128,30 @@ export function UserProvider({ children }: { children: ReactNode }) {
             logsQuery,
             (snapshot) => {
               const loadedLogs: MealLog[] = [];
-              snapshot.forEach((doc) => {
-                const data = doc.data();
+              snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const ts = data.timestamp;
+                const timestamp =
+                  ts && typeof ts.toDate === "function"
+                    ? ts.toDate()
+                    : ts instanceof Date
+                    ? ts
+                    : new Date(ts);
+                const mealType = data.mealType;
+                const validMealType =
+                  mealType === "Breakfast" || mealType === "Lunch" || mealType === "Dinner" || mealType === "Snack" || mealType === "Fluid"
+                    ? mealType
+                    : "Snack";
                 loadedLogs.push({
-                  id: doc.id,
-                  name: data.name,
-                  protein: data.protein,
-                  calories: data.calories,
+                  id: docSnap.id,
+                  name: data.name ?? "",
+                  protein: Number(data.protein) || 0,
+                  calories: Number(data.calories) || 0,
                   carbs: data.carbs,
-                  mealType: data.mealType,
-                  timestamp: data.timestamp?.toDate() || new Date(),
+                  fat: data.fat,
+                  sugar: data.sugar,
+                  mealType: validMealType,
+                  timestamp: timestamp instanceof Date && !isNaN(timestamp.getTime()) ? timestamp : new Date(),
                 });
               });
               setDailyLogs(loadedLogs);
@@ -127,6 +171,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setUserProfile(null);
         setIsOnboarded(false);
         setDailyLogs([]);
+        setUserRole(null);
       }
       setLoading(false);
     });
@@ -152,7 +197,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         name: meal.name,
         protein: meal.protein,
         calories: meal.calories,
-        carbs: meal.carbs || 0,
+        carbs: meal.carbs ?? 0,
+        fat: meal.fat ?? 0,
+        sugar: meal.sugar ?? 0,
         mealType: meal.mealType,
         timestamp: Timestamp.fromDate(meal.timestamp),
       });
@@ -170,15 +217,33 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateMealLog = async (logId: string, updates: MealLogUpdate) => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.error("Cannot update meal log: user not authenticated");
+      return;
+    }
+    const docRef = doc(db, "users", user.uid, "mealLogs", logId);
+    const payload: Record<string, unknown> = { ...updates };
+    if (updates.timestamp !== undefined) {
+      payload.timestamp = Timestamp.fromDate(
+        updates.timestamp instanceof Date ? updates.timestamp : new Date(updates.timestamp)
+      );
+    }
+    await updateDoc(docRef, payload);
+  };
+
   return (
     <UserContext.Provider
       value={{
         userProfile,
+        userRole,
         setUserProfile,
         isOnboarded,
         setIsOnboarded,
         dailyLogs,
         addMealLog,
+        updateMealLog,
         loading,
       }}
     >
@@ -194,3 +259,4 @@ export function useUser() {
   }
   return context;
 }
+

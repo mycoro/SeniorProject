@@ -1,18 +1,41 @@
 import { Tabs } from "expo-router";
-import { Home, Plus, MessageCircle, Clock, Settings, HeartPulse } from "lucide-react-native";
+import { Home, Plus, MessageCircle, Clock, Settings, Stethoscope } from "lucide-react-native";
 import { Platform } from "react-native";
+import { useEffect, useState } from "react";
+import { auth } from "@/config/firebase";
+import { getUserRole } from "@/config/users";
 
 export default function TabsLayout() {
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const u = auth.currentUser;
+    if (!u) return;
+
+    getUserRole(u.uid)
+      .then((r) => {
+        if (mounted) setRole(r);
+      })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const isDoctor = role === "healthcare_prof";
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#009235",
-        tabBarInactiveTintColor: "#7A9C8A",
+        tabBarActiveTintColor: "#008080",
+        tabBarInactiveTintColor: "#94a3b8",
         tabBarStyle: {
-          backgroundColor: "#FFF8E7",
+          backgroundColor: "#ffffff",
           borderTopWidth: 1,
-          borderTopColor: "#E6DDC8",
+          borderTopColor: "#e2e8f0",
           elevation: 8,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: -2 },
@@ -32,6 +55,7 @@ export default function TabsLayout() {
         },
       }}
     >
+      {/* Leave these alone */}
       <Tabs.Screen
         name="dashboard"
         options={{
@@ -50,9 +74,7 @@ export default function TabsLayout() {
         name="chat"
         options={{
           title: "Chat",
-          tabBarIcon: ({ color, size }) => (
-            <MessageCircle size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -70,16 +92,27 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Doctor Dashboard Tab */}
+      {/* Add these ONLY for doctors */}
       <Tabs.Screen
         name="doctorDashboard"
         options={{
-          title: "Patients",
-          tabBarIcon: ({ color, size }) => <HeartPulse size={size} color={color} />,
+          href: isDoctor ? undefined : null, // hide from tab bar unless doctor
+          title: "Doctor",
+          tabBarIcon: ({ color, size }) => <Stethoscope size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="doctorInvites"
+        options={{
+          href: isDoctor ? undefined : null, // hide from tab bar unless doctor
+          title: "Invites",
+          tabBarIcon: ({ color, size }) => <Plus size={size} color={color} />,
         }}
       />
 
-      {/* Hidden Screens */}
+
+
+      {/* hidden/detail routes (leave these alone) */}
       <Tabs.Screen
         name="log-fluid"
         options={{
@@ -91,6 +124,14 @@ export default function TabsLayout() {
         name="log-vitamins"
         options={{
           href: null,
+          headerShown: false,
+        }}
+      />
+            {/* You have this route file; hide it unless you want it as a tab */}
+      <Tabs.Screen
+        name="doctorPatients"
+        options={{
+          href: null, // keeps it accessible via navigation but not visible as a tab
           headerShown: false,
         }}
       />

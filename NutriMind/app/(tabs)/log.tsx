@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,10 +9,11 @@ import {
   StyleSheet,
   Modal,
   Animated,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Camera, Timer, X, Loader2 } from "lucide-react-native";
 import { useUser } from "@/context/UserContext";
-import { auth } from "@/config/firebase";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { API_BASE_URL } from "@/config/api";
@@ -22,7 +23,6 @@ type EntryMode = "manual" | "camera";
 
 export default function LogMeal() {
   const { addMealLog, userProfile } = useUser();
-  const user = auth.currentUser;
   const [mealType, setMealType] = useState<MealType>("Breakfast");
   const [entryMode, setEntryMode] = useState<EntryMode>("manual");
   const [isScanning, setIsScanning] = useState(false);
@@ -39,7 +39,9 @@ export default function LogMeal() {
   const [carbs, setCarbs] = useState("");
   const [foodName, setFoodName] = useState("");
 
-  const pulseAnim = new Animated.Value(1);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const phaseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     if (showBiteTimer) {
@@ -60,25 +62,48 @@ export default function LogMeal() {
       pulse.start();
       return () => pulse.stop();
     }
-  }, [showBiteTimer]);
+  }, [pulseAnim, showBiteTimer]);
 
   useEffect(() => {
-    if (!showBiteTimer) return;
+    if (!showBiteTimer) {
+      if (phaseTimeoutRef.current) {
+        clearTimeout(phaseTimeoutRef.current);
+        phaseTimeoutRef.current = null;
+      }
+      return;
+    }
 
+    // 20-20-20 rule (bariatric): chew ~20 times (~20s), brief swallow, wait 20s–1 min between bites.
     const phases: ("chew" | "swallow" | "wait")[] = ["chew", "swallow", "wait"];
-    const durations = { chew: 3000, swallow: 2000, wait: 5000 };
+    const durations = {
+      chew: 20000,   // 20 sec – time for ~20 chews (1/sec) to reach pureed consistency
+      swallow: 5000, // 5 sec – brief moment to swallow
+      wait: 20000,   // 20 sec – wait between bites (20-20-20; some guidelines use up to 60 sec)
+    };
     let currentIndex = 0;
+    setTimerPhase("chew");
 
-    const runPhase = () => {
-      setTimerPhase(phases[currentIndex]);
-      currentIndex = (currentIndex + 1) % phases.length;
+    const scheduleNext = () => {
+      phaseTimeoutRef.current = setTimeout(() => {
+        currentIndex = (currentIndex + 1) % phases.length;
+        setTimerPhase(phases[currentIndex]);
+        scheduleNext();
+      }, durations[phases[currentIndex]]);
     };
 
-    runPhase();
-    const interval = setInterval(runPhase, durations[timerPhase]);
+    phaseTimeoutRef.current = setTimeout(() => {
+      currentIndex = 1;
+      setTimerPhase("swallow");
+      scheduleNext();
+    }, durations.chew);
 
-    return () => clearInterval(interval);
-  }, [showBiteTimer, timerPhase]);
+    return () => {
+      if (phaseTimeoutRef.current) {
+        clearTimeout(phaseTimeoutRef.current);
+        phaseTimeoutRef.current = null;
+      }
+    };
+  }, [showBiteTimer]);
 
   const handleScan = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -108,7 +133,7 @@ export default function LogMeal() {
 
       if (!base64) {
         const fileContent = await FileSystem.readAsStringAsync(imageUri, {
-         encoding: "base64",
+          encoding: "base64",
         });
         await analyzePhoto(fileContent);
       } else {
@@ -143,7 +168,11 @@ export default function LogMeal() {
             surgeryDate: userProfile.surgeryDate,
             surgeryType: userProfile.surgeryType,
             hasDumpingSyndrome: userProfile.hasDumpingSyndrome,
+            hasDiabetes: userProfile.hasDiabetes,
             intolerances: userProfile.intolerances || [],
+            tastePreferences: userProfile.tastePreferences,
+            dislikedFoods: userProfile.dislikedFoods,
+            favoriteCuisines: userProfile.favoriteCuisines || [],
           },
         }),
         signal: controller.signal,
@@ -166,7 +195,10 @@ export default function LogMeal() {
       
       if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();
-        throw new Error(`Server returned non-JSON response (${response.status}). Check if backend is running.`);
+        const preview = text ? text.slice(0, 200) : "";
+        throw new Error(
+          `Server returned non-JSON response (${response.status}). ${preview ? `Response: ${preview}` : "Check if backend is running."}`
+        );
       }
 
       if (!response.ok) {
@@ -249,11 +281,18 @@ export default function LogMeal() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView 
-        style={styles.container} 
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      >
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
       <Text style={styles.title}>Log Food</Text>
 
@@ -321,6 +360,7 @@ export default function LogMeal() {
         <Timer size={16} color="#008080" />
         <Text style={styles.biteTimerText}>Smart Bite Timer</Text>
       </Pressable>
+
 
       {entryMode === "camera" ? (
         <View style={styles.scanCard}>
@@ -430,6 +470,11 @@ export default function LogMeal() {
               placeholder="e.g., Greek Yogurt"
               value={foodName}
               onChangeText={setFoodName}
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollToEnd({ animated: true });
+                }, 100);
+              }}
             />
           </View>
 
@@ -522,6 +567,7 @@ export default function LogMeal() {
         </View>
       </Modal>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -531,12 +577,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFDF4",
   },
+  keyboardAvoid: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
   content: {
     padding: 16,
-    paddingBottom: 80,
+    paddingBottom: 160,
     flexGrow: 1,
   },
 
