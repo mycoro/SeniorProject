@@ -29,6 +29,13 @@ export interface UserProfile {
   tastePreferences?: TastePreferences;
   dislikedFoods?: string;
   favoriteCuisines?: string[];
+
+  // Doctor-specific fields
+  isDoctor?: boolean;
+  specialty?: string;
+  licenseNumber?: string | null;
+  yearsExperience?: string | null;
+  practiceType?: string | null;
 }
 
 interface UserContextType {
