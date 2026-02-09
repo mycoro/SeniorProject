@@ -16,7 +16,10 @@ export default function Settings() {
   const [fluidGoal, setFluidGoal] = useState("");
   const [calorieGoal, setCalorieGoal] = useState("");
   
-  const isProfileComplete = userProfile?.surgeryDate && userProfile?.surgeryType && userProfile?.name;
+  const isDoctor = userProfile?.isDoctor;
+  const isProfileComplete = isDoctor
+    ? userProfile?.name && userProfile?.specialty && userProfile?.practiceType
+    : userProfile?.surgeryDate && userProfile?.surgeryType && userProfile?.name;
 
   const handleSaveGoals = async () => {
     const user = auth.currentUser;
@@ -126,7 +129,10 @@ export default function Settings() {
           <View style={styles.warningContent}>
             <Text style={styles.warningTitle}>Profile Incomplete</Text>
             <Text style={styles.warningText}>
-              Please complete your profile to use all features including AI photo scanning.
+              {isDoctor 
+                ? "Please complete your profile to access all doctor features."
+                : "Please complete your profile to use all features including AI photo scanning."
+              }
             </Text>
           </View>
         </View>
@@ -161,55 +167,91 @@ export default function Settings() {
             {userProfile?.isPreOp === true ? "Pre-Op" : userProfile?.isPreOp === false ? "Post-Op" : "Not set"}
           </Text>
         </View>
-        <View style={styles.profileCard}>
-          <Text style={styles.label}>Surgery Date</Text>
-          <Text style={styles.value}>
-            {userProfile?.surgeryDate || "Not set"}
-          </Text>
-        </View>
-        <View style={styles.profileCard}>
-          <Text style={styles.label}>Surgery Type</Text>
-          <Text style={styles.value}>
-            {userProfile?.surgeryType || "Not set"}
-          </Text>
-        </View>
+        
+        {isDoctor ? (
+          <>
+            <View style={styles.profileCard}>
+              <Text style={styles.label}>Specialty</Text>
+              <Text style={styles.value}>
+                {userProfile?.specialty || "Not set"}
+              </Text>
+            </View>
+            <View style={styles.profileCard}>
+              <Text style={styles.label}>Years of Experience</Text>
+              <Text style={styles.value}>
+                {userProfile?.yearsExperience || "Not set"}
+              </Text>
+            </View>
+            <View style={styles.profileCard}>
+              <Text style={styles.label}>Practice Type</Text>
+              <Text style={styles.value}>
+                {userProfile?.practiceType || "Not set"}
+              </Text>
+            </View>
+            {userProfile?.licenseNumber && (
+              <View style={styles.profileCard}>
+                <Text style={styles.label}>License Number</Text>
+                <Text style={styles.value}>
+                  {userProfile.licenseNumber}
+                </Text>
+              </View>
+            )}
+          </>
+        ) : (
+          <>
+            <View style={styles.profileCard}>
+              <Text style={styles.label}>Surgery Date</Text>
+              <Text style={styles.value}>
+                {userProfile?.surgeryDate || "Not set"}
+              </Text>
+            </View>
+            <View style={styles.profileCard}>
+              <Text style={styles.label}>Surgery Type</Text>
+              <Text style={styles.value}>
+                {userProfile?.surgeryType || "Not set"}
+              </Text>
+            </View>
+          </>
+        )}
       </View>
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Daily Goals</Text>
-          <Pressable
-            onPress={() => {
-              setProteinGoal(userProfile?.proteinGoal?.toString() || "");
-              setFluidGoal(userProfile?.fluidGoal?.toString() || "");
-              setCalorieGoal(userProfile?.calorieGoal?.toString() || "");
-              setShowGoalsModal(true);
-            }}
-            style={styles.editButton}
-          >
-            <Target size={16} color="#008080" />
-            <Text style={styles.editButtonText}>Set Goals</Text>
-          </Pressable>
+      {!isDoctor && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Daily Goals</Text>
+            <Pressable
+              onPress={() => {
+                setProteinGoal(userProfile?.proteinGoal?.toString() || "");
+                setFluidGoal(userProfile?.fluidGoal?.toString() || "");
+                setCalorieGoal(userProfile?.calorieGoal?.toString() || "");
+                setShowGoalsModal(true);
+              }}
+              style={styles.editButton}
+            >
+              <Target size={16} color="#008080" />
+              <Text style={styles.editButtonText}>Set Goals</Text>
+            </Pressable>
+          </View>
+          <View style={styles.profileCard}>
+            <Text style={styles.label}>Protein Goal</Text>
+            <Text style={styles.value}>
+              {userProfile?.proteinGoal ? `${userProfile.proteinGoal}g/day` : "Not set - Tap 'Set Goals' to configure"}
+            </Text>
+          </View>
+          <View style={styles.profileCard}>
+            <Text style={styles.label}>Fluid Goal</Text>
+            <Text style={styles.value}>
+              {userProfile?.fluidGoal ? `${userProfile.fluidGoal}oz/day` : "Not set - Tap 'Set Goals' to configure"}
+            </Text>
+          </View>
+          <View style={styles.profileCard}>
+            <Text style={styles.label}>Calorie Goal</Text>
+            <Text style={styles.value}>
+              {userProfile?.calorieGoal ? `${userProfile.calorieGoal} cal/day` : "Not set - Tap 'Set Goals' to configure"}
+            </Text>
+          </View>
         </View>
-        <View style={styles.profileCard}>
-          <Text style={styles.label}>Protein Goal</Text>
-          <Text style={styles.value}>
-            {userProfile?.proteinGoal ? `${userProfile.proteinGoal}g/day` : "Not set - Tap 'Set Goals' to configure"}
-          </Text>
-        </View>
-        <View style={styles.profileCard}>
-          <Text style={styles.label}>Fluid Goal</Text>
-          <Text style={styles.value}>
-            {userProfile?.fluidGoal ? `${userProfile.fluidGoal}oz/day` : "Not set - Tap 'Set Goals' to configure"}
-          </Text>
-        </View>
-        <View style={styles.profileCard}>
-          <Text style={styles.label}>Calorie Goal</Text>
-          <Text style={styles.value}>
-            {userProfile?.calorieGoal ? `${userProfile.calorieGoal} cal/day` : "Not set - Tap 'Set Goals' to configure"}
-          </Text>
-        </View>
-      </View>
+      )}
 
       <Modal
         visible={showNameModal}

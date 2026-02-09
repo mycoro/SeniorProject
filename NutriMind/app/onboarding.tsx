@@ -418,6 +418,17 @@ export default function Onboarding() {
             </View>
 
             <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Your Name</Text>
+              <TextInput
+                placeholder="Enter your preferred name"
+                value={profile.name}
+                onChangeText={(text) => setProfile({ ...profile, name: text })}
+                style={styles.textInput}
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View style={styles.section}>
               <Text style={styles.sectionLabel}>Are you Pre-Op or Post-Op?</Text>
               <View style={styles.toggleRow}>
                 <Pressable

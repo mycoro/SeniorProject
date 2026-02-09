@@ -28,6 +28,13 @@ export interface UserProfile {
   tastePreferences?: TastePreferences;
   dislikedFoods?: string;
   favoriteCuisines?: string[];
+
+  // Doctor-specific fields
+  isDoctor?: boolean;
+  specialty?: string;
+  licenseNumber?: string | null;
+  yearsExperience?: string | null;
+  practiceType?: string | null;
 }
 
 export type MealLogUpdate = Partial<Omit<MealLog, "id">>;

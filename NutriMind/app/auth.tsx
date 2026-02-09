@@ -106,6 +106,46 @@ export default function Auth() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      Alert.alert(
+        "Enter Email", 
+        "Please enter your email address first.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Reset Password",
+      `Send password reset email to ${email}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Send",
+          onPress: async () => {
+            try {
+              await sendPasswordResetEmail(auth, email.trim());
+              Alert.alert(
+                "Email Sent!", 
+                "Check your email for password reset instructions.",
+                [{ text: "OK" }]
+              );
+            } catch (error: any) {
+              let errorMessage = "Failed to send reset email.";
+              if (error.code === "auth/user-not-found") {
+                errorMessage = "No account found with this email.";
+              } else if (error.code === "auth/invalid-email") {
+                errorMessage = "Invalid email address.";
+              }
+              Alert.alert("Error", errorMessage);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -244,7 +284,7 @@ export default function Auth() {
               </View>
 
               {isLogin && (
-                <Pressable>
+                <Pressable onPress={handleForgotPassword}>
                   <Text style={styles.forgotPassword}>Forgot password?</Text>
                 </Pressable>
               )}
