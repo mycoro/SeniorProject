@@ -43,5 +43,6 @@ app-example
 /android
 
 # Environment variables
+.env.example
 .env
 NutriMind/.env
