@@ -10,9 +10,8 @@ import {
   Alert,
 } from "react-native";
 import { Droplets, ArrowLeft } from "lucide-react-native";
-import { useUser } from "@/context/UserContext";
+import { useUser, MealLog } from "@/context/UserContext";
 import { router } from "expo-router";
-import { MealLog } from "@/context/UserContext";
 
 const fluidTypes = [
   "Water",
@@ -26,48 +25,24 @@ const fluidTypes = [
   "Other",
 ];
 
+function parseNum(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const n = parseFloat(trimmed);
+  return isNaN(n) || n < 0 ? null : Math.round(n * 10) / 10;
+}
+
 export default function LogFluid() {
   const { addMealLog, userProfile, dailyLogs } = useUser();
   const [fluidType, setFluidType] = useState<string>("");
   const [amount, setAmount] = useState("");
   const [customType, setCustomType] = useState("");
   const [notes, setNotes] = useState("");
-
-  const handleSave = async () => {
-    if (!fluidType) {
-      Alert.alert("Required", "Please select a fluid type.");
-      return;
-    }
-
-    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      Alert.alert("Required", "Please enter a valid amount in ounces.");
-      return;
-    }
-
-    const fluidName = fluidType === "Other" && customType.trim() 
-      ? customType.trim() 
-      : fluidType;
-
-    const ounces = parseFloat(amount);
-    
-    const fluidLog: MealLog = {
-      id: Date.now().toString(),
-      name: `${fluidName} (${ounces}oz)`,
-      protein: fluidType === "Protein Shake" ? Math.round(ounces * 1.5) : 0,
-      calories: getCaloriesForFluid(fluidType, ounces),
-      carbs: fluidType === "Protein Shake" ? Math.round(ounces * 0.5) : 0,
-      mealType: "Snack",
-      timestamp: new Date(),
-    };
-
-    await addMealLog(fluidLog);
-    
-    setFluidType("");
-    setAmount("");
-    setCustomType("");
-    setNotes("");
-    Alert.alert("Success", "Fluid logged successfully!");
-  };
+  const [proteinInput, setProteinInput] = useState("");
+  const [caloriesInput, setCaloriesInput] = useState("");
+  const [carbsInput, setCarbsInput] = useState("");
+  const [fatInput, setFatInput] = useState("");
+  const [sugarInput, setSugarInput] = useState("");
 
   const getCaloriesForFluid = (type: string, ounces: number): number => {
     const caloriesPerOz: { [key: string]: number } = {
@@ -81,13 +56,118 @@ export default function LogFluid() {
       "Electrolyte Drink": 8,
       "Other": 5,
     };
-    
     return Math.round((caloriesPerOz[type] || 5) * ounces);
+  };
+
+  const getProteinForFluid = (type: string, ounces: number): number => {
+    const proteinPerOz: { [key: string]: number } = {
+      "Protein Shake": 1.5,
+      "Skim Milk": 0.35,
+      "Other": 0,
+    };
+    return Math.round((proteinPerOz[type] ?? 0) * ounces);
+  };
+
+  const getCarbsForFluid = (type: string, ounces: number): number => {
+    const carbsPerOz: { [key: string]: number } = {
+      "Protein Shake": 0.5,
+      "Skim Milk": 0.45,
+      "Sugar-Free Jell-O": 0.25,
+      "Electrolyte Drink": 0.5,
+      "Other": 0,
+    };
+    return Math.round((carbsPerOz[type] ?? 0) * ounces * 10) / 10;
+  };
+
+  const getFatForFluid = (type: string, ounces: number): number => {
+    const fatPerOz: { [key: string]: number } = {
+      "Skim Milk": 0.04,
+      "Protein Shake": 0.1,
+      "Other": 0,
+    };
+    return Math.round((fatPerOz[type] ?? 0) * ounces * 10) / 10;
+  };
+
+  const getSugarForFluid = (type: string, ounces: number): number => {
+    const sugarPerOz: { [key: string]: number } = {
+      "Skim Milk": 0.5,
+      "Electrolyte Drink": 0.3,
+      "Protein Shake": 0.2,
+      "Other": 0,
+    };
+    return Math.round((sugarPerOz[type] ?? 0) * ounces * 10) / 10;
+  };
+
+  const handleSave = async () => {
+    if (!fluidType) {
+      Alert.alert("Required", "Please select a fluid type.");
+      return;
+    }
+
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      Alert.alert("Required", "Please enter a valid amount in ounces.");
+      return;
+    }
+
+    const fluidName = fluidType === "Other" && customType.trim()
+      ? customType.trim()
+      : fluidType;
+
+    const ounces = parseFloat(amount);
+
+    const protein = parseNum(proteinInput) ?? getProteinForFluid(fluidType, ounces);
+    const calories = parseNum(caloriesInput) ?? getCaloriesForFluid(fluidType, ounces);
+    const carbs = parseNum(carbsInput) ?? getCarbsForFluid(fluidType, ounces);
+    const fat = parseNum(fatInput) ?? getFatForFluid(fluidType, ounces);
+    const sugar = parseNum(sugarInput) ?? getSugarForFluid(fluidType, ounces);
+
+    const fluidLog: MealLog = {
+      id: Date.now().toString(),
+      name: `${fluidName} (${ounces}oz)`,
+      protein,
+      calories,
+      carbs,
+      fat,
+      sugar,
+      mealType: "Snack",
+      timestamp: new Date(),
+    };
+
+    await addMealLog(fluidLog);
+
+    setFluidType("");
+    setAmount("");
+    setCustomType("");
+    setNotes("");
+    setProteinInput("");
+    setCaloriesInput("");
+    setCarbsInput("");
+    setFatInput("");
+    setSugarInput("");
+    Alert.alert("Success", "Fluid logged successfully!");
   };
 
   const getDaysPostOp = () => {
     if (!userProfile?.surgeryDate) return 14;
-    const surgery = new Date(userProfile.surgeryDate);
+    if (userProfile?.isPreOp === true) return 999; // Pre-Op: return large number so warning doesn't show
+    
+    let surgery: Date;
+    if (userProfile.surgeryDate.includes("/")) {
+      const parts = userProfile.surgeryDate.split("/");
+      if (parts.length === 3) {
+        const month = parseInt(parts[0]) - 1;
+        const day = parseInt(parts[1]);
+        const year = parseInt(parts[2]);
+        surgery = new Date(year, month, day);
+      } else {
+        return 14;
+      }
+    } else {
+      surgery = new Date(userProfile.surgeryDate);
+    }
+    
+    if (isNaN(surgery.getTime())) return 14;
+    
     const today = new Date();
     const diff = Math.floor(
       (today.getTime() - surgery.getTime()) / (1000 * 60 * 60 * 24)
@@ -157,7 +237,7 @@ export default function LogFluid() {
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Today's Total</Text>
+              <Text style={styles.summaryLabel}>Today’s Total</Text>
               <Text style={styles.summaryValue}>{todayFluids.toFixed(1)} oz</Text>
             </View>
             <View style={styles.summaryDivider} />
@@ -244,6 +324,67 @@ export default function LogFluid() {
                 <Text style={styles.quickAmountText}>{oz} oz</Text>
               </Pressable>
             ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Nutrition (optional)</Text>
+          <Text style={styles.sectionHint}>
+            Add protein, calories, fat, sugar to count toward daily totals. Leave blank to use estimates.
+          </Text>
+          <View style={styles.nutritionRow}>
+            <View style={styles.nutritionField}>
+              <Text style={styles.nutritionFieldLabel}>Protein (g)</Text>
+              <TextInput
+                style={styles.nutritionInput}
+                placeholder="Auto"
+                value={proteinInput}
+                onChangeText={setProteinInput}
+                keyboardType="decimal-pad"
+              />
+            </View>
+            <View style={styles.nutritionField}>
+              <Text style={styles.nutritionFieldLabel}>Calories</Text>
+              <TextInput
+                style={styles.nutritionInput}
+                placeholder="Auto"
+                value={caloriesInput}
+                onChangeText={setCaloriesInput}
+                keyboardType="decimal-pad"
+              />
+            </View>
+          </View>
+          <View style={styles.nutritionRow}>
+            <View style={styles.nutritionField}>
+              <Text style={styles.nutritionFieldLabel}>Carbs (g)</Text>
+              <TextInput
+                style={styles.nutritionInput}
+                placeholder="Auto"
+                value={carbsInput}
+                onChangeText={setCarbsInput}
+                keyboardType="decimal-pad"
+              />
+            </View>
+            <View style={styles.nutritionField}>
+              <Text style={styles.nutritionFieldLabel}>Fat (g)</Text>
+              <TextInput
+                style={styles.nutritionInput}
+                placeholder="Auto"
+                value={fatInput}
+                onChangeText={setFatInput}
+                keyboardType="decimal-pad"
+              />
+            </View>
+            <View style={styles.nutritionField}>
+              <Text style={styles.nutritionFieldLabel}>Sugar (g)</Text>
+              <TextInput
+                style={styles.nutritionInput}
+                placeholder="Auto"
+                value={sugarInput}
+                onChangeText={setSugarInput}
+                keyboardType="decimal-pad"
+              />
+            </View>
           </View>
         </View>
 
@@ -433,6 +574,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#FF7A2F",
     fontWeight: "600",
+  },
+
+  /* nutrition optional */
+  nutritionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginBottom: 12,
+  },
+  nutritionField: {
+    flex: 1,
+    minWidth: "30%",
+  },
+  nutritionFieldLabel: {
+    fontSize: 12,
+    color: "#7A9C8A",
+    marginBottom: 4,
+    fontWeight: "500",
+  },
+  nutritionInput: {
+    borderWidth: 1,
+    borderColor: "#D6C89A",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    backgroundColor: "#FFFDF4",
+    color: "#004734",
   },
 
   /* inputs */

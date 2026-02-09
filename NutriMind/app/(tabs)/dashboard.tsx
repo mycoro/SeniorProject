@@ -1,22 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, SafeAreaView } from "react-native";
 import { Camera, Droplets, Pill } from "lucide-react-native";
-import { useUser } from "@/context/UserContext";
+import { useUser, MealLog } from "@/context/UserContext";
 import { router } from "expo-router";
 import ProgressRing from "@/components/ProgressRing";
+import EditLogModal from "@/components/EditLogModal";
 
 export default function Dashboard() {
   const { userProfile, dailyLogs } = useUser();
+  const [editLog, setEditLog] = useState<MealLog | null>(null);
 
   const recentActivity = dailyLogs.slice(0, 3).map((log) => ({
-    name: log.name,
-    calories: log.calories,
+    ...log,
     time: log.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    protein: log.protein,
+    mealType: log.mealType ?? "Meal",
   }));
 
+  const isPreOp = userProfile?.isPreOp === true;
+
   const getDaysPostOp = () => {
-    if (!userProfile?.surgeryDate) return 0;
+    if (!userProfile?.surgeryDate) return null;
+    if (isPreOp) return null; // Pre-Op: don't calculate days post-op
     
     let surgeryDate: Date;
     
@@ -28,14 +32,14 @@ export default function Dashboard() {
         const year = parseInt(parts[2]);
         surgeryDate = new Date(year, month, day);
       } else {
-        return 0;
+        return null;
       }
     } else {
       surgeryDate = new Date(userProfile.surgeryDate);
     }
     
     if (isNaN(surgeryDate.getTime())) {
-      return 0;
+      return null;
     }
     
     const today = new Date();
@@ -49,12 +53,18 @@ export default function Dashboard() {
   };
 
   const daysPostOp = getDaysPostOp();
-  const userName = userProfile?.name || "Guest";
+  const userName = userProfile?.name || "there";
   const proteinGoal = userProfile?.proteinGoal || undefined;
   const fluidGoal = userProfile?.fluidGoal || undefined;
   const calorieGoal = userProfile?.calorieGoal || undefined;
 
   const getPhase = () => {
+    if (isPreOp) {
+      return { number: "-", name: "Pre-Op" };
+    }
+    if (daysPostOp === null) {
+      return { number: "-", name: "Phase not set" };
+    }
     if (daysPostOp <= 14) return { number: 1, name: "Full Liquids" };
     if (daysPostOp <= 28) return { number: 2, name: "Pureed Foods" };
     if (daysPostOp <= 42) return { number: 3, name: "Soft Foods" };
@@ -62,11 +72,19 @@ export default function Dashboard() {
   };
 
   const phase = getPhase();
-  const displayDays = isNaN(daysPostOp) ? 0 : daysPostOp;
+  const displayDays =
+    typeof daysPostOp === "number" && !isNaN(daysPostOp) ? daysPostOp : 0;
+  const subtitleText = isPreOp
+    ? "Pre-Op"
+    : daysPostOp === null
+    ? "Pre-Op"
+    : `Day ${displayDays} Post-Op`;
 
   const totalProtein = dailyLogs.reduce((sum, log) => sum + log.protein, 0);
   const totalCalories = dailyLogs.reduce((sum, log) => sum + log.calories, 0);
-  
+  const totalFat = dailyLogs.reduce((sum, log) => sum + (log.fat ?? 0), 0);
+  const totalSugar = dailyLogs.reduce((sum, log) => sum + (log.sugar ?? 0), 0);
+
   const getFluidAmountFromLog = (log: any) => {
     const match = log.name.match(/\((\d+(?:\.\d+)?)oz\)/i);
     if (match) {
@@ -105,7 +123,7 @@ export default function Dashboard() {
       >
       <View style={styles.header}>
         <Text style={styles.greeting}>Hi {userName}!</Text>
-        <Text style={styles.subtitle}>Day {displayDays} Post-Op</Text>
+        <Text style={styles.subtitle}>{subtitleText}</Text>
       </View>
 
       <View style={styles.phaseBanner}>
@@ -139,6 +157,15 @@ export default function Dashboard() {
             color="#009235"
           />
         </View>
+        {(totalFat > 0 || totalSugar > 0) && (
+          <View style={styles.extraNutrients}>
+            <Text style={styles.extraNutrientsText}>
+              Also today: {totalFat > 0 && `${totalFat.toFixed(0)}g fat`}
+              {totalFat > 0 && totalSugar > 0 && " · "}
+              {totalSugar > 0 && `${totalSugar.toFixed(0)}g sugar`}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -178,12 +205,13 @@ export default function Dashboard() {
             </View>
           ) : (
             recentActivity.map((item, index) => (
-            <View
-              key={index}
+            <Pressable
+              key={item.id}
               style={[
                 styles.mealItem,
                 index < recentActivity.length - 1 && styles.mealDivider,
               ]}
+              onPress={() => setEditLog(item)}
             >
               <View style={styles.mealLeft}>
                 <View style={styles.proteinBadge}>
@@ -191,15 +219,22 @@ export default function Dashboard() {
                 </View>
                 <View>
                   <Text style={styles.mealName}>{item.name}</Text>
-                  <Text style={styles.mealTime}>Logged at {item.time}</Text>
+                  <Text style={styles.mealTime}>{item.mealType} · {item.time}</Text>
                 </View>
               </View>
               <Text style={styles.mealCalories}>{item.calories} kcal</Text>
-            </View>
+            </Pressable>
             ))
           )}
         </View>
       </View>
+
+      <EditLogModal
+        visible={!!editLog}
+        log={editLog}
+        onClose={() => setEditLog(null)}
+        onSaved={() => {}}
+      />
       </ScrollView>
     </SafeAreaView>
   );
@@ -265,6 +300,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
+  },
+  extraNutrients: {
+    marginTop: 12,
+    alignItems: "center",
+  },
+  extraNutrientsText: {
+    fontSize: 13,
+    color: "#3F5E52",
+    fontWeight: "500",
   },
 
   /* sections */

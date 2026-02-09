@@ -10,56 +10,77 @@ import {
 import { ChevronLeft, ChevronRight, Filter, Clock } from "lucide-react-native";
 import { useUser, MealLog } from "@/context/UserContext";
 import ProgressRing from "@/components/ProgressRing";
+import EditLogModal from "@/components/EditLogModal";
+
+const sameCalendarDay = (logTimestamp: Date, year: number, month: number, day: number) =>
+  logTimestamp.getFullYear() === year &&
+  logTimestamp.getMonth() === month &&
+  logTimestamp.getDate() === day;
+
+const getFluidOzFromLog = (log: MealLog): number => {
+  const match = log.name.match(/\((\d+(?:\.\d+)?)\s*oz\)/i);
+  if (match) return parseFloat(match[1]);
+  return 0;
+};
 
 const getDayData = (logs: MealLog[], date: Date) => {
-  const compareDate = new Date(date);
-  compareDate.setHours(0, 0, 0, 0);
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  const d = date.getDate();
 
   const dayLogs = logs.filter((log) => {
     const logTimestamp = log.timestamp instanceof Date ? log.timestamp : new Date(log.timestamp);
-    if (isNaN(logTimestamp.getTime())) return false;
-    
-    const logDate = new Date(logTimestamp);
-    logDate.setHours(0, 0, 0, 0);
-    
-    return logDate.getTime() === compareDate.getTime();
+    return !isNaN(logTimestamp.getTime()) && sameCalendarDay(logTimestamp, y, m, d);
   });
+
+  const fluidsOz = dayLogs
+    .filter((log) => isFluidLog(log.name))
+    .reduce((sum, log) => sum + getFluidOzFromLog(log), 0);
 
   return {
     protein: dayLogs.reduce((sum, log) => sum + log.protein, 0),
-    water: dayLogs
-      .filter((log) => log.name.toLowerCase().includes("water") || log.name.toLowerCase().includes("fluid"))
-      .reduce((sum, log) => sum + (log.calories / 8), 0),
+    water: fluidsOz,
     calories: dayLogs.reduce((sum, log) => sum + log.calories, 0),
+    fat: dayLogs.reduce((sum, log) => sum + (log.fat ?? 0), 0),
+    sugar: dayLogs.reduce((sum, log) => sum + (log.sugar ?? 0), 0),
   };
 };
 
+const isFluidLog = (name: string) => {
+  const n = name.toLowerCase();
+  return (
+    /\(\d+(\.\d+)?\s*oz\)/i.test(name) ||
+    n.includes("water") ||
+    n.includes("fluid") ||
+    n.includes("shake") ||
+    n.includes("broth") ||
+    n.includes("milk") ||
+    n.includes("tea") ||
+    n.includes("coffee") ||
+    n.includes("drink")
+  );
+};
+
 const getMealLogsForDate = (logs: MealLog[], date: Date) => {
-  const dayStart = new Date(date);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(date);
-  dayEnd.setHours(23, 59, 59, 999);
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  const d = date.getDate();
 
   return logs
     .filter((log) => {
       const logTimestamp = log.timestamp instanceof Date ? log.timestamp : new Date(log.timestamp);
-      if (isNaN(logTimestamp.getTime())) return false;
-      
-      const logDate = new Date(logTimestamp);
-      logDate.setHours(0, 0, 0, 0);
-      const compareDate = new Date(date);
-      compareDate.setHours(0, 0, 0, 0);
-      
-      return logDate.getTime() === compareDate.getTime();
+      return !isNaN(logTimestamp.getTime()) && sameCalendarDay(logTimestamp, y, m, d);
     })
     .map((log) => {
       const logTimestamp = log.timestamp instanceof Date ? log.timestamp : new Date(log.timestamp);
+      const displayType = isFluidLog(log.name) ? "Fluid" : (log.mealType ?? "Meal");
       return {
+        id: log.id,
         name: log.name,
         protein: log.protein,
         calories: log.calories,
         time: logTimestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        type: log.mealType,
+        type: displayType,
       };
     })
     .sort((a, b) => {
@@ -70,10 +91,16 @@ const getMealLogsForDate = (logs: MealLog[], date: Date) => {
 };
 
 export default function History() {
-  const { dailyLogs, loading } = useUser();
+  const { userProfile, dailyLogs, loading } = useUser();
+  const proteinGoal = userProfile?.proteinGoal ?? undefined;
+  const fluidGoal = userProfile?.fluidGoal ?? undefined;
+  const calorieGoal = userProfile?.calorieGoal ?? undefined;
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
+  const [editLog, setEditLog] = useState<MealLog | null>(null);
+  const [expandedListDate, setExpandedListDate] = useState<string | null>(null);
 
   useEffect(() => {
     const today = new Date();
@@ -243,9 +270,9 @@ export default function History() {
                   day
                 );
                 const dayData = getDayData(dailyLogs, dayDate);
-                const proteinPercent = (dayData.protein / 60) * 100;
-                const waterPercent = (dayData.water / 64) * 100;
-                const caloriesPercent = (dayData.calories / 800) * 100;
+                const proteinPercent = proteinGoal && proteinGoal > 0 ? (dayData.protein / proteinGoal) * 100 : 0;
+                const waterPercent = fluidGoal && fluidGoal > 0 ? (dayData.water / fluidGoal) * 100 : 0;
+                const caloriesPercent = calorieGoal && calorieGoal > 0 ? (dayData.calories / calorieGoal) * 100 : 0;
 
                 return (
                   <Pressable
@@ -334,7 +361,7 @@ export default function History() {
               <ProgressRing
                 label="Protein"
                 current={selectedDayData.protein}
-                target={60}
+                target={proteinGoal ?? undefined}
                 unit="g"
                 color="#008080"
                 size={60}
@@ -342,7 +369,7 @@ export default function History() {
               <ProgressRing
                 label="Fluids"
                 current={selectedDayData.water}
-                target={64}
+                target={fluidGoal ?? undefined}
                 unit="oz"
                 color="#3b82f6"
                 size={60}
@@ -350,7 +377,7 @@ export default function History() {
               <ProgressRing
                 label="Calories"
                 current={selectedDayData.calories}
-                target={800}
+                target={calorieGoal ?? undefined}
                 unit=""
                 color="#f97316"
                 size={60}
@@ -358,16 +385,16 @@ export default function History() {
             </View>
 
             <View style={styles.mealsSection}>
-              <Text style={styles.mealsTitle}>Meals Logged</Text>
+              <Text style={styles.mealsTitle}>Meals & fluids</Text>
               {loading ? (
                 <View style={styles.emptyMeals}>
-                  <Text style={styles.emptyMealsText}>Loading meals...</Text>
+                  <Text style={styles.emptyMealsText}>Loading...</Text>
                 </View>
               ) : (
                 <View style={styles.mealsList}>
                   {selectedMeals.length === 0 ? (
                     <View style={styles.emptyMeals}>
-                      <Text style={styles.emptyMealsText}>No meals logged for this day</Text>
+                      <Text style={styles.emptyMealsText}>No meals or fluids logged for this day</Text>
                       {dailyLogs.length > 0 && (
                         <Text style={[styles.emptyMealsText, { fontSize: 12, marginTop: 4 }]}>
                           ({dailyLogs.length} total meals in database)
@@ -375,25 +402,32 @@ export default function History() {
                       )}
                     </View>
                   ) : (
-                    selectedMeals.map((meal, index) => (
-                      <View key={index} style={styles.mealItem}>
-                      <View style={styles.mealLeft}>
-                        <Clock size={16} color="#94a3b8" />
-                        <View>
-                          <Text style={styles.mealName}>{meal.name}</Text>
-                          <Text style={styles.mealDetails}>
-                            {meal.type} at {meal.time}
-                          </Text>
-                        </View>
-                      </View>
-                      <View style={styles.mealRight}>
-                        <Text style={styles.mealProtein}>{meal.protein}g</Text>
-                        <Text style={styles.mealCalories}>
-                          {meal.calories} kcal
-                        </Text>
-                      </View>
-                    </View>
-                    ))
+                    selectedMeals.map((meal, index) => {
+                      const fullLog = dailyLogs.find((l) => l.id === meal.id);
+                      return (
+                        <Pressable
+                          key={meal.id ?? index}
+                          style={styles.mealItem}
+                          onPress={() => fullLog && setEditLog(fullLog)}
+                        >
+                          <View style={styles.mealLeft}>
+                            <Clock size={16} color="#94a3b8" />
+                            <View>
+                              <Text style={styles.mealName}>{meal.name}</Text>
+                              <Text style={styles.mealDetails}>
+                                {meal.type} at {meal.time}
+                              </Text>
+                            </View>
+                          </View>
+                          <View style={styles.mealRight}>
+                            <Text style={styles.mealProtein}>{meal.protein}g</Text>
+                            <Text style={styles.mealCalories}>
+                              {meal.calories} kcal
+                            </Text>
+                          </View>
+                        </Pressable>
+                      );
+                    })
                   )}
                 </View>
               )}
@@ -405,8 +439,12 @@ export default function History() {
           {Array.from({ length: 7 }).map((_, index) => {
             const date = new Date();
             date.setDate(date.getDate() - index);
+            const dateKey = date.toISOString().slice(0, 10);
             const meals = getMealLogsForDate(dailyLogs, date);
             const dayData = getDayData(dailyLogs, date);
+            const isExpanded = expandedListDate === dateKey;
+            const visibleMeals = isExpanded ? meals : meals.slice(0, 3);
+            const hasMore = meals.length > 3;
 
             return (
               <View key={index} style={styles.listCard}>
@@ -430,7 +468,7 @@ export default function History() {
                   <ProgressRing
                     label=""
                     current={dayData.protein}
-                    target={60}
+                    target={proteinGoal ?? undefined}
                     unit=""
                     color="#008080"
                     size={36}
@@ -438,19 +476,36 @@ export default function History() {
                 </View>
                 <View style={styles.listMeals}>
                   {meals.length === 0 ? (
-                    <Text style={styles.listEmptyMeals}>No meals logged</Text>
+                    <Text style={styles.listEmptyMeals}>No meals or fluids logged</Text>
                   ) : (
                     <>
-                      {meals.slice(0, 3).map((meal, mealIndex) => (
-                        <View key={mealIndex} style={styles.listMealItem}>
-                          <Text style={styles.listMealName}>{meal.name}</Text>
-                          <Text style={styles.listMealProtein}>{meal.protein}g</Text>
-                        </View>
-                      ))}
-                      {meals.length > 3 && (
-                        <Text style={styles.listMoreMeals}>
-                          +{meals.length - 3} more meals
-                        </Text>
+                      {visibleMeals.map((meal, mealIndex) => {
+                        const fullLog = dailyLogs.find((l) => l.id === meal.id);
+                        return (
+                          <Pressable
+                            key={meal.id ?? mealIndex}
+                            style={styles.listMealItem}
+                            onPress={() => fullLog && setEditLog(fullLog)}
+                          >
+                            <View>
+                              <Text style={styles.listMealName}>{meal.name}</Text>
+                              <Text style={styles.listMealType}>{meal.type ?? "Meal"} · {meal.protein}g</Text>
+                            </View>
+                            <Text style={styles.listMealProtein}>{meal.calories} kcal</Text>
+                          </Pressable>
+                        );
+                      })}
+                      {hasMore && (
+                        <Pressable
+                          style={styles.listMoreMealsTouchable}
+                          onPress={() => setExpandedListDate(isExpanded ? null : dateKey)}
+                        >
+                          <Text style={styles.listMoreMeals}>
+                            {isExpanded
+                              ? "Show less"
+                              : `+${meals.length - 3} more meals`}
+                          </Text>
+                        </Pressable>
                       )}
                     </>
                   )}
@@ -460,6 +515,13 @@ export default function History() {
           })}
         </View>
       )}
+
+      <EditLogModal
+        visible={!!editLog}
+        log={editLog}
+        onClose={() => setEditLog(null)}
+        onSaved={() => {}}
+      />
       </ScrollView>
     </SafeAreaView>
   );
@@ -713,15 +775,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#004734",
   },
+  listMealType: {
+    fontSize: 12,
+    color: "#64748b",
+    marginTop: 2,
+  },
   listMealProtein: {
     fontSize: 14,
     color: "#009235",
     fontWeight: "600",
   },
+  listMoreMealsTouchable: {
+    marginTop: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    alignSelf: "flex-start",
+  },
   listMoreMeals: {
     fontSize: 12,
     color: "#FF7A2F",
-    marginTop: 4,
     fontWeight: "700",
   },
 

@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { Send, AlertTriangle, Bot } from "lucide-react-native";
 import { useUser } from "@/context/UserContext";
@@ -21,16 +22,20 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: string;
+  imageUrl?: string;
+  imageUrls?: string[];
 }
 
 export default function Chat() {
-  const { userProfile } = useUser();
+  const { userProfile, dailyLogs } = useUser();
   const user = auth.currentUser;
   const userName = userProfile?.name || "there";
   const hasDumpingSyndrome = userProfile?.hasDumpingSyndrome || false;
+  const isPreOp = userProfile?.isPreOp === true;
 
   const getDaysPostOp = () => {
-    if (!userProfile?.surgeryDate) return 0;
+    if (!userProfile?.surgeryDate) return null;
+    if (userProfile?.isPreOp === true) return null; // Pre-Op: don't calculate days post-op
     
     let surgeryDate: Date;
     
@@ -42,14 +47,14 @@ export default function Chat() {
         const year = parseInt(parts[2]);
         surgeryDate = new Date(year, month, day);
       } else {
-        return 0;
+        return null;
       }
     } else {
       surgeryDate = new Date(userProfile.surgeryDate);
     }
     
     if (isNaN(surgeryDate.getTime())) {
-      return 0;
+      return null;
     }
     
     const today = new Date();
@@ -66,8 +71,12 @@ export default function Chat() {
     if (!userProfile?.surgeryDate) {
       return "Hi! I'm here to help you with your nutrition journey. Once you complete your profile setup, I can provide personalized guidance based on your recovery phase.";
     }
+    const isPreOp = userProfile?.isPreOp === true;
+    if (isPreOp) {
+      return `Hi ${userName}! You're preparing for surgery—I have your surgery date and profile. Ask me anything about pre-op diet, what to expect, or nutrition. How can I help you today?`;
+    }
     const daysPostOp = getDaysPostOp();
-    if (daysPostOp === 0) {
+    if (daysPostOp === null || daysPostOp === 0) {
       return `Hi ${userName}! Welcome to your nutrition journey. How can I help you today?`;
     }
     if (daysPostOp < 15) {
@@ -94,6 +103,10 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [failedImageKeys, setFailedImageKeys] = useState<Record<string, number[]>>({});
+  
+  const daysPostOp = getDaysPostOp();
+  const showPhase1Warning = !isPreOp && daysPostOp !== null && daysPostOp < 15;
 
   useEffect(() => {
     if (scrollViewRef.current) {
@@ -130,8 +143,37 @@ export default function Chat() {
         throw new Error("You must be logged in to use the chat.");
       }
 
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+      const todayLogs = dailyLogs.filter((log) => {
+        const t = log.timestamp instanceof Date ? log.timestamp : new Date(log.timestamp);
+        return t >= todayStart && t <= todayEnd;
+      });
+      const proteinToday = todayLogs.reduce((s, l) => s + (l.protein ?? 0), 0);
+      const caloriesToday = todayLogs.reduce((s, l) => s + (l.calories ?? 0), 0);
+      const getFluidOz = (log: { name: string }) => {
+        const m = log.name.match(/\((\d+(?:\.\d+)?)oz\)/i);
+        return m ? parseFloat(m[1]) : 0;
+      };
+      const fluidsToday = Math.round(
+        todayLogs
+          .filter((l) => /water|shake|broth|milk|tea|coffee|jell-o|fluid|drink|\(\d+oz\)/i.test(l.name))
+          .reduce((s, l) => s + getFluidOz(l), 0) * 10
+      ) / 10;
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const timeoutMs = 90000; // 90s — backend + OpenAI can be slow
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      const recentMessages = messages
+        .filter((m) => m.id !== "1")
+        .slice(-8)
+        .map((m) => ({
+          role: m.isUser ? ("user" as const) : ("assistant" as const),
+          content: m.text,
+        }));
 
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
@@ -141,12 +183,27 @@ export default function Chat() {
         body: JSON.stringify({
           userId: user.uid,
           userMessage: userInput,
+          conversationHistory: recentMessages,
           userProfile: {
             name: userProfile.name,
+            dateOfBirth: userProfile.dateOfBirth,
             surgeryDate: userProfile.surgeryDate,
             surgeryType: userProfile.surgeryType,
+            isPreOp: userProfile.isPreOp ?? false,
             hasDumpingSyndrome: userProfile.hasDumpingSyndrome,
+            hasDiabetes: userProfile.hasDiabetes,
             intolerances: userProfile.intolerances || [],
+            proteinGoal: userProfile.proteinGoal,
+            fluidGoal: userProfile.fluidGoal,
+            calorieGoal: userProfile.calorieGoal,
+            tastePreferences: userProfile.tastePreferences,
+            dislikedFoods: userProfile.dislikedFoods,
+            favoriteCuisines: userProfile.favoriteCuisines || [],
+          },
+          activitySummary: {
+            proteinToday,
+            caloriesToday,
+            fluidsToday,
           },
         }),
         signal: controller.signal,
@@ -160,26 +217,33 @@ export default function Chat() {
         throw new Error(result.error);
       }
 
+      const urls = Array.isArray(result.image_urls) && result.image_urls.length > 0
+        ? result.image_urls
+        : result.image_url ? [result.image_url] : [];
+      const responseText = (result.response && String(result.response).trim()) || "";
+      const hasImages = Array.isArray(result.image_urls) && result.image_urls.length > 0 || !!result.image_url;
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: result.response || "I apologize, but I couldn't generate a response.",
+        text: responseText || (hasImages ? "Here are some ideas for you." : "I couldn't generate a response. Please try again."),
         isUser: false,
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
+        imageUrl: urls[0],
+        imageUrls: urls.length > 0 ? urls : undefined,
       };
       setMessages((prev) => [...prev, aiResponse]);
     } catch (error: any) {
       console.error("Chat API error:", error);
       let errorText = "Failed to get response. Please check your connection and try again.";
-      
-      if (error.name === "AbortError") {
+      const msg = error?.message ?? "";
+      if (error?.name === "AbortError" || msg.includes("timed out") || msg.includes("Network request timed out")) {
         errorText = "Request timed out. Please check your connection and try again.";
-      } else if (error.message && error.message.includes("Network")) {
-        errorText = `Cannot connect to server. Please check your network connection.`;
-      } else if (error.message) {
-        errorText = error.message;
+      } else if (msg.includes("Network") || msg.includes("fetch")) {
+        errorText = "Cannot connect to server. Please check your network connection.";
+      } else if (msg) {
+        errorText = msg;
       }
       
       const errorMsg: Message = {
@@ -218,17 +282,19 @@ export default function Chat() {
         </View>
       </View>
 
-      <View style={styles.alertBanner}>
-        <AlertTriangle size={20} color="#d97706" />
-        <View style={styles.alertContent}>
-          <Text style={styles.alertTitle}>Safety Alert</Text>
-          <Text style={styles.alertText}>
-            {hasDumpingSyndrome
-              ? "Avoid high-sugar foods to prevent Dumping Syndrome symptoms"
-              : "No Straws in Phase 1 - sip directly from cups"}
-          </Text>
+      {(hasDumpingSyndrome || showPhase1Warning) && (
+        <View style={styles.alertBanner}>
+          <AlertTriangle size={20} color="#d97706" />
+          <View style={styles.alertContent}>
+            <Text style={styles.alertTitle}>Safety Alert</Text>
+            <Text style={styles.alertText}>
+              {hasDumpingSyndrome
+                ? "Avoid high-sugar foods to prevent Dumping Syndrome symptoms"
+                : "No Straws in Phase 1 - sip directly from cups"}
+            </Text>
+          </View>
         </View>
-      </View>
+      )}
 
       <ScrollView
         ref={scrollViewRef}
@@ -249,14 +315,65 @@ export default function Chat() {
                 message.isUser ? styles.messageBubbleUser : styles.messageBubbleAI,
               ]}
             >
-              <Text
-                style={[
-                  styles.messageText,
-                  message.isUser ? styles.messageTextUser : styles.messageTextAI,
-                ]}
-              >
-                {message.text}
-              </Text>
+              <View style={styles.messageTextBlock}>
+                <Text
+                  style={[
+                    styles.messageText,
+                    message.isUser ? styles.messageTextUser : styles.messageTextAI,
+                  ]}
+                >
+                  {message.isUser
+                    ? message.text
+                    : (() => {
+                        let raw = message.text
+                          .replace(/https?:\/\/[^\s)]+/gi, "")
+                          .replace(/!\[[^\]]*\]\s*\([^)]*\)/g, "")
+                          .replace(/\s{2,}/g, " ")
+                          .trim();
+                        if (raw) return raw;
+                        if ((message.imageUrls?.length ?? 0) > 0) return "Here are some ideas for you.";
+                        return "I couldn't generate a response. Please try again.";
+                      })()}
+                </Text>
+              </View>
+              {!message.isUser && (message.imageUrls?.length ?? 0) > 0 && (() => {
+                const urls = message.imageUrls ?? [];
+                const failed = failedImageKeys[message.id] ?? [];
+                const visibleUrls = urls.map((uri, idx) => ({ uri, idx })).filter(({ idx }) => !failed.includes(idx));
+                if (visibleUrls.length === 0) return (
+                  <View style={styles.messageImageRowWrap}>
+                    <Text style={styles.messageImageUnavailable}>Image unavailable</Text>
+                  </View>
+                );
+                return (
+                  <View style={styles.messageImageRowWrap}>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      style={styles.messageImageRow}
+                      contentContainerStyle={styles.messageImageRowContent}
+                    >
+                      {visibleUrls.map(({ uri, idx }) => {
+                        const proxyUri = `${API_BASE_URL}/api/image-proxy?url=${encodeURIComponent(uri)}`;
+                        return (
+                          <Image
+                            key={idx}
+                            source={{ uri: proxyUri }}
+                            style={styles.messageImageThumb}
+                            resizeMode="cover"
+                            onError={() => {
+                              setFailedImageKeys((prev) => ({
+                                ...prev,
+                                [message.id]: [...(prev[message.id] ?? []), idx],
+                              }));
+                            }}
+                          />
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+                );
+              })()}
               <Text
                 style={[
                   styles.messageTime,
@@ -379,6 +496,14 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 16,
     paddingVertical: 10,
+    flexDirection: "column",
+  },
+  messageTextBlock: {
+    flexDirection: "column",
+  },
+  messageImageRowWrap: {
+    marginTop: 10,
+    flexDirection: "row",
   },
   messageBubbleUser: {
     backgroundColor: "#FF7A2F",
@@ -408,7 +533,27 @@ const styles = StyleSheet.create({
   messageTimeAI: {
     color: "#7A9C8A",
   },
-
+  messageImageRow: {
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  messageImageRowContent: {
+    flexDirection: "row",
+    gap: 10,
+    paddingRight: 8,
+  },
+  messageImageThumb: {
+    width: 200,
+    height: 200,
+    borderRadius: 12,
+    backgroundColor: "#e2e8f0",
+  },
+  messageImageUnavailable: {
+    fontSize: 13,
+    color: "#7A9C8A",
+    fontStyle: "italic",
+    marginTop: 8,
+  },
   loadingWrapper: {
     alignItems: "center",
     padding: 8,

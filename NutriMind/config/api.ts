@@ -39,7 +39,3 @@ const getApiBaseUrl = (): string => {
 
 export const API_BASE_URL = getApiBaseUrl();
 
-if (__DEV__) {
-  console.log("API Base URL:", API_BASE_URL);
-}
-
