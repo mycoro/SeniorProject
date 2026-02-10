@@ -30,6 +30,8 @@ export default function LogMeal() {
   const [timerPhase, setTimerPhase] = useState<"chew" | "swallow" | "wait">("chew");
   const [scanResult, setScanResult] = useState<{
     name: string;
+    dishName?: string;
+    ingredients?: string[];
     protein: number;
     calories: number;
     carbs?: number;
@@ -38,6 +40,7 @@ export default function LogMeal() {
   const [calories, setCalories] = useState("");
   const [carbs, setCarbs] = useState("");
   const [foodName, setFoodName] = useState("");
+  const [ingredients, setIngredients] = useState("");
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const phaseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -217,6 +220,8 @@ export default function LogMeal() {
       setIsScanning(false);
       setScanResult({
         name: result.name || "Food Item",
+        dishName: result.dishName,
+        ingredients: Array.isArray(result.ingredients) ? result.ingredients : undefined,
         protein: result.protein || 0,
         calories: result.calories || 0,
         carbs: result.carbs || 0,
@@ -261,9 +266,13 @@ export default function LogMeal() {
       return;
     }
 
+    const fullName = ingredients.trim()
+      ? `${foodName.trim()} (${ingredients.trim()})`
+      : foodName.trim();
+
     await addMealLog({
       id: Date.now().toString(),
-      name: foodName.trim(),
+      name: fullName,
       protein: proteinValue,
       calories: caloriesValue,
       carbs: carbsValue > 0 ? carbsValue : undefined,
@@ -272,6 +281,7 @@ export default function LogMeal() {
     });
 
     setFoodName("");
+    setIngredients("");
     setProtein("");
     setCalories("");
     setCarbs("");
@@ -385,7 +395,14 @@ export default function LogMeal() {
           {scanResult && (
             <View style={styles.scanResult}>
               <Text style={styles.scanResultTitle}>AI Analysis Results</Text>
-              <Text style={styles.scanResultName}>{scanResult.name}</Text>
+              <Text style={styles.scanResultName}>
+                {scanResult.dishName || scanResult.name}
+              </Text>
+              {scanResult.ingredients && scanResult.ingredients.length > 0 && (
+                <Text style={styles.scanResultIngredients}>
+                  {scanResult.ingredients.join(", ")}
+                </Text>
+              )}
               <View style={styles.scanResultRow}>
                 <Text style={styles.scanResultProtein}>
                   {scanResult.protein}g Protein
@@ -401,7 +418,12 @@ export default function LogMeal() {
               </View>
               <Pressable
                 onPress={() => {
-                  setFoodName(scanResult.name);
+                  setFoodName(scanResult.dishName || scanResult.name);
+                  setIngredients(
+                    scanResult.ingredients?.length
+                      ? scanResult.ingredients.join(", ")
+                      : ""
+                  );
                   setProtein(scanResult.protein.toString());
                   setCalories(scanResult.calories.toString());
                   setCarbs(scanResult.carbs?.toString() || "");
@@ -412,6 +434,9 @@ export default function LogMeal() {
               >
                 <Text style={styles.confirmButtonText}>Confirm & Log</Text>
               </Pressable>
+              <Text style={styles.scanDisclaimer}>
+                AI-generated analysis.
+              </Text>
             </View>
           )}
         </View>
@@ -469,6 +494,21 @@ export default function LogMeal() {
               placeholder="e.g., Greek Yogurt"
               value={foodName}
               onChangeText={setFoodName}
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollToEnd({ animated: true });
+                }, 100);
+              }}
+            />
+          </View>
+
+          <View style={styles.foodNameInput}>
+            <Text style={styles.foodNameLabel}>Ingredients (optional)</Text>
+            <TextInput
+              style={styles.foodNameTextInput}
+              placeholder="e.g., Lettuce, Tomato, Pickles"
+              value={ingredients}
+              onChangeText={setIngredients}
               onFocus={() => {
                 setTimeout(() => {
                   scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -741,8 +781,14 @@ const styles = StyleSheet.create({
     color: "#004734",
   },
   scanResultName: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: "600",
     color: "#004734",
+  },
+  scanResultIngredients: {
+    fontSize: 13,
+    color: "#6B8F7A",
+    marginTop: 2,
   },
   scanResultRow: {
     flexDirection: "row",
@@ -772,6 +818,13 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     color: "white",
     fontWeight: "600",
+  },
+  scanDisclaimer: {
+    fontSize: 11,
+    color: "#6B8F7A",
+    marginTop: 10,
+    textAlign: "center",
+    fontStyle: "italic",
   },
 
   manualTitle: {

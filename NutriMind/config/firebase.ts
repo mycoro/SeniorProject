@@ -1,11 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import {
-  getAuth,
-  initializeAuth,
-  getReactNativePersistence,
-} from "firebase/auth";
+import { getAuth, initializeAuth } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 
@@ -25,13 +21,14 @@ let authInstance;
 if (Platform.OS === "web") {
   authInstance = getAuth(app);
 } else {
-  // In React Native, use AsyncStorage so the user stays logged in between app restarts.
   try {
+    const { getReactNativePersistence } = require("firebase/auth") as {
+      getReactNativePersistence: (storage: typeof AsyncStorage) => import("firebase/auth").Persistence;
+    };
     authInstance = initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage),
     });
   } catch (error) {
-    // If Auth was already initialized, fall back to the existing instance.
     authInstance = getAuth(app);
   }
 }
