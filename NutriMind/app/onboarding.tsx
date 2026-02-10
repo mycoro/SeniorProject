@@ -27,7 +27,7 @@ import { setUserProfile as saveUserProfile } from "@/config/users";
 
 const surgeryTypes = ["Gastric Sleeve", "Gastric Bypass", "Duodenal Switch"];
 const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
-const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian"];
+const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian", "Other"];
 const defaultTastePreferences = { sweet: 3, spicy: 3, savory: 3, bitter: 3, sour: 3 };
 
 export default function Onboarding() {
@@ -35,6 +35,8 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
+  const [showOtherCuisineInput, setShowOtherCuisineInput] = useState(false);
+  const [otherCuisineText, setOtherCuisineText] = useState("");
 
   const formatDateUS = (date: Date | string) => {
     if (!date) return "";
@@ -99,6 +101,7 @@ export default function Onboarding() {
         tastePreferences: existingProfile.tastePreferences ?? defaultTastePreferences,
         dislikedFoods: existingProfile.dislikedFoods ?? "",
         favoriteCuisines: existingProfile.favoriteCuisines ?? [],
+        allergies: existingProfile.allergies ?? [],
       };
     }
     return {
@@ -113,6 +116,7 @@ export default function Onboarding() {
       tastePreferences: defaultTastePreferences,
       dislikedFoods: "",
       favoriteCuisines: [],
+      allergies: [],
     };
   };
 
@@ -150,6 +154,7 @@ export default function Onboarding() {
           tastePreferences: existingProfile.tastePreferences ?? defaultTastePreferences,
           dislikedFoods: existingProfile.dislikedFoods ?? "",
           favoriteCuisines: existingProfile.favoriteCuisines ?? [],
+          allergies: existingProfile.allergies ?? []
         });
         if (formattedDate) {
           const parsed = parseUSDate(formattedDate);
@@ -260,6 +265,7 @@ export default function Onboarding() {
             tastePreferences: profile.tastePreferences ?? defaultTastePreferences,
             dislikedFoods: profile.dislikedFoods ?? "",
             favoriteCuisines: profile.favoriteCuisines ?? [],
+            allergies: profile.allergies ?? [],
           });
 
           setUserProfile({ ...profile, dateOfBirth: hasValidDob ? dobIso : undefined } as UserProfile);
@@ -703,9 +709,10 @@ export default function Onboarding() {
               <View style={styles.cardIcon}>
                 <Target size={20} color="#008080" />
               </View>
-              <View>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.cardTitle}>Food Preferences</Text>
                 <Text style={styles.cardSubtitle}>Help us personalize your meals</Text>
+                <Text style={styles.cardSubtitle}>With each taste preference, rank them from 1 (Do not like) to 5 (Do like)</Text>
               </View>
             </View>
 
@@ -759,29 +766,82 @@ export default function Onboarding() {
               <View style={styles.intoleranceRow}>
                 {cuisineOptions.map((cuisine) => (
                   <Pressable
-                    key={cuisine}
-                    onPress={() => {
-                      const current = profile.favoriteCuisines ?? [];
-                      setProfile({
-                        ...profile,
-                        favoriteCuisines: current.includes(cuisine)
-                          ? current.filter((c) => c !== cuisine)
-                          : [...current, cuisine],
-                      });
-                    }}
-                    style={[
-                      styles.intoleranceButton,
-                      (profile.favoriteCuisines ?? []).includes(cuisine) &&
-                        styles.intoleranceButtonActive,
-                    ]}
-                  >
+                  key={cuisine}
+                  onPress={() => {
+                    if (cuisine === "Other") {
+                    setShowOtherCuisineInput((prev) => !prev);
+                    return;
+                  }
+
+                  const current = profile.favoriteCuisines ?? [];
+                  setProfile({
+                  ...profile,
+                  favoriteCuisines: current.includes(cuisine)
+                    ? current.filter((c) => c !== cuisine)
+                    : [...current, cuisine],
+                  });
+                  }}
+                  style={[
+                    styles.intoleranceButton,
+                    cuisine === "Other"
+                    ? showOtherCuisineInput && styles.intoleranceButtonActive
+                    : (profile.favoriteCuisines ?? []).includes(cuisine) &&
+                    styles.intoleranceButtonActive,
+                  ]}
+                >
                     <Text style={styles.intoleranceButtonText}>
-                      {(profile.favoriteCuisines ?? []).includes(cuisine) && "✓ "}
-                      {cuisine}
+                        {cuisine === "Other" && showOtherCuisineInput && "✓ "}
+                        {cuisine !== "Other" &&
+                        (profile.favoriteCuisines ?? []).includes(cuisine) &&
+                        "✓ "}
+                        {cuisine}
                     </Text>
                   </Pressable>
                 ))}
               </View>
+
+              {showOtherCuisineInput && (
+                       <View style={{ marginTop: 10 }}>
+                        <TextInput
+                          placeholder="Enter other cuisines (comma separated)"
+                          value={otherCuisineText}
+                          onChangeText={(text) => {
+                          setOtherCuisineText(text);
+
+                          const parsed = text
+                            .split(",")
+                            .map((c) => c.trim())
+                            .filter(Boolean);
+
+                          setProfile({
+                          ...profile,
+                          favoriteCuisines: [
+                            ...(profile.favoriteCuisines ?? []).filter(c => c !== "Other"),
+                            ...parsed,
+                          ],
+                        });
+                        }}
+                    style={styles.textInput}
+                    />
+                  </View>
+              )}
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Allergies</Text>
+              <TextInput
+                placeholder="e.g. nuts, seafood..."
+                value={(profile.allergies ?? []).join(", ")}
+                onChangeText={(text) =>
+                  setProfile({
+                    ...profile,
+                    allergies: text
+                    .split(",")
+                    .map(a => a.trim())
+                    .filter(Boolean),
+                  })
+                }
+                style={styles.textInput}
+              /> 
             </View>
           </View>
         )}

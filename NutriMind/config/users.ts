@@ -20,6 +20,7 @@ export type UserProfile = {
   tastePreferences?: { sweet: number; spicy: number; savory: number; bitter: number; sour: number };
   dislikedFoods?: string;
   favoriteCuisines?: string[];
+  allergies?: string[];
   createdAt: any;
   updatedAt: any;
 };

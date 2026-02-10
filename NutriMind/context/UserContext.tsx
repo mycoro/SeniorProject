@@ -28,6 +28,7 @@ export interface UserProfile {
   tastePreferences?: TastePreferences;
   dislikedFoods?: string;
   favoriteCuisines?: string[];
+  allergies?: string[];
 
   // Doctor-specific fields
   isDoctor?: boolean;
@@ -104,6 +105,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
               tastePreferences: (rawProfile as UserProfile).tastePreferences,
               dislikedFoods: (rawProfile as UserProfile).dislikedFoods,
               favoriteCuisines: (rawProfile as UserProfile).favoriteCuisines,
+              allergies: (rawProfile as UserProfile).allergies,
             };
             const hasOnboardingData = Boolean(
               profile.surgeryDate && profile.surgeryType && profile.name
