@@ -22,12 +22,8 @@ if (Platform.OS === "web") {
   authInstance = getAuth(app);
 } else {
   try {
-    const { getReactNativePersistence } = require("firebase/auth") as {
-      getReactNativePersistence: (storage: typeof AsyncStorage) => import("firebase/auth").Persistence;
-    };
-    authInstance = initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    });
+    // initializeAuth without explicit persistence; fall back to getAuth if it fails
+    authInstance = initializeAuth(app);
   } catch (error) {
     authInstance = getAuth(app);
   }

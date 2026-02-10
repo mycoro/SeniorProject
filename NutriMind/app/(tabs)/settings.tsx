@@ -142,7 +142,14 @@ export default function Settings() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Profile</Text>
           <Pressable
-            onPress={() => router.push("/edit-profile")}
+            onPress={() => {
+              console.log("Settings: edit pressed", { isDoctor, isProfileComplete, userProfile });
+              if (!isProfileComplete) {
+                router.push(isDoctor ? "/doctorOnboarding" : "/onboarding");
+              } else {
+                router.push(isDoctor ? "/edit-doctor" : "/edit-profile");
+              }
+            }}
             style={styles.editButton}
           >
             <Edit3 size={16} color="#008080" />

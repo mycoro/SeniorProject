@@ -12,31 +12,94 @@ import {
 import { HeartPulse, ChevronRight, Search } from "lucide-react-native";
 import { router } from "expo-router";
 import { useUser } from "@/context/UserContext";
+import { auth } from "@/config/firebase";
+import { API_BASE_URL } from "@/config/api";
 
-// Mock patient data - replace with actual data fetching
-const MOCK_PATIENTS = [
-  { id: "1", name: "Mayra Coronilla", subtitle: "Gastric Sleeve • 45 days post-op" },
-  { id: "2", name: "Kim Nguyen", subtitle: "Gastric Bypass • 120 days post-op" },
-  { id: "3", name: "Michelle Jimenez", subtitle: "Gastric Sleeve • 30 days post-op" },
-  { id: "4", name: "Sujit Bhandari", subtitle: "Gastric Bypass • 90 days post-op" },
-  { id: "5", name: "Samiksha Gupta", subtitle: "Gastric Sleeve • 15 days post-op" },
-  { id: "6", name: "Nibesh Yadav", subtitle: "Gastric Bypass • 60 days post-op" },
-];
+type PatientItem = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  surgeryDate: string | null;
+  surgeryType?: string | null;
+  assignedDoctors?: string[];
+};
 
 export default function DoctorDashboard() {
   const { userProfile } = useUser();
-  const [patients, setPatients] = useState(MOCK_PATIENTS);
-  const [loading, setLoading] = useState(false);
+  const [patients, setPatients] = useState<PatientItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredPatients = patients.filter((patient) =>
-    patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.subtitle.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const firstName =
+    (userProfile?.name && userProfile.name.trim().split(/\s+/)[0]) || "Doctor";
+
+  const filteredPatients = patients.filter((patient) => {
+    const q = searchQuery.toLowerCase();
+    const name = (patient.name || "").toLowerCase();
+    const email = (patient.email || "").toLowerCase();
+    const surgery = (patient.surgeryDate || "").toLowerCase();
+    return name.includes(q) || email.includes(q) || surgery.includes(q);
+  });
 
   const handlePatientPress = (patientId: string) => {
-    router.push(`/specificPatient?id=${patientId}`);
+    // You have specificPatient.tsx inside (tabs), so route there explicitly:
+    router.push({
+      pathname: "/specificPatient",
+      params: { id: patientId },
+    });
   };
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchPatients = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const user = auth.currentUser;
+        if (!user) {
+          setError("Not signed in");
+          setPatients([]);
+          setLoading(false);
+          return;
+        }
+        const idToken = await user.getIdToken();
+        const res = await fetch(`${API_BASE_URL}/api/doctor/patients`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+        if (!res.ok) {
+          let errJson = null;
+          try {
+            errJson = await res.json();
+          } catch {}
+          setError(errJson?.error || "Failed to load patients");
+          setPatients([]);
+          setLoading(false);
+          return;
+        }
+        const j = await res.json();
+        const list = (j.patients || []).map((p: any) => ({
+          id: p.uid,
+          name: p.name ?? null,
+          email: p.email ?? null,
+          surgeryDate: p.surgeryDate ?? null,
+          surgeryType: p.surgeryType ?? null,
+          assignedDoctors: p.assignedDoctors ?? [],
+        }));
+        if (mounted) setPatients(list);
+      } catch (err) {
+        console.error("Error fetching patients:", err);
+        if (mounted) setError("Failed to load patients");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchPatients();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Color pattern: green, orange, yellow
   const getPatientColor = (index: number) => {
@@ -44,15 +107,29 @@ export default function DoctorDashboard() {
     return colors[index % colors.length];
   };
 
+  const getSurgeryRelativeText = (surgeryDateStr: string | null) => {
+    if (!surgeryDateStr) return "";
+    const surgeryDate = new Date(surgeryDateStr);
+    if (Number.isNaN(surgeryDate.getTime())) return surgeryDateStr;
+    const now = new Date();
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const diff = Math.round((surgeryDate.getTime() - now.getTime()) / msPerDay);
+    const absDays = Math.abs(diff);
+    const dayWord = absDays === 1 ? "day" : "days";
+    if (diff > 0) return `${absDays} ${dayWord} pre-op`;
+    if (diff < 0) return `${absDays} ${dayWord} post-op`;
+    return `Day of surgery`;
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView 
+      <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.greeting}>Hi {userProfile?.name?.split(" ")[0] || "Doctor"}!</Text>
+          <Text style={styles.greeting}>Hi {firstName}!</Text>
           <Text style={styles.subGreeting}>Here are your patients</Text>
         </View>
 
@@ -82,15 +159,24 @@ export default function DoctorDashboard() {
                 key={patient.id}
                 style={[
                   styles.patientCard,
-                  index < filteredPatients.length - 1 && styles.patientDivider
+                  index < filteredPatients.length - 1 && styles.patientDivider,
                 ]}
                 onPress={() => handlePatientPress(patient.id)}
               >
                 <View style={styles.patientLeft}>
-                  <HeartPulse size={28} color={getPatientColor(index)} strokeWidth={2} />
+                  <HeartPulse
+                    size={28}
+                    color={getPatientColor(index)}
+                    strokeWidth={2}
+                  />
                   <View style={styles.patientInfo}>
-                    <Text style={styles.patientName}>{patient.name}</Text>
-                    <Text style={styles.patientSubtitle}>{patient.subtitle}</Text>
+                    <Text style={styles.patientName}>{patient.name ?? ""}</Text>
+                    {(patient.surgeryType || patient.surgeryDate) ? (
+                      <Text style={styles.patientSubtitle}>
+                        {patient.surgeryType ?? ""}
+                        {patient.surgeryDate ? ` • ${getSurgeryRelativeText(patient.surgeryDate)}` : ""}
+                      </Text>
+                    ) : null}
                   </View>
                 </View>
                 <ChevronRight size={20} color="#7A9C8A" />
