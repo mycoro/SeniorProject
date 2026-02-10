@@ -392,6 +392,10 @@ export default function Chat() {
         )}
       </ScrollView>
 
+      <Text style={styles.aiDisclaimer}>
+        Responses are AI-generated. For medical decisions, consult your care team.
+      </Text>
+
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -560,6 +564,15 @@ const styles = StyleSheet.create({
   },
 
   /* Input */
+  aiDisclaimer: {
+    fontSize: 11,
+    color: "#6B7280",
+    paddingHorizontal: 16,
+    paddingTop: 6,
+    paddingBottom: 2,
+    backgroundColor: "#FFF8E7",
+    fontStyle: "italic",
+  },
   inputContainer: {
     padding: 16,
     backgroundColor: "#FFF8E7",

@@ -102,7 +102,9 @@ CRITICAL INSTRUCTIONS:
 
 For the response, use this JSON format:
 {
-  "name": "Complete meal description including ALL items (e.g., 'Grilled Chicken with Cucumber and Lettuce Salad')",
+  "dishName": "Short main dish name only (e.g. 'Cheeseburger', 'Grilled Chicken')",
+  "ingredients": ["Ingredient 1", "Ingredient 2", "Ingredient 3"],
+  "name": "Full meal description for logging (e.g. 'Cheeseburger with Lettuce, Tomato, Pickles')",
   "protein": total protein in grams for the entire meal,
   "calories": total calories for the entire meal,
   "carbs": total carbs in grams for the entire meal,
@@ -110,6 +112,8 @@ For the response, use this JSON format:
   "recommendation": brief recommendation or warning,
   "items": [optional array of individual items if multiple foods detected]
 }
+
+Always set "dishName" to the main dish only (1–3 words). Set "ingredients" to an array of visible components (toppings, sides, garnishes). "name" stays the full description for records.
 
 Be extremely thorough - do not miss any visible food items. If you see vegetables, fruits, proteins, grains, or any other food items, you must include them all in your analysis.`,
         },
@@ -176,11 +180,28 @@ In your "recommendation" field, tailor the message to the patient's phase and an
       };
     }
     
+    let dishName = parsed.dishName;
+    let ingredients = Array.isArray(parsed.ingredients) ? parsed.ingredients : [];
+    const fullName = parsed.name || "Food Item";
+
+    if (!dishName && fullName) {
+      const withMatch = fullName.match(/^(.+?)\s+with\s+(.+)$/i);
+      if (withMatch) {
+        dishName = withMatch[1].trim();
+        ingredients = withMatch[2].split(/\s*,\s*|\s+and\s+/i).map((s) => s.trim()).filter(Boolean);
+      } else {
+        dishName = fullName;
+      }
+    }
+    if (!dishName) dishName = fullName;
+
     if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
-      const fullName = parsed.items.map(item => item.name || item).join(", ");
+      const itemsName = parsed.items.map((item) => item.name || item).join(", ");
       return {
         success: true,
-        name: parsed.name || fullName || "Food Item",
+        name: parsed.name || itemsName || fullName,
+        dishName: dishName || parsed.name || itemsName,
+        ingredients,
         protein: parsed.protein || 0,
         calories: parsed.calories || 0,
         carbs: parsed.carbs || 0,
@@ -189,10 +210,12 @@ In your "recommendation" field, tailor the message to the patient's phase and an
         items: parsed.items,
       };
     }
-    
+
     return {
       success: true,
-      name: parsed.name || "Food Item",
+      name: fullName,
+      dishName,
+      ingredients,
       protein: parsed.protein || 0,
       calories: parsed.calories || 0,
       carbs: parsed.carbs || 0,

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useUser, MealLog } from "@/context/UserContext";
+import { parseMealNameForEdit } from "@/utils/mealDisplay";
 
 const mealTypes = ["Breakfast", "Lunch", "Dinner", "Snack"] as const;
 
@@ -25,6 +26,7 @@ type Props = {
 export default function EditLogModal({ visible, log, onClose, onSaved }: Props) {
   const { updateMealLog } = useUser();
   const [name, setName] = useState("");
+  const [ingredients, setIngredients] = useState("");
   const [protein, setProtein] = useState("");
   const [calories, setCalories] = useState("");
   const [carbs, setCarbs] = useState("");
@@ -37,7 +39,9 @@ export default function EditLogModal({ visible, log, onClose, onSaved }: Props) 
 
   useEffect(() => {
     if (log && visible) {
-      setName(log.name);
+      const { dishName, ingredients: ing } = parseMealNameForEdit(log.name);
+      setName(dishName);
+      setIngredients(ing);
       setProtein(String(log.protein));
       setCalories(String(log.calories));
       setCarbs(log.carbs != null ? String(log.carbs) : "");
@@ -78,10 +82,14 @@ export default function EditLogModal({ visible, log, onClose, onSaved }: Props) 
     const fatVal = parseNum(fat);
     const sugarVal = parseNum(sugar);
 
+    const fullName = ingredients.trim()
+      ? `${nameTrim} (${ingredients.trim()})`
+      : nameTrim;
+
     setSaving(true);
     try {
       await updateMealLog(log.id, {
-        name: nameTrim,
+        name: fullName,
         protein: proteinVal,
         calories: caloriesVal,
         carbs: carbsVal ?? 0,
@@ -136,6 +144,17 @@ export default function EditLogModal({ visible, log, onClose, onSaved }: Props) 
                 value={name}
                 onChangeText={setName}
                 placeholder="e.g. Grilled chicken"
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Ingredients (optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={ingredients}
+                onChangeText={setIngredients}
+                placeholder="e.g. Lettuce, Tomato, Pickles"
                 placeholderTextColor="#9ca3af"
               />
             </View>

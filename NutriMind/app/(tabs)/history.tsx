@@ -11,6 +11,7 @@ import { ChevronLeft, ChevronRight, Filter, Clock } from "lucide-react-native";
 import { useUser, MealLog } from "@/context/UserContext";
 import ProgressRing from "@/components/ProgressRing";
 import EditLogModal from "@/components/EditLogModal";
+import { getMealDisplayName } from "@/utils/mealDisplay";
 
 const sameCalendarDay = (logTimestamp: Date, year: number, month: number, day: number) =>
   logTimestamp.getFullYear() === year &&
@@ -413,7 +414,7 @@ export default function History() {
                           <View style={styles.mealLeft}>
                             <Clock size={16} color="#94a3b8" />
                             <View>
-                              <Text style={styles.mealName}>{meal.name}</Text>
+                              <Text style={styles.mealName}>{getMealDisplayName(meal.name)}</Text>
                               <Text style={styles.mealDetails}>
                                 {meal.type} at {meal.time}
                               </Text>
@@ -488,7 +489,7 @@ export default function History() {
                             onPress={() => fullLog && setEditLog(fullLog)}
                           >
                             <View>
-                              <Text style={styles.listMealName}>{meal.name}</Text>
+                              <Text style={styles.listMealName}>{getMealDisplayName(meal.name)}</Text>
                               <Text style={styles.listMealType}>{meal.type ?? "Meal"} · {meal.protein}g</Text>
                             </View>
                             <Text style={styles.listMealProtein}>{meal.calories} kcal</Text>

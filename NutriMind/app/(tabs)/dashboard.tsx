@@ -5,6 +5,7 @@ import { useUser, MealLog } from "@/context/UserContext";
 import { router } from "expo-router";
 import ProgressRing from "@/components/ProgressRing";
 import EditLogModal from "@/components/EditLogModal";
+import { getMealDisplayName } from "@/utils/mealDisplay";
 
 export default function Dashboard() {
   const { userProfile, dailyLogs } = useUser();
@@ -218,7 +219,7 @@ export default function Dashboard() {
                   <Text style={styles.proteinText}>{item.protein}g</Text>
                 </View>
                 <View>
-                  <Text style={styles.mealName}>{item.name}</Text>
+                  <Text style={styles.mealName}>{getMealDisplayName(item.name)}</Text>
                   <Text style={styles.mealTime}>{item.mealType} · {item.time}</Text>
                 </View>
               </View>
