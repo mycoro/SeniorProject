@@ -330,25 +330,16 @@ export default function Onboarding() {
               </View>
             </View>
 
-            {!existingProfile?.name?.trim() && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Your name</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. Alex"
-                  value={profile.name || ""}
-                  onChangeText={(text) => setProfile({ ...profile, name: text })}
-                  autoCapitalize="words"
-                />
-              </View>
-            )}
-            {existingProfile?.name?.trim() && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Name</Text>
-                <Text style={styles.nameDisplay}>{existingProfile.name}</Text>
-                <Text style={styles.nameHint}>Set during sign up. You can change it later in Settings.</Text>
-              </View>
-            )}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Preferred name</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="e.g. Alex"
+                value={profile.name || ""}
+                onChangeText={(text) => setProfile({ ...profile, name: text })}
+                autoCapitalize="words"
+              />
+            </View>
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Date of Birth</Text>
@@ -415,17 +406,6 @@ export default function Onboarding() {
                   )}
                 </>
               )}
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Your Name</Text>
-              <TextInput
-                placeholder="Enter your preferred name"
-                value={profile.name}
-                onChangeText={(text) => setProfile({ ...profile, name: text })}
-                style={styles.textInput}
-                autoCapitalize="words"
-              />
             </View>
 
             <View style={styles.section}>
@@ -908,17 +888,6 @@ const styles = StyleSheet.create({
     color: "#004734",
     fontSize: 15,
     fontWeight: "600",
-  },
-  nameDisplay: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#004734",
-    marginTop: 4,
-  },
-  nameHint: {
-    fontSize: 13,
-    color: "#3F5E52",
-    marginTop: 6,
   },
 
   /* Toggles */

@@ -392,10 +392,6 @@ export default function Chat() {
         )}
       </ScrollView>
 
-      <Text style={styles.aiDisclaimer}>
-        Responses are AI-generated. For medical decisions, consult your care team.
-      </Text>
-
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -409,6 +405,10 @@ export default function Chat() {
           <Send size={16} color="white" />
         </Pressable>
       </View>
+
+      <Text style={styles.aiDisclaimer}>
+        NutriMind is AI and can make mistakes.
+      </Text>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -569,9 +569,9 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     paddingHorizontal: 16,
     paddingTop: 6,
-    paddingBottom: 2,
+    paddingBottom: 8,
     backgroundColor: "#FFF8E7",
-    fontStyle: "italic",
+    textAlign: "center",
   },
   inputContainer: {
     padding: 16,

@@ -86,7 +86,7 @@ export default function Settings() {
       setUserProfile({ ...userProfile, name: trimmed } as any);
       setShowNameModal(false);
       setNameInput("");
-      Alert.alert("Saved", "Your name has been updated.");
+      Alert.alert("Saved", "Preferred name has been updated.");
     } catch (e) {
       console.error("Error saving name:", e);
       Alert.alert("Error", "Failed to save name. Please try again.");
@@ -261,7 +261,7 @@ export default function Settings() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Your name</Text>
+            <Text style={styles.modalTitle}>Preferred name</Text>
             <View style={styles.inputGroup}>
               <TextInput
                 style={styles.textInput}

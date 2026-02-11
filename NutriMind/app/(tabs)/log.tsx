@@ -435,7 +435,7 @@ export default function LogMeal() {
                 <Text style={styles.confirmButtonText}>Confirm & Log</Text>
               </Pressable>
               <Text style={styles.scanDisclaimer}>
-                AI-generated analysis.
+                NutriMind is AI and can make mistakes.
               </Text>
             </View>
           )}

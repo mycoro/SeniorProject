@@ -268,7 +268,7 @@ export default function EditProfile() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Your name</Text>
+            <Text style={styles.sectionLabel}>Preferred name</Text>
             <TextInput
               style={styles.textInput}
               placeholder="e.g. Alex"
