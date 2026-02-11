@@ -20,6 +20,7 @@ import {
   Target,
 } from "lucide-react-native";
 import { router } from "expo-router";
+import * as Clipboard from 'expo-clipboard';
 import UserTypeSelector from "@/components/UserTypeSelector";
 import OnboardingFooter from "../components/OnboardingFooter";
 import { useUser, UserProfile } from "@/context/UserContext";
@@ -210,19 +211,6 @@ export default function Onboarding() {
         Alert.alert("Required", "Please select your surgery type.");
         return;
       }
-      if (!profile.surgeryDate) {
-        Alert.alert("Required", "Please enter your surgery date.");
-        return;
-      }
-      const parsed = parseUSDate(profile.surgeryDate ?? "");
-      if (!parsed) {
-        Alert.alert("Invalid Date", "Please enter a valid date in MM/DD/YYYY format.");
-        return;
-      }
-      if (!profile.surgeryType) {
-        Alert.alert("Required", "Please select your surgery type.");
-        return;
-      }
     }
     
     if (step < 3) {
@@ -355,6 +343,21 @@ export default function Onboarding() {
     setStep((s) => Math.min(s + 1, 3));
   };
 
+  const handlePasteFromClipboard = async () => {
+    try {
+      const text = await Clipboard.getStringAsync();
+      if (text && text.trim()) {
+        setInviteCodeInput(text.trim());
+        setInviteMessage(null);
+      } else {
+        Alert.alert('Clipboard empty', 'No text found in clipboard');
+      }
+    } catch (e) {
+      console.error('Clipboard read error', e);
+      Alert.alert('Error', 'Failed to read clipboard');
+    }
+  };
+
   const toggleIntolerance = (intolerance: string) => {
     setProfile((prev) => {
       const list = prev.intolerances ?? [];
@@ -419,12 +422,13 @@ export default function Onboarding() {
                     editable={!inviteApplying && !inviteApplied}
                   />
                   <Pressable
-                    onPress={handleSkipInvite}
+                    onPress={handlePasteFromClipboard}
                     style={[styles.backButton, { paddingHorizontal: 12, paddingVertical: 10 }]}
                   >
-                    <Text style={styles.backButtonText}>Skip</Text>
+                    <Text style={styles.backButtonText}>Paste</Text>
                   </Pressable>
-                  <Pressable
+                  
+                  <Pressable      
                     onPress={handleApplyInvite}
                     style={[styles.nextButton, { paddingHorizontal: 12, paddingVertical: 10 }]}
                     disabled={inviteApplying || inviteApplied}

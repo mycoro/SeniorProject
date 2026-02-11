@@ -68,8 +68,13 @@ export async function updateUserProfile(
   updates: Partial<Omit<UserProfile, "email" | "role" | "createdAt" | "updatedAt">>
 ) {
   const ref = doc(db, "users", uid);
+  const cleaned: Record<string, any> = {};
+  Object.entries(updates).forEach(([k, v]) => {
+    if (v !== undefined) cleaned[k] = v;
+  });
+  if (Object.keys(cleaned).length === 0) return;
   await updateDoc(ref, {
-    ...updates,
+    ...cleaned,
     updatedAt: serverTimestamp(),
   });
 }
