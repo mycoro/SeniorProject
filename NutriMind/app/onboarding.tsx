@@ -163,7 +163,7 @@ export default function Onboarding() {
         }
         setProfile({
           name: existingProfile.name || "",
-          dateOfBirth: dobRaw,
+          dateOfBirth: (existingProfile as UserProfile).dateOfBirth ?? "",
           isPreOp: existingProfile.isPreOp ?? false,
           surgeryDate: formattedDate,
           surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
