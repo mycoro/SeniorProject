@@ -153,7 +153,7 @@ export default function EditProfile() {
   const handleDone = async () => {
     const nameStr = profile.name?.trim();
     if (!nameStr) {
-      Alert.alert("Required", "Please enter your name.");
+      Alert.alert("Required", "Please enter your preferred name.");
       return;
     }
     if (!profile.surgeryDate) {
@@ -268,7 +268,7 @@ export default function EditProfile() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Your name</Text>
+            <Text style={styles.sectionLabel}>Preferred name</Text>
             <TextInput
               style={styles.textInput}
               placeholder="e.g. Alex"

@@ -198,6 +198,28 @@ export default function Onboarding() {
       return;
     }
     if (step === 1) {
+      const hasNameFromSignup = !!existingProfile?.name?.trim();
+      if (!hasNameFromSignup && !profile.name?.trim()) {
+        Alert.alert("Required", "Please enter your preferred name.");
+        return;
+      }
+      if (!profile.dateOfBirth?.trim()) {
+        Alert.alert("Required", "Please select your date of birth.");
+        return;
+      }
+      const birth = new Date(profile.dateOfBirth.slice(0, 10));
+      if (isNaN(birth.getTime())) {
+        Alert.alert("Invalid Date", "Please select a valid date of birth.");
+        return;
+      }
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+      if (age < 13 || age > 120) {
+        Alert.alert("Invalid Date", "You must be 13–120 years old.");
+        return;
+      }
       if (!profile.surgeryDate) {
         Alert.alert("Required", "Please enter your surgery date.");
         return;
@@ -444,7 +466,7 @@ export default function Onboarding() {
 
             {!existingProfile?.name?.trim() && (
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Your name</Text>
+                <Text style={styles.sectionLabel}>Preferred name</Text>
                 <TextInput
                   style={styles.textInput}
                   placeholder="e.g. Alex"
@@ -527,17 +549,6 @@ export default function Onboarding() {
                   )}
                 </>
               )}
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Your Name</Text>
-              <TextInput
-                placeholder="Enter your preferred name"
-                value={profile.name}
-                onChangeText={(text) => setProfile({ ...profile, name: text })}
-                style={styles.textInput}
-                autoCapitalize="words"
-              />
             </View>
 
             <View style={styles.section}>

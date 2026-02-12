@@ -100,18 +100,45 @@ CRITICAL INSTRUCTIONS:
 4. Consider portion sizes visible in the image
 5. If multiple items are present, combine their nutritional values OR provide a detailed breakdown
 
-For the response, use this JSON format:
+For the response, use this JSON format with COMPREHENSIVE nutritional information:
 {
   "dishName": "Short main dish name only (e.g. 'Cheeseburger', 'Grilled Chicken')",
   "ingredients": ["Ingredient 1", "Ingredient 2", "Ingredient 3"],
   "name": "Full meal description for logging (e.g. 'Cheeseburger with Lettuce, Tomato, Pickles')",
-  "protein": total protein in grams for the entire meal,
   "calories": total calories for the entire meal,
+  "protein": total protein in grams for the entire meal,
   "carbs": total carbs in grams for the entire meal,
+  "fat": total fat in grams for the entire meal,
+  "fiber": total fiber in grams for the entire meal,
+  "sugar": total sugar in grams for the entire meal,
+  "sodium": total sodium in milligrams for the entire meal,
+  "vitamins": {
+    "vitaminA": amount in mcg or IU (if significant),
+    "vitaminC": amount in mg (if significant),
+    "vitaminD": amount in mcg or IU (if significant),
+    "vitaminE": amount in mg (if significant),
+    "vitaminK": amount in mcg (if significant),
+    "thiamin": amount in mg (if significant),
+    "riboflavin": amount in mg (if significant),
+    "niacin": amount in mg (if significant),
+    "vitaminB6": amount in mg (if significant),
+    "folate": amount in mcg (if significant),
+    "vitaminB12": amount in mcg (if significant)
+  },
+  "minerals": {
+    "calcium": amount in mg (if significant),
+    "iron": amount in mg (if significant),
+    "magnesium": amount in mg (if significant),
+    "phosphorus": amount in mg (if significant),
+    "potassium": amount in mg (if significant),
+    "zinc": amount in mg (if significant)
+  },
   "isAppropriate": true/false based on phase,
   "recommendation": brief recommendation or warning,
   "items": [optional array of individual items if multiple foods detected]
 }
+
+IMPORTANT: Include ALL nutritional values that are present in the food. If a nutrient is not present or negligible, you can omit it or set it to 0. Be thorough and accurate with all nutritional information.
 
 Always set "dishName" to the main dish only (1–3 words). Set "ingredients" to an array of visible components (toppings, sides, garnishes). "name" stays the full description for records.
 
@@ -140,7 +167,7 @@ In your "recommendation" field, tailor the message to the patient's phase and an
         },
       ],
       temperature: 0.1,
-      max_tokens: 1000,
+      max_tokens: 2000,
     });
 
     const content = response.choices[0]?.message?.content || "";
@@ -157,24 +184,43 @@ In your "recommendation" field, tailor the message to the patient's phase and an
       console.error("JSON parse error:", parseError);
       console.error("Response content:", content.substring(0, 500));
       
+      // Fallback parsing for basic nutrients if JSON parse fails
       const nameMatch = content.match(/"name"\s*:\s*"([^"]+)"/i) || 
                         content.match(/name["\s:]+([^"\n,}]+)/i) || 
                         content.match(/name[:\s]+([^\n,}]+)/i);
-      const proteinMatch = content.match(/"protein"\s*:\s*(\d+)/i) || 
-                           content.match(/protein["\s:]+(\d+)/i) || 
-                           content.match(/protein[:\s]+(\d+)/i);
-      const caloriesMatch = content.match(/"calories"\s*:\s*(\d+)/i) || 
-                            content.match(/calories["\s:]+(\d+)/i) || 
-                            content.match(/calories[:\s]+(\d+)/i);
-      const carbsMatch = content.match(/"carbs"\s*:\s*(\d+)/i) || 
-                         content.match(/carbs["\s:]+(\d+)/i) || 
-                         content.match(/carbs[:\s]+(\d+)/i);
+      const proteinMatch = content.match(/"protein"\s*:\s*(\d+\.?\d*)/i) || 
+                           content.match(/protein["\s:]+(\d+\.?\d*)/i) || 
+                           content.match(/protein[:\s]+(\d+\.?\d*)/i);
+      const caloriesMatch = content.match(/"calories"\s*:\s*(\d+\.?\d*)/i) || 
+                            content.match(/calories["\s:]+(\d+\.?\d*)/i) || 
+                            content.match(/calories[:\s]+(\d+\.?\d*)/i);
+      const carbsMatch = content.match(/"carbs"\s*:\s*(\d+\.?\d*)/i) || 
+                         content.match(/carbs["\s:]+(\d+\.?\d*)/i) || 
+                         content.match(/carbs[:\s]+(\d+\.?\d*)/i);
+      const fatMatch = content.match(/"fat"\s*:\s*(\d+\.?\d*)/i) || 
+                       content.match(/fat["\s:]+(\d+\.?\d*)/i) || 
+                       content.match(/fat[:\s]+(\d+\.?\d*)/i);
+      const fiberMatch = content.match(/"fiber"\s*:\s*(\d+\.?\d*)/i) || 
+                         content.match(/fiber["\s:]+(\d+\.?\d*)/i) || 
+                         content.match(/fiber[:\s]+(\d+\.?\d*)/i);
+      const sugarMatch = content.match(/"sugar"\s*:\s*(\d+\.?\d*)/i) || 
+                         content.match(/sugar["\s:]+(\d+\.?\d*)/i) || 
+                         content.match(/sugar[:\s]+(\d+\.?\d*)/i);
+      const sodiumMatch = content.match(/"sodium"\s*:\s*(\d+\.?\d*)/i) || 
+                           content.match(/sodium["\s:]+(\d+\.?\d*)/i) || 
+                           content.match(/sodium[:\s]+(\d+\.?\d*)/i);
       
       parsed = {
         name: nameMatch ? nameMatch[1].trim().replace(/["']/g, "") : "Food Item",
-        protein: proteinMatch ? parseInt(proteinMatch[1]) : 0,
-        calories: caloriesMatch ? parseInt(caloriesMatch[1]) : 0,
-        carbs: carbsMatch ? parseInt(carbsMatch[1]) : 0,
+        protein: proteinMatch ? parseFloat(proteinMatch[1]) : 0,
+        calories: caloriesMatch ? parseFloat(caloriesMatch[1]) : 0,
+        carbs: carbsMatch ? parseFloat(carbsMatch[1]) : 0,
+        fat: fatMatch ? parseFloat(fatMatch[1]) : 0,
+        fiber: fiberMatch ? parseFloat(fiberMatch[1]) : 0,
+        sugar: sugarMatch ? parseFloat(sugarMatch[1]) : 0,
+        sodium: sodiumMatch ? parseFloat(sodiumMatch[1]) : 0,
+        vitamins: {},
+        minerals: {},
         isAppropriate: true,
         recommendation: content.substring(0, 300),
       };
@@ -195,6 +241,19 @@ In your "recommendation" field, tailor the message to the patient's phase and an
     }
     if (!dishName) dishName = fullName;
 
+    // Extract comprehensive nutritional data
+    const nutritionData = {
+      calories: parsed.calories || 0,
+      protein: parsed.protein || 0,
+      carbs: parsed.carbs || 0,
+      fat: parsed.fat || 0,
+      fiber: parsed.fiber || 0,
+      sugar: parsed.sugar || 0,
+      sodium: parsed.sodium || 0,
+      vitamins: parsed.vitamins || {},
+      minerals: parsed.minerals || {},
+    };
+
     if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
       const itemsName = parsed.items.map((item) => item.name || item).join(", ");
       return {
@@ -202,9 +261,7 @@ In your "recommendation" field, tailor the message to the patient's phase and an
         name: parsed.name || itemsName || fullName,
         dishName: dishName || parsed.name || itemsName,
         ingredients,
-        protein: parsed.protein || 0,
-        calories: parsed.calories || 0,
-        carbs: parsed.carbs || 0,
+        ...nutritionData,
         isAppropriate: parsed.isAppropriate !== false,
         recommendation: parsed.recommendation || "",
         items: parsed.items,
@@ -216,9 +273,7 @@ In your "recommendation" field, tailor the message to the patient's phase and an
       name: fullName,
       dishName,
       ingredients,
-      protein: parsed.protein || 0,
-      calories: parsed.calories || 0,
-      carbs: parsed.carbs || 0,
+      ...nutritionData,
       isAppropriate: parsed.isAppropriate !== false,
       recommendation: parsed.recommendation || "",
     };
