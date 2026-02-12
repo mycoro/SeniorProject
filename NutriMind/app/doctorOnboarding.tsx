@@ -53,6 +53,7 @@ export default function DoctorOnboarding() {
 
       try {
         await saveUserProfile(user.uid, {
+          role: "healthcare_prof",
           isDoctor: true,
           name: doctorInfo.name,
           specialty: doctorInfo.specialty,
@@ -62,6 +63,7 @@ export default function DoctorOnboarding() {
         } as UserProfile);
 
         setUserProfile({
+          role: "healthcare_prof",
           isDoctor: true,
           name: doctorInfo.name,
           specialty: doctorInfo.specialty,

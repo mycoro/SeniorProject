@@ -20,6 +20,12 @@ export type UserProfile = {
   tastePreferences?: { sweet: number; spicy: number; savory: number; bitter: number; sour: number };
   dislikedFoods?: string;
   favoriteCuisines?: string[];
+  // Doctor-specific fields
+  isDoctor?: boolean;
+  specialty?: string | null;
+  licenseNumber?: string | null;
+  yearsExperience?: string | null;
+  practiceType?: string | null;
   createdAt: any;
   updatedAt: any;
 };
@@ -62,8 +68,13 @@ export async function updateUserProfile(
   updates: Partial<Omit<UserProfile, "email" | "role" | "createdAt" | "updatedAt">>
 ) {
   const ref = doc(db, "users", uid);
+  const cleaned: Record<string, any> = {};
+  Object.entries(updates).forEach(([k, v]) => {
+    if (v !== undefined) cleaned[k] = v;
+  });
+  if (Object.keys(cleaned).length === 0) return;
   await updateDoc(ref, {
-    ...updates,
+    ...cleaned,
     updatedAt: serverTimestamp(),
   });
 }

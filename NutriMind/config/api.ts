@@ -10,8 +10,8 @@ const getApiBaseUrl = (): string => {
   }
   
   if (__DEV__) {
-    const hostUri = Constants.expoConfig?.hostUri;
-    const debuggerHost = Constants.expoConfig?.debuggerHost;
+    const hostUri = (Constants as any).expoConfig?.hostUri ?? (Constants as any).manifest?.hostUri;
+    const debuggerHost = (Constants as any).expoConfig?.debuggerHost ?? (Constants as any).manifest?.debuggerHost;
     
     if (hostUri && !isExpoTunnelUrl(hostUri)) {
       const localIP = hostUri.split(":")[0];
