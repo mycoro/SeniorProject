@@ -76,7 +76,7 @@ export default function Settings() {
   const handleSaveName = async () => {
     const trimmed = nameInput.trim();
     if (!trimmed) {
-      Alert.alert("Required", "Please enter your name.");
+      Alert.alert("Required", "Please enter your preferred name.");
       return;
     }
     const user = auth.currentUser;
@@ -86,10 +86,10 @@ export default function Settings() {
       setUserProfile({ ...userProfile, name: trimmed } as any);
       setShowNameModal(false);
       setNameInput("");
-      Alert.alert("Saved", "Your name has been updated.");
+      Alert.alert("Saved", "Your preferred name has been updated.");
     } catch (e) {
       console.error("Error saving name:", e);
-      Alert.alert("Error", "Failed to save name. Please try again.");
+      Alert.alert("Error", "Failed to save preferred name. Please try again.");
     }
   };
 
@@ -158,7 +158,7 @@ export default function Settings() {
             setShowNameModal(true);
           }}
         >
-          <Text style={styles.label}>Name</Text>
+          <Text style={styles.label}>Preferred name</Text>
           <Text style={styles.value}>{userProfile?.name || "Not set"}</Text>
         </Pressable>
         <View style={styles.profileCard}>
@@ -261,7 +261,7 @@ export default function Settings() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Your name</Text>
+            <Text style={styles.modalTitle}>Preferred name</Text>
             <View style={styles.inputGroup}>
               <TextInput
                 style={styles.textInput}

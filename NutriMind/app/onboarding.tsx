@@ -194,7 +194,7 @@ export default function Onboarding() {
     if (step === 1) {
       const hasNameFromSignup = !!existingProfile?.name?.trim();
       if (!hasNameFromSignup && !profile.name?.trim()) {
-        Alert.alert("Required", "Please enter your name.");
+        Alert.alert("Required", "Please enter your preferred name.");
         return;
       }
       if (!profile.dateOfBirth?.trim()) {
@@ -332,7 +332,7 @@ export default function Onboarding() {
 
             {!existingProfile?.name?.trim() && (
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Your name</Text>
+                <Text style={styles.sectionLabel}>Preferred name</Text>
                 <TextInput
                   style={styles.textInput}
                   placeholder="e.g. Alex"
@@ -415,17 +415,6 @@ export default function Onboarding() {
                   )}
                 </>
               )}
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Your Name</Text>
-              <TextInput
-                placeholder="Enter your preferred name"
-                value={profile.name}
-                onChangeText={(text) => setProfile({ ...profile, name: text })}
-                style={styles.textInput}
-                autoCapitalize="words"
-              />
             </View>
 
             <View style={styles.section}>

@@ -35,6 +35,12 @@ export default function LogMeal() {
     protein: number;
     calories: number;
     carbs?: number;
+    fat?: number;
+    fiber?: number;
+    sugar?: number;
+    sodium?: number;
+    vitamins?: Record<string, number | string>;
+    minerals?: Record<string, number | string>;
   } | null>(null);
   const [protein, setProtein] = useState("");
   const [calories, setCalories] = useState("");
@@ -225,6 +231,12 @@ export default function LogMeal() {
         protein: result.protein || 0,
         calories: result.calories || 0,
         carbs: result.carbs || 0,
+        fat: result.fat || 0,
+        fiber: result.fiber || 0,
+        sugar: result.sugar || 0,
+        sodium: result.sodium || 0,
+        vitamins: result.vitamins || {},
+        minerals: result.minerals || {},
       });
 
       if (result.recommendation && !result.isAppropriate) {
@@ -403,19 +415,98 @@ export default function LogMeal() {
                   {scanResult.ingredients.join(", ")}
                 </Text>
               )}
+              
+              {/* Main Macros */}
               <View style={styles.scanResultRow}>
-                <Text style={styles.scanResultProtein}>
-                  {scanResult.protein}g Protein
-                </Text>
-                <Text style={styles.scanResultCalories}>
-                  {scanResult.calories} Cal
-                </Text>
-                {scanResult.carbs !== undefined && scanResult.carbs > 0 && (
-                  <Text style={styles.scanResultCarbs}>
-                    {scanResult.carbs}g Carbs
-                  </Text>
+                <View style={styles.nutrientBadge}>
+                  <Text style={styles.nutrientValue}>{scanResult.calories}</Text>
+                  <Text style={styles.nutrientLabel}>Calories</Text>
+                </View>
+                <View style={styles.nutrientBadge}>
+                  <Text style={styles.nutrientValue}>{scanResult.protein}g</Text>
+                  <Text style={styles.nutrientLabel}>Protein</Text>
+                </View>
+                <View style={styles.nutrientBadge}>
+                  <Text style={styles.nutrientValue}>{scanResult.carbs || 0}g</Text>
+                  <Text style={styles.nutrientLabel}>Carbs</Text>
+                </View>
+                {(scanResult.fat || 0) > 0 && (
+                  <View style={styles.nutrientBadge}>
+                    <Text style={styles.nutrientValue}>{scanResult.fat}g</Text>
+                    <Text style={styles.nutrientLabel}>Fat</Text>
+                  </View>
                 )}
               </View>
+
+              {/* Additional Nutrients */}
+              <View style={styles.additionalNutrients}>
+                <Text style={styles.additionalNutrientsTitle}>Nutritional Information</Text>
+                <View style={styles.nutrientGrid}>
+                  {(scanResult.fiber || 0) > 0 && (
+                    <View style={styles.nutrientItem}>
+                      <Text style={styles.nutrientItemLabel}>Fiber</Text>
+                      <Text style={styles.nutrientItemValue}>{scanResult.fiber}g</Text>
+                    </View>
+                  )}
+                  {(scanResult.sugar || 0) > 0 && (
+                    <View style={styles.nutrientItem}>
+                      <Text style={styles.nutrientItemLabel}>Sugar</Text>
+                      <Text style={styles.nutrientItemValue}>{scanResult.sugar}g</Text>
+                    </View>
+                  )}
+                  {(scanResult.sodium || 0) > 0 && (
+                    <View style={styles.nutrientItem}>
+                      <Text style={styles.nutrientItemLabel}>Sodium</Text>
+                      <Text style={styles.nutrientItemValue}>{Math.round(scanResult.sodium)}mg</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Vitamins */}
+                {scanResult.vitamins && Object.keys(scanResult.vitamins).length > 0 && (
+                  <View style={styles.vitaminsSection}>
+                    <Text style={styles.sectionLabel}>Vitamins</Text>
+                    <View style={styles.nutrientGrid}>
+                      {Object.entries(scanResult.vitamins).map(([key, value]) => {
+                        if (!value || value === 0) return null;
+                        const displayName = key
+                          .replace(/([A-Z])/g, ' $1')
+                          .replace(/^./, str => str.toUpperCase())
+                          .trim();
+                        return (
+                          <View key={key} style={styles.nutrientItem}>
+                            <Text style={styles.nutrientItemLabel}>{displayName}</Text>
+                            <Text style={styles.nutrientItemValue}>{String(value)}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
+
+                {/* Minerals */}
+                {scanResult.minerals && Object.keys(scanResult.minerals).length > 0 && (
+                  <View style={styles.mineralsSection}>
+                    <Text style={styles.sectionLabel}>Minerals</Text>
+                    <View style={styles.nutrientGrid}>
+                      {Object.entries(scanResult.minerals).map(([key, value]) => {
+                        if (!value || value === 0) return null;
+                        const displayName = key
+                          .replace(/([A-Z])/g, ' $1')
+                          .replace(/^./, str => str.toUpperCase())
+                          .trim();
+                        return (
+                          <View key={key} style={styles.nutrientItem}>
+                            <Text style={styles.nutrientItemLabel}>{displayName}</Text>
+                            <Text style={styles.nutrientItemValue}>{String(value)}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
+              </View>
+
               <Pressable
                 onPress={() => {
                   setFoodName(scanResult.dishName || scanResult.name);
@@ -792,7 +883,78 @@ const styles = StyleSheet.create({
   },
   scanResultRow: {
     flexDirection: "row",
-    gap: 16,
+    gap: 8,
+    flexWrap: "wrap",
+    marginTop: 8,
+  },
+  nutrientBadge: {
+    flex: 1,
+    minWidth: "22%",
+    backgroundColor: "#FFFDF4",
+    borderRadius: 8,
+    padding: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E6D8A8",
+  },
+  nutrientValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#004734",
+  },
+  nutrientLabel: {
+    fontSize: 10,
+    color: "#6B8F7A",
+    marginTop: 2,
+  },
+  additionalNutrients: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E6D8A8",
+  },
+  additionalNutrientsTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#004734",
+    marginBottom: 8,
+  },
+  nutrientGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 4,
+  },
+  nutrientItem: {
+    flex: 1,
+    minWidth: "30%",
+    backgroundColor: "#FFFDF4",
+    borderRadius: 6,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: "#E6D8A8",
+  },
+  nutrientItemLabel: {
+    fontSize: 10,
+    color: "#6B8F7A",
+    marginBottom: 2,
+  },
+  nutrientItemValue: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#004734",
+  },
+  vitaminsSection: {
+    marginTop: 12,
+  },
+  mineralsSection: {
+    marginTop: 12,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#004734",
+    marginBottom: 6,
   },
   scanResultProtein: {
     color: "#009235",
