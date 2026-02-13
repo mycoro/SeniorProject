@@ -94,6 +94,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
               } catch (_) {}
             }
             const profile: UserProfile = {
+              // include role and doctor-specific fields when available
+              role: (rawProfile as any).role,
               name: (rawProfile as UserProfile).name?.trim() || nameToUse || undefined,
               dateOfBirth: (rawProfile as UserProfile).dateOfBirth,
               isPreOp: rawProfile.isPreOp,
@@ -109,6 +111,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
               dislikedFoods: (rawProfile as UserProfile).dislikedFoods,
               favoriteCuisines: (rawProfile as UserProfile).favoriteCuisines,
               allergies: (rawProfile as UserProfile).allergies,
+              isDoctor: (rawProfile as any).isDoctor,
+              specialty: (rawProfile as any).specialty,
+              licenseNumber: (rawProfile as any).licenseNumber ?? null,
+              yearsExperience: (rawProfile as any).yearsExperience ?? null,
+              practiceType: (rawProfile as any).practiceType ?? null,
             };
 
             const hasOnboardingData = Boolean(

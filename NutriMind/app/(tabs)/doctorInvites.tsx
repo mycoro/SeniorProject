@@ -89,11 +89,26 @@ export default function DoctorInvites() {
     }
   };
 
+  const cleanName = (raw?: string | null) => {
+    if (!raw) return "";
+    let s = raw.trim();
+    s = s.replace(/^Dr\.?\s*/i, "");
+    return s;
+  };
+
+  // Prefer last name for doctors, fallback to first or email local-part
+  const fullCleanName = cleanName(userProfile?.name || auth.currentUser?.displayName || auth.currentUser?.email || "");
+  const nameParts = fullCleanName.split(/\s+/).filter(Boolean);
+  const greetingFirst = nameParts[0] || (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "Doctor");
+  const greetingLast = nameParts.length > 1 ? nameParts[nameParts.length - 1] : greetingFirst;
+
+  // Show first name (no 'Dr.' prefix) on the Invites screen
+  const greeting = greetingFirst;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>Hi {userProfile?.name?.split(" ")[0] || "Doctor"}!</Text>
           <Text style={styles.subGreeting}>Invite patients</Text>
         </View>
 

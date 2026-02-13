@@ -31,8 +31,25 @@ export default function DoctorDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const firstName =
-    (userProfile?.name && userProfile.name.trim().split(/\s+/)[0]) || "Doctor";
+  const cleanName = (raw?: string | null) => {
+    if (!raw) return "";
+    let s = raw.trim();
+    s = s.replace(/^Dr\.?\s*/i, "");
+    return s;
+  };
+
+  // Build a cleaned full name, prefer profile -> auth displayName -> email local-part
+  const fullCleanName = cleanName(userProfile?.name || auth.currentUser?.displayName || auth.currentUser?.email || "");
+  const nameParts = fullCleanName.split(/\s+/).filter(Boolean);
+  const firstName = nameParts[0] || (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "Doctor");
+  const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : firstName;
+
+  const isDoctor = Boolean(userProfile?.role === "healthcare_prof" || userProfile?.isDoctor);
+  const greeting = isDoctor
+    ? lastName && lastName !== "Doctor"
+      ? `Dr. ${lastName}`
+      : "Dr."
+    : firstName;
 
   const filteredPatients = patients.filter((patient) => {
     const q = searchQuery.toLowerCase();
@@ -129,7 +146,7 @@ export default function DoctorDashboard() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.greeting}>Hi {firstName}!</Text>
+          <Text style={styles.greeting}>Hi {greeting}!</Text>
           <Text style={styles.subGreeting}>Here are your patients</Text>
         </View>
 
