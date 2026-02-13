@@ -27,7 +27,7 @@ import { useUser, UserProfile } from "@/context/UserContext";
 import { auth } from "@/config/firebase";
 import { API_BASE_URL } from "@/config/api";
 import { updateProfile } from "firebase/auth";
-import { setUserProfile as saveUserProfile } from "@/config/users";
+import { setUserProfile as saveUserProfile, getUserProfile } from "@/config/users";
 
 const surgeryTypes = ["Gastric Sleeve", "Gastric Bypass", "Duodenal Switch"];
 const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
@@ -305,7 +305,18 @@ export default function Onboarding() {
             allergies: profile.allergies ?? [],
           });
 
-          setUserProfile({ ...profile, dateOfBirth: hasValidDob ? dobIso : undefined } as UserProfile);
+          // Refresh the saved profile from Firestore so fields like `assignedDoctors` are preserved
+          try {
+            const fresh = await getUserProfile(user.uid);
+            if (fresh) {
+              setUserProfile({ ...(fresh as any) } as UserProfile);
+            } else {
+              setUserProfile({ ...profile, dateOfBirth: hasValidDob ? dobIso : undefined } as UserProfile);
+            }
+          } catch (e) {
+            console.error('Failed to refresh profile after save:', e);
+            setUserProfile({ ...profile, dateOfBirth: hasValidDob ? dobIso : undefined } as UserProfile);
+          }
           setIsOnboarded(true);
           router.replace("/(tabs)/dashboard");
         } catch (error) {
@@ -381,6 +392,14 @@ export default function Onboarding() {
         await user.getIdToken(true);
       } catch (e) {
         console.warn("Failed to refresh ID token after claiming invite", e);
+      }
+
+      // Refresh user profile so UI reflects assignedDoctors immediately
+      try {
+        const fresh = await getUserProfile(user.uid);
+        if (fresh) setUserProfile({ ...(fresh as any) } as any);
+      } catch (e) {
+        console.error('Failed to refresh user profile after onboarding invite claim:', e);
       }
 
       setInviteApplied(true);
@@ -501,25 +520,16 @@ export default function Onboarding() {
               </View>
             )}
 
-            {!existingProfile?.name?.trim() && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Preferred name</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. Alex"
-                  value={profile.name || ""}
-                  onChangeText={(text) => setProfile({ ...profile, name: text })}
-                  autoCapitalize="words"
-                />
-              </View>
-            )}
-            {existingProfile?.name?.trim() && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Name</Text>
-                <Text style={styles.nameDisplay}>{existingProfile.name}</Text>
-                <Text style={styles.nameHint}>Set during sign up. You can change it later in Settings.</Text>
-              </View>
-            )}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Preferred name</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="e.g. Alex"
+                value={profile.name || ""}
+                onChangeText={(text) => setProfile({ ...profile, name: text })}
+                autoCapitalize="words"
+              />
+            </View>
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Date of Birth</Text>

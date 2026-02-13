@@ -5,7 +5,8 @@ import { auth } from "@/config/firebase";
 import { signOut } from "firebase/auth";
 import { router } from "expo-router";
 import { useUser } from "@/context/UserContext";
-import { updateUserProfile } from "@/config/users";
+import { updateUserProfile, getUserProfile } from "@/config/users";
+import { API_BASE_URL } from "@/config/api";
 
 export default function Settings() {
   const { userProfile, setUserProfile } = useUser();
@@ -15,6 +16,10 @@ export default function Settings() {
   const [proteinGoal, setProteinGoal] = useState("");
   const [fluidGoal, setFluidGoal] = useState("");
   const [calorieGoal, setCalorieGoal] = useState("");
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteCodeInput, setInviteCodeInput] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
   
   const isDoctor = userProfile?.isDoctor;
   const isProfileComplete = isDoctor
@@ -169,6 +174,31 @@ export default function Settings() {
           <Text style={styles.label}>Preferred name</Text>
           <Text style={styles.value}>{userProfile?.name || "Not set"}</Text>
         </Pressable>
+        {!isDoctor && (() => {
+          const hasLinkedDoctor = Boolean(userProfile?.assignedDoctors && userProfile.assignedDoctors.length > 0);
+          if (hasLinkedDoctor) {
+            return (
+              <View style={[styles.profileCard, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}> 
+                <View>
+                  <Text style={styles.label}>Invitation code</Text>
+                  <Text style={styles.value}>Successfully linked to my doctor</Text>
+                </View>
+              </View>
+            );
+          }
+          return (
+            <Pressable
+              style={[styles.profileCard, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
+              onPress={() => setShowInviteModal(true)}
+            >
+              <View>
+                <Text style={styles.label}>Invitation code</Text>
+                <Text style={styles.value}>Apply a code from your doctor</Text>
+              </View>
+              <Text style={{ color: '#008080', fontWeight: '700' }}>Apply</Text>
+            </Pressable>
+          );
+        })()}
         <View style={styles.profileCard}>
           <Text style={styles.label}>Status</Text>
           <Text style={styles.value}>
@@ -291,6 +321,111 @@ export default function Settings() {
                 style={[styles.modalButton, styles.saveButtonModal]}
               >
                 <Text style={styles.saveButtonText}>Save</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showInviteModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => { setShowInviteModal(false); setInviteError(null); setInviteCodeInput(""); }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Apply Invitation Code</Text>
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter code (e.g. ABC123)"
+                value={inviteCodeInput}
+                onChangeText={(t) => setInviteCodeInput(t.toUpperCase())}
+                autoCapitalize="characters"
+              />
+              {inviteError ? <Text style={{ color: '#ff4d4f', marginTop: 8 }}>{inviteError}</Text> : null}
+            </View>
+            <View style={styles.modalButtons}>
+              <Pressable
+                onPress={() => { setShowInviteModal(false); setInviteError(null); setInviteCodeInput(""); }}
+                style={[styles.modalButton, styles.cancelButton]}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={async () => {
+                  const code = (inviteCodeInput || "").trim().toUpperCase();
+                  if (!code) { setInviteError('Please enter a code.'); return; }
+                  setInviteLoading(true);
+                  setInviteError(null);
+                  try {
+                    // Verify code
+                    const verifyRes = await fetch(`${API_BASE_URL}/api/invites/verify`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ code }),
+                    });
+                    const verifyJson = await verifyRes.json().catch(() => null);
+                    if (!verifyRes.ok) {
+                      setInviteError(verifyJson?.error || `Invalid code (${verifyRes.status})`);
+                      setInviteLoading(false);
+                      return;
+                    }
+                    const inviteId = verifyJson?.inviteId;
+                    if (!inviteId) {
+                      setInviteError('Invalid invite response from server.');
+                      setInviteLoading(false);
+                      return;
+                    }
+
+                    // Claim invite as current user
+                    const user = auth.currentUser;
+                    if (!user) {
+                      setInviteError('Not authenticated. Please sign in and try again.');
+                      setInviteLoading(false);
+                      return;
+                    }
+                    const idToken = await user.getIdToken();
+                    const claimRes = await fetch(`${API_BASE_URL}/api/invites/claim`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+                      body: JSON.stringify({ inviteId }),
+                    });
+                    const claimJson = await claimRes.json().catch(() => null);
+                    if (!claimRes.ok) {
+                      setInviteError(claimJson?.error || `Failed to claim invite (${claimRes.status})`);
+                      setInviteLoading(false);
+                      return;
+                    }
+
+                    // Refresh ID token to pick up claims
+                    try { await auth.currentUser?.getIdToken(true); } catch (e) {}
+
+                    // Refresh ID token to pick up claims
+                    try { await auth.currentUser?.getIdToken(true); } catch (e) {}
+
+                    // Refresh user profile from Firestore so UI updates immediately
+                    try {
+                      const fresh = await getUserProfile(user.uid);
+                      if (fresh) setUserProfile({ ...(fresh as any) } as any);
+                    } catch (e) {
+                      console.error('Failed to refresh user profile after claiming invite:', e);
+                    }
+
+                    Alert.alert('Success', 'Invitation applied.');
+                    setShowInviteModal(false);
+                    setInviteCodeInput("");
+                  } catch (err) {
+                    console.error('Apply invite error:', err);
+                    setInviteError('Failed to apply invite. Please try again.');
+                  } finally {
+                    setInviteLoading(false);
+                  }
+                }}
+                style={[styles.modalButton, styles.saveButtonModal]}
+              >
+                <Text style={styles.saveButtonText}>{inviteLoading ? '...' : 'Apply'}</Text>
               </Pressable>
             </View>
           </View>
