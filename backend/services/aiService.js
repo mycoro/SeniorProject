@@ -48,7 +48,13 @@ function buildSystemPrompt(phaseInfo, userProfile, activitySummary) {
     preOpPrompt += buildCommonPromptSuffix(userProfile, activitySummary, patientName);
     preOpPrompt += `IMAGES: When you suggest foods or meals, call get_food_image_url 2-3 times with different dish names (e.g. one for breakfast, one for lunch) so we show 2-3 pictures in a row. In your text reply, write first something like "Here are some pictures of the foods" or "Here are a few ideas:" then describe the dishes—the images will appear below your text. Do not mention links or URLs. `;
     preOpPrompt += `VARIETY: If the user asks again for the same meal (e.g. "what for dinner" twice), suggest different dishes than you already recommended in this conversation. Do not repeat the same dish. `;
-    preOpPrompt += `CRITICAL FORMATTING: Plain text only. No markdown, no ![]() image syntax. Write like a caring coach. Never say "I understand" or "I'm here to help"—answer directly.`;
+    preOpPrompt += `CRITICAL FORMATTING: 
+    - When listing foods, recommendations, recipes, or steps, put each item on a NEW LINE
+    - For recipes: List ingredients first (each on new line with measurements), then numbered steps (each on new line)
+    - For food recommendations: List each food option on a new line with brief description
+    - Use line breaks between items for readability
+    - No markdown, no ![]() image syntax
+    - Write like a caring nutritionist. No "I understand" or "I'm here to help"—answer directly.`;
     return preOpPrompt;
   }
 
@@ -91,7 +97,13 @@ function buildSystemPrompt(phaseInfo, userProfile, activitySummary) {
   // Image rules: proactive image for any food suggestion
   prompt += `IMAGES: When you suggest foods or meals, call get_food_image_url 2-3 times with different dish names (e.g. one for breakfast, one for lunch) so we show 2-3 pictures in a row. In your text reply, write first something like "Here are some pictures of the foods" or "Here are a few ideas:" then describe the dishes—the images will appear below your text. Do not mention links or URLs. `;
   prompt += `VARIETY: If the user asks again for the same meal (e.g. "what for dinner" twice), suggest different dishes than you already recommended in this conversation. Do not repeat the same dish. `;
-  prompt += `CRITICAL FORMATTING: Plain text only. No markdown, no ![]() image syntax. Write like a caring nutritionist. No "I understand" or "I'm here to help"—answer directly.`;
+  prompt += `CRITICAL FORMATTING: 
+    - When listing foods, recommendations, recipes, or steps, put each item on a NEW LINE
+    - For recipes: List ingredients first (each on new line with measurements), then numbered steps (each on new line)
+    - For food recommendations: List each food option on a new line with brief description
+    - Use line breaks between items for readability
+    - No markdown, no ![]() image syntax
+    - Write like a caring nutritionist. No "I understand" or "I'm here to help"—answer directly.`;
 
   return prompt;
 }
