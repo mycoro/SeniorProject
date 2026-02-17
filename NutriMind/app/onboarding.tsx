@@ -18,10 +18,11 @@ import {
   Calendar,
   Pill,
   Target,
+  Heart,
+  Stethoscope,
 } from "lucide-react-native";
 import { router } from "expo-router";
 import * as Clipboard from 'expo-clipboard';
-import UserTypeSelector from "@/components/UserTypeSelector";
 import OnboardingFooter from "../components/OnboardingFooter";
 import { useUser, UserProfile } from "@/context/UserContext";
 import { auth } from "@/config/firebase";
@@ -457,23 +458,84 @@ export default function Onboarding() {
           </View>
           <View>
             <Text style={styles.headerTitle}>NutriMind Setup</Text>
-                  <Text style={styles.headerSubtitle}>{step === 0 ? 'Account Type' : `Step ${step} of 3`}</Text>
+            <Text style={styles.headerSubtitle}>{step === 0 ? 'Let\'s get started' : `Step ${step} of 3`}</Text>
           </View>
         </View>
-        <View style={styles.progressBar}>
-          {[1, 2, 3].map((s) => (
-            <View
-              key={s}
-              style={[
-                styles.progressDot,
-                s <= step && styles.progressDotActive,
-              ]}
-            />
-          ))}
-        </View>
+        {step > 0 && (
+          <View style={styles.progressBar}>
+            {[1, 2, 3].map((s) => (
+              <View
+                key={s}
+                style={[
+                  styles.progressDot,
+                  s <= step && styles.progressDotActive,
+                ]}
+              />
+            ))}
+          </View>
+        )}
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+
+        {/* Step 0: User Type Selection */}
+        {step === 0 && (
+          <View style={styles.card}>
+            <Text style={styles.userTypeTitle}>I am a...</Text>
+            <Text style={styles.userTypeSubtitle}>Select your account type</Text>
+
+            <View style={styles.userTypeContainer}>
+              <Pressable
+                style={[
+                  styles.userTypeCard,
+                  userType === "patient" && styles.userTypeCardActive,
+                ]}
+                onPress={() => setUserType("patient")}
+              >
+                <View style={[
+                  styles.userTypeIcon,
+                  userType === "patient" && styles.userTypeIconActive,
+                ]}>
+                  <Heart size={32} color={userType === "patient" ? "white" : "#009235"} />
+                </View>
+                <Text style={[
+                  styles.userTypeCardTitle,
+                  userType === "patient" && styles.userTypeCardTitleActive,
+                ]}>
+                  Patient
+                </Text>
+                <Text style={styles.userTypeDescription}>
+                  Track your bariatric surgery recovery journey
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[
+                  styles.userTypeCard,
+                  userType === "doctor" && styles.userTypeCardActive,
+                ]}
+                onPress={() => setUserType("doctor")}
+              >
+                <View style={[
+                  styles.userTypeIcon,
+                  userType === "doctor" && styles.userTypeIconActive,
+                ]}>
+                  <Stethoscope size={32} color={userType === "doctor" ? "white" : "#009235"} />
+                </View>
+                <Text style={[
+                  styles.userTypeCardTitle,
+                  userType === "doctor" && styles.userTypeCardTitleActive,
+                ]}>
+                  Doctor
+                </Text>
+                <Text style={styles.userTypeDescription}>
+                  Monitor and support your patients
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
         {step === 1 && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -734,10 +796,6 @@ export default function Onboarding() {
           </View>
         )}
 
-        {step === 0 && (
-          <UserTypeSelector userType={userType} setUserType={setUserType} />
-        )}
-
         {step === 2 && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -851,7 +909,6 @@ export default function Onboarding() {
                       (profile.intolerances ?? []).includes(item) &&
                         styles.intoleranceButtonActive,
                     ]}
-
                   >
                     <Text
                       style={[
@@ -859,7 +916,6 @@ export default function Onboarding() {
                         (profile.intolerances ?? []).includes(item) &&
                           styles.intoleranceButtonTextActive,
                       ]}
-
                     >
                       {(profile.intolerances ?? []).includes(item) && "✓ "}
                       {item}
@@ -934,66 +990,64 @@ export default function Onboarding() {
               <View style={styles.intoleranceRow}>
                 {cuisineOptions.map((cuisine) => (
                   <Pressable
-                  key={cuisine}
-                  onPress={() => {
-                    if (cuisine === "Other") {
-                    setShowOtherCuisineInput((prev) => !prev);
-                    return;
-                  }
-
-                  const current = profile.favoriteCuisines ?? [];
-                  setProfile({
-                  ...profile,
-                  favoriteCuisines: current.includes(cuisine)
-                    ? current.filter((c) => c !== cuisine)
-                    : [...current, cuisine],
-                  });
-                  }}
-                  style={[
-                    styles.intoleranceButton,
-                    cuisine === "Other"
-                    ? showOtherCuisineInput && styles.intoleranceButtonActive
-                    : (profile.favoriteCuisines ?? []).includes(cuisine) &&
-                    styles.intoleranceButtonActive,
-                  ]}
-                >
+                    key={cuisine}
+                    onPress={() => {
+                      if (cuisine === "Other") {
+                        setShowOtherCuisineInput((prev) => !prev);
+                        return;
+                      }
+                      const current = profile.favoriteCuisines ?? [];
+                      setProfile({
+                        ...profile,
+                        favoriteCuisines: current.includes(cuisine)
+                          ? current.filter((c) => c !== cuisine)
+                          : [...current, cuisine],
+                      });
+                    }}
+                    style={[
+                      styles.intoleranceButton,
+                      cuisine === "Other"
+                        ? showOtherCuisineInput && styles.intoleranceButtonActive
+                        : (profile.favoriteCuisines ?? []).includes(cuisine) &&
+                          styles.intoleranceButtonActive,
+                    ]}
+                  >
                     <Text style={styles.intoleranceButtonText}>
-                        {cuisine === "Other" && showOtherCuisineInput && "✓ "}
-                        {cuisine !== "Other" &&
+                      {cuisine === "Other" && showOtherCuisineInput && "✓ "}
+                      {cuisine !== "Other" &&
                         (profile.favoriteCuisines ?? []).includes(cuisine) &&
                         "✓ "}
-                        {cuisine}
+                      {cuisine}
                     </Text>
                   </Pressable>
                 ))}
               </View>
 
               {showOtherCuisineInput && (
-                       <View style={{ marginTop: 10 }}>
-                        <TextInput
-                          placeholder="Enter other cuisines (comma separated)"
-                          value={otherCuisineText}
-                          onChangeText={(text) => {
-                          setOtherCuisineText(text);
-
-                          const parsed = text
-                            .split(",")
-                            .map((c) => c.trim())
-                            .filter(Boolean);
-
-                          setProfile({
-                          ...profile,
-                          favoriteCuisines: [
-                            ...(profile.favoriteCuisines ?? []).filter(c => c !== "Other"),
-                            ...parsed,
-                          ],
-                        });
-                        }}
+                <View style={{ marginTop: 10 }}>
+                  <TextInput
+                    placeholder="Enter other cuisines (comma separated)"
+                    value={otherCuisineText}
+                    onChangeText={(text) => {
+                      setOtherCuisineText(text);
+                      const parsed = text
+                        .split(",")
+                        .map((c) => c.trim())
+                        .filter(Boolean);
+                      setProfile({
+                        ...profile,
+                        favoriteCuisines: [
+                          ...(profile.favoriteCuisines ?? []).filter(c => c !== "Other"),
+                          ...parsed,
+                        ],
+                      });
+                    }}
                     style={styles.textInput}
-                    />
-                  </View>
+                  />
+                </View>
               )}
             </View>
+
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Allergies</Text>
               <TextInput
@@ -1003,13 +1057,13 @@ export default function Onboarding() {
                   setProfile({
                     ...profile,
                     allergies: text
-                    .split(",")
-                    .map(a => a.trim())
-                    .filter(Boolean),
+                      .split(",")
+                      .map(a => a.trim())
+                      .filter(Boolean),
                   })
                 }
                 style={styles.textInput}
-              /> 
+              />
             </View>
           </View>
         )}
@@ -1077,31 +1131,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFB703",
   },
 
-  typeOption: {
-    backgroundColor: '#FFFDF4',
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#E8E3D4',
-  },
-  typeOptionActive: {
-    backgroundColor: '#009235',
-    borderColor: '#009235',
-  },
-  typeOptionText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#004734',
-  },
-  typeOptionTextActive: {
-    color: '#fff',
-  },
-  typeOptionHint: {
-    fontSize: 13,
-    color: '#3F5E52',
-    marginTop: 6,
-  },
-
   /* Body */
   scrollView: {
     flex: 1,
@@ -1141,6 +1170,62 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#3F5E52",
     marginTop: 2,
+  },
+
+  /* User Type Selection */
+  userTypeTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#004734",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  userTypeSubtitle: {
+    fontSize: 14,
+    color: "#3F5E52",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  userTypeContainer: {
+    gap: 16,
+  },
+  userTypeCard: {
+    backgroundColor: "#FFFDF4",
+    borderRadius: 16,
+    padding: 20,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#D6C89A",
+  },
+  userTypeCardActive: {
+    borderColor: "#009235",
+    backgroundColor: "#E8F5E9",
+  },
+  userTypeIcon: {
+    width: 64,
+    height: 64,
+    backgroundColor: "#E8F5E9",
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  userTypeIconActive: {
+    backgroundColor: "#009235",
+  },
+  userTypeCardTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#004734",
+    marginBottom: 8,
+  },
+  userTypeCardTitleActive: {
+    color: "#009235",
+  },
+  userTypeDescription: {
+    fontSize: 14,
+    color: "#3F5E52",
+    textAlign: "center",
   },
 
   section: {
@@ -1345,7 +1430,6 @@ const styles = StyleSheet.create({
   datePickerCancel: {
     padding: 6,
   },
-
   datePickerDone: {
     padding: 6,
   },
