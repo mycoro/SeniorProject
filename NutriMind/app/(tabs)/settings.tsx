@@ -199,12 +199,14 @@ export default function Settings() {
             </Pressable>
           );
         })()}
-        <View style={styles.profileCard}>
-          <Text style={styles.label}>Status</Text>
-          <Text style={styles.value}>
-            {userProfile?.isPreOp === true ? "Pre-Op" : userProfile?.isPreOp === false ? "Post-Op" : "Not set"}
-          </Text>
-        </View>
+        {!isDoctor && (
+          <View style={styles.profileCard}>
+            <Text style={styles.label}>Status</Text>
+            <Text style={styles.value}>
+              {userProfile?.isPreOp === true ? "Pre-Op" : userProfile?.isPreOp === false ? "Post-Op" : "Not set"}
+            </Text>
+          </View>
+        )}
         
         {isDoctor ? (
           <>
