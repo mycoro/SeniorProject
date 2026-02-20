@@ -17,6 +17,7 @@ export interface UserProfile {
   role?: "patient" | "healthcare_prof";
   name?: string;
   dateOfBirth?: string;
+  sex?: string; 
   isPreOp?: boolean;
   surgeryDate?: string;
   surgeryType?: "Gastric Sleeve" | "Gastric Bypass" | "Duodenal Switch";

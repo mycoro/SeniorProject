@@ -31,6 +31,7 @@ import { updateProfile } from "firebase/auth";
 import { setUserProfile as saveUserProfile, getUserProfile } from "@/config/users";
 
 const surgeryTypes = ["Gastric Sleeve", "Gastric Bypass", "Duodenal Switch"];
+const sexOptions = ["Male", "Female"]; 
 const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
 const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian", "Other"];
 const defaultTastePreferences = { sweet: 3, spicy: 3, savory: 3, bitter: 3, sour: 3 };
@@ -99,6 +100,7 @@ export default function Onboarding() {
       return {
         name: existingProfile.name || "",
         dateOfBirth: (existingProfile as UserProfile).dateOfBirth ?? "",
+        sex: existingProfile.sex || "", 
         isPreOp: existingProfile.isPreOp ?? false,
         surgeryDate: formattedDate,
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
@@ -117,6 +119,7 @@ export default function Onboarding() {
     return {
       name: existingProfile?.name || "",
       dateOfBirth: (existingProfile as UserProfile)?.dateOfBirth ?? "",
+      sex: "", 
       isPreOp: false,
       surgeryDate: "",
       surgeryType: "Gastric Sleeve",
@@ -257,6 +260,10 @@ export default function Onboarding() {
         Alert.alert("Invalid Date", "You must be 13–120 years old.");
         return;
       }
+      if (!profile.sex) { 
+        Alert.alert("Required", "Please select your sex.");
+        return;
+      }
       if (!profile.surgeryDate) {
         Alert.alert("Required", "Please enter your surgery date.");
         return;
@@ -294,6 +301,7 @@ export default function Onboarding() {
           await saveUserProfile(user.uid, {
             name: nameStr || undefined,
             dateOfBirth: hasValidDob ? dobIso : undefined,
+            sex: profile.sex, 
             isPreOp: profile.isPreOp,
             surgeryDate: isoDate,
             surgeryType: profile.surgeryType,
@@ -658,6 +666,31 @@ export default function Onboarding() {
                   )}
                 </>
               )}
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Sex</Text>
+              <View style={styles.optionsList}>
+                {sexOptions.map((type) => (
+                  <Pressable
+                    key={type}
+                    onPress={() => setProfile({ ...profile, sex: type as any })}
+                    style={[
+                      styles.optionButton,
+                      profile.sex === type && styles.optionButtonActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.optionButtonText,
+                        profile.sex === type && styles.optionButtonTextActive,
+                      ]}
+                    >
+                      {type}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
 
             <View style={styles.section}>

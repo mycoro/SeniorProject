@@ -8,6 +8,7 @@ export type UserProfile = {
   role: UserRole;
   name?: string;
   dateOfBirth?: string;
+  sex?: string; 
   isPreOp?: boolean;
   surgeryDate?: string;
   surgeryType?: string;
