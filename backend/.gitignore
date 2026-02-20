@@ -3,5 +3,7 @@ node_modules
 .env
 .env.example
 
+service-account.json
+
 /generated/prisma
 backend/service-account.json
