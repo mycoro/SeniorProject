@@ -31,7 +31,7 @@ import { updateProfile } from "firebase/auth";
 import { setUserProfile as saveUserProfile, getUserProfile } from "@/config/users";
 
 const surgeryTypes = ["Gastric Sleeve", "Gastric Bypass", "Duodenal Switch"];
-const genderOptions = ["Male", "Female", "Prefer Not to Say"]; 
+const sexOptions = ["Male", "Female"]; 
 const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
 const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian", "Other"];
 const defaultTastePreferences = { sweet: 3, spicy: 3, savory: 3, bitter: 3, sour: 3 };
@@ -100,7 +100,7 @@ export default function Onboarding() {
       return {
         name: existingProfile.name || "",
         dateOfBirth: (existingProfile as UserProfile).dateOfBirth ?? "",
-        gender: existingProfile.gender || "", 
+        sex: existingProfile.sex || "", 
         isPreOp: existingProfile.isPreOp ?? false,
         surgeryDate: formattedDate,
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
@@ -119,7 +119,7 @@ export default function Onboarding() {
     return {
       name: existingProfile?.name || "",
       dateOfBirth: (existingProfile as UserProfile)?.dateOfBirth ?? "",
-      gender: "", 
+      sex: "", 
       isPreOp: false,
       surgeryDate: "",
       surgeryType: "Gastric Sleeve",
@@ -260,8 +260,8 @@ export default function Onboarding() {
         Alert.alert("Invalid Date", "You must be 13–120 years old.");
         return;
       }
-      if (!profile.gender) { 
-        Alert.alert("Required", "Please select an option for gender.");
+      if (!profile.sex) { 
+        Alert.alert("Required", "Please select your sex.");
         return;
       }
       if (!profile.surgeryDate) {
@@ -301,7 +301,7 @@ export default function Onboarding() {
           await saveUserProfile(user.uid, {
             name: nameStr || undefined,
             dateOfBirth: hasValidDob ? dobIso : undefined,
-            gender: profile.gender, 
+            sex: profile.sex, 
             isPreOp: profile.isPreOp,
             surgeryDate: isoDate,
             surgeryType: profile.surgeryType,
@@ -669,21 +669,21 @@ export default function Onboarding() {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Gender</Text>
+              <Text style={styles.sectionLabel}>Sex</Text>
               <View style={styles.optionsList}>
-                {genderOptions.map((type) => (
+                {sexOptions.map((type) => (
                   <Pressable
                     key={type}
-                    onPress={() => setProfile({ ...profile, gender: type as any })}
+                    onPress={() => setProfile({ ...profile, sex: type as any })}
                     style={[
                       styles.optionButton,
-                      profile.gender === type && styles.optionButtonActive,
+                      profile.sex === type && styles.optionButtonActive,
                     ]}
                   >
                     <Text
                       style={[
                         styles.optionButtonText,
-                        profile.gender === type && styles.optionButtonTextActive,
+                        profile.sex === type && styles.optionButtonTextActive,
                       ]}
                     >
                       {type}
