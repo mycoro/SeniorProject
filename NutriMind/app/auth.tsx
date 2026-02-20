@@ -40,7 +40,7 @@ export default function Auth() {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email.trim(), password);
         await ensureUserDoc(auth.currentUser!.uid, email.trim());
-        router.replace("/(tabs)/dashboard");
+        router.replace("/dashboard");
       } else {
         const userCredential = await createUserWithEmailAndPassword(
           auth,
