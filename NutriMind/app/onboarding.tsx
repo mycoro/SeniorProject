@@ -327,7 +327,7 @@ export default function Onboarding() {
             setUserProfile({ ...profile, dateOfBirth: hasValidDob ? dobIso : undefined } as UserProfile);
           }
           setIsOnboarded(true);
-          router.replace("/(tabs)/dashboard");
+          router.replace("/(patients)/(tabs)/dashboard");
         } catch (error) {
           console.error("Error saving profile:", error);
           Alert.alert("Error", "Failed to save profile. Please try again.");

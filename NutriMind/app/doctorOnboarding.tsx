@@ -73,7 +73,7 @@ export default function DoctorOnboarding() {
         } as UserProfile);
 
         setIsOnboarded(true);
-        router.replace("/(tabs)/doctorDashboard");
+        router.replace("/(provider)/(tabs)/doctorDashboard");
       } catch (error) {
         console.error("Error saving doctor profile:", error);
         Alert.alert("Error", "Failed to save profile. Please check your permissions.");

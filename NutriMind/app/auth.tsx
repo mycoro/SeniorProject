@@ -4,7 +4,7 @@ import { Leaf, Mail, Lock, User, Eye, EyeOff } from "lucide-react-native";
 import { router } from "expo-router";
 import { auth } from "@/config/firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "firebase/auth";
-import { ensureUserDoc, setUserProfile } from "@/config/users";
+import { ensureUserDoc, setUserProfile, getUserRole } from "@/config/users";
 import { useUser } from "@/context/UserContext";
 
 export default function Auth() {
@@ -38,9 +38,22 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email.trim(), password);
-        await ensureUserDoc(auth.currentUser!.uid, email.trim());
-        router.replace("/dashboard");
+        const cred = await signInWithEmailAndPassword(
+    auth,
+    email.trim(),
+    password
+  );
+
+  await ensureUserDoc(cred.user.uid, email.trim());
+
+  // 🔥 Get role AFTER login
+  const role = await getUserRole(cred.user.uid);
+
+  if (role === "healthcare_prof") {
+    router.replace("/(provider)/(tabs)/doctorDashboard");
+  } else {
+    router.replace("/(patients)/(tabs)/dashboard");
+  }
       } else {
         const userCredential = await createUserWithEmailAndPassword(
           auth,

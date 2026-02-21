@@ -44,7 +44,17 @@ export async function getUserRole(uid: string): Promise<UserRole> {
   const ref = doc(db, "users", uid);
   const snap = await getDoc(ref);
 
-  const role = snap.data()?.role;
+  if (!snap.exists()) {
+    console.log("User doc does NOT exist for:", uid);
+    return "patient";
+  }
+
+  const data = snap.data();
+  console.log("Firestore user data:", data);
+
+  const role = data?.role;
+  console.log("Firestore role value:", role);
+
   return role === "healthcare_prof" ? "healthcare_prof" : "patient";
 }
 
