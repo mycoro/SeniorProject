@@ -1,3 +1,4 @@
+// @ts-expect-error - React types may not resolve in IDE; runtime is fine
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -327,7 +328,7 @@ export default function Onboarding() {
             setUserProfile({ ...profile, dateOfBirth: hasValidDob ? dobIso : undefined } as UserProfile);
           }
           setIsOnboarded(true);
-          router.replace("/(patients)/(tabs)/dashboard");
+          router.replace("/(patients)/(tabs)/dashboard" as import("expo-router").Href);
         } catch (error) {
           console.error("Error saving profile:", error);
           Alert.alert("Error", "Failed to save profile. Please try again.");

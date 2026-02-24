@@ -526,6 +526,49 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+// Process meal from text or audio (voice log / AI describe)
+import multer from "multer";
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
+
+app.post("/api/process-meal", upload.single("audio"), async (req, res) => {
+  try {
+    const { transcribeAudio, parseMealText } = await import("./services/mealParser.js");
+
+    let mealText;
+
+    if (req.file) {
+      const audioBuffer = req.file.buffer;
+      const mimeType = req.file.mimetype || "audio/webm";
+      mealText = await transcribeAudio(audioBuffer, mimeType);
+    } else {
+      mealText = req.body.text;
+    }
+
+    if (!mealText || !String(mealText).trim()) {
+      return res.status(400).json({ error: "No meal description provided. Speak or type what you ate." });
+    }
+
+    const userProfile = req.body.userProfile
+      ? (typeof req.body.userProfile === "string" ? JSON.parse(req.body.userProfile) : req.body.userProfile)
+      : {};
+
+    const result = await parseMealText(String(mealText).trim(), userProfile);
+
+    res.json({
+      success: true,
+      transcription: mealText,
+      ...result,
+    });
+  } catch (error) {
+    console.error("/api/process-meal error:", error);
+    const msg = error?.message || String(error);
+    if (msg.includes("API key") || msg.includes("api_key")) {
+      return res.status(500).json({ error: "OpenAI API key issue. Check backend/.env" });
+    }
+    res.status(500).json({ error: msg || "Failed to process meal. Please try again." });
+  }
+});
+
 app.post("/api/analyze-photo", async (req, res) => {
   try {
     const { imageBase64, userProfile } = req.body;
