@@ -283,7 +283,7 @@ app.get("/api/doctor/patient", async (req, res) => {
     res.json({ ok: true, patient: {
       uid: patientId,
       name: data.name || null,
-      gender: data.gender || null,
+      sex: data.sex || null,
       dateOfBirth: data.dateOfBirth || null,
       surgeryType: data.surgeryType || null,
       surgeryDate: data.surgeryDate || null,

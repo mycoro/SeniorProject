@@ -187,6 +187,7 @@ export default function Chat() {
           userProfile: {
             name: userProfile.name,
             dateOfBirth: userProfile.dateOfBirth,
+            sex: userProfile.sex,
             surgeryDate: userProfile.surgeryDate,
             surgeryType: userProfile.surgeryType,
             isPreOp: userProfile.isPreOp ?? false,

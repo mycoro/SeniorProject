@@ -20,6 +20,7 @@ import { updateProfile } from "firebase/auth";
 import { setUserProfile as saveUserProfile } from "@/config/users";
 
 const surgeryTypes = ["Gastric Sleeve", "Gastric Bypass", "Duodenal Switch"] as const;
+const sexOptions = ["Male", "Female"];
 const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
 const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian"];
 const defaultTastePreferences = { sweet: 3, spicy: 3, savory: 3, bitter: 3, sour: 3 };
@@ -70,6 +71,7 @@ export default function EditProfile() {
   const [profile, setProfile] = useState<UserProfile>({
     name: "",
     dateOfBirth: "",
+    sex: undefined,
     isPreOp: false,
     surgeryDate: "",
     surgeryType: "Gastric Sleeve",
@@ -104,6 +106,7 @@ export default function EditProfile() {
     setProfile({
       name: existingProfile.name || "",
       dateOfBirth: dobRaw,
+      sex: existingProfile.sex,
       isPreOp: existingProfile.isPreOp ?? false,
       surgeryDate: formattedDate,
       surgeryType: (existingProfile.surgeryType as "Gastric Sleeve" | "Gastric Bypass" | "Duodenal Switch") || "Gastric Sleeve",
@@ -189,6 +192,7 @@ export default function EditProfile() {
       await saveUserProfile(user.uid, {
         name: nameStr,
         dateOfBirth: hasValidDob ? dobIso : undefined,
+        sex: profile.sex,
         isPreOp: profile.isPreOp,
         surgeryDate: isoDate,
         surgeryType: profile.surgeryType,
@@ -207,6 +211,7 @@ export default function EditProfile() {
         ...existingProfile,
         name: nameStr,
         dateOfBirth: hasValidDob ? dobIso : undefined,
+        sex: profile.sex,
         isPreOp: profile.isPreOp,
         surgeryDate: isoDate,
         surgeryType: profile.surgeryType,
@@ -334,6 +339,21 @@ export default function EditProfile() {
                 )}
               </>
             )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Sex</Text>
+            <View style={styles.toggleRow}>
+              {sexOptions.map((option) => (
+                <Pressable
+                  key={option}
+                  onPress={() => setProfile((p) => ({ ...p, sex: option as any }))}
+                  style={[styles.toggleButton, profile.sex === option && styles.toggleButtonActive]}
+                >
+                  <Text style={[styles.toggleButtonText, profile.sex === option && styles.toggleButtonTextActive]}>{option}</Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
 
           <View style={styles.section}>
