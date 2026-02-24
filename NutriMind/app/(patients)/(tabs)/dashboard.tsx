@@ -7,11 +7,22 @@ import ProgressRing from "@/components/ProgressRing";
 import EditLogModal from "@/components/EditLogModal";
 import { getMealDisplayName } from "@/utils/mealDisplay";
 
+const isSameCalendarDay = (logTimestamp: Date, ref: Date) =>
+  logTimestamp.getFullYear() === ref.getFullYear() &&
+  logTimestamp.getMonth() === ref.getMonth() &&
+  logTimestamp.getDate() === ref.getDate();
+
 export default function Dashboard() {
   const { userProfile, dailyLogs } = useUser();
   const [editLog, setEditLog] = useState<MealLog | null>(null);
 
-  const recentActivity = dailyLogs.slice(0, 3).map((log) => ({
+  const today = new Date();
+  const todayLogs = dailyLogs.filter((log) => {
+    const t = log.timestamp instanceof Date ? log.timestamp : new Date(log.timestamp);
+    return !isNaN(t.getTime()) && isSameCalendarDay(t, today);
+  });
+
+  const recentActivity = todayLogs.slice(0, 3).map((log) => ({
     ...log,
     time: log.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     mealType: log.mealType ?? "Meal",
@@ -81,10 +92,10 @@ export default function Dashboard() {
     ? "Pre-Op"
     : `Day ${displayDays} Post-Op`;
 
-  const totalProtein = dailyLogs.reduce((sum, log) => sum + log.protein, 0);
-  const totalCalories = dailyLogs.reduce((sum, log) => sum + log.calories, 0);
-  const totalFat = dailyLogs.reduce((sum, log) => sum + (log.fat ?? 0), 0);
-  const totalSugar = dailyLogs.reduce((sum, log) => sum + (log.sugar ?? 0), 0);
+  const totalProtein = todayLogs.reduce((sum, log) => sum + log.protein, 0);
+  const totalCalories = todayLogs.reduce((sum, log) => sum + log.calories, 0);
+  const totalFat = todayLogs.reduce((sum, log) => sum + (log.fat ?? 0), 0);
+  const totalSugar = todayLogs.reduce((sum, log) => sum + (log.sugar ?? 0), 0);
 
   const getFluidAmountFromLog = (log: any) => {
     const match = log.name.match(/\((\d+(?:\.\d+)?)oz\)/i);
@@ -94,7 +105,7 @@ export default function Dashboard() {
     return 0;
   };
   
-  const totalFluids = dailyLogs
+  const totalFluids = todayLogs
     .filter((log) => {
       const name = log.name.toLowerCase();
       return (
