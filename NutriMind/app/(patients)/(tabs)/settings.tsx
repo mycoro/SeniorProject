@@ -174,6 +174,10 @@ export default function Settings() {
           <Text style={styles.label}>Preferred name</Text>
           <Text style={styles.value}>{userProfile?.name || "Not set"}</Text>
         </Pressable>
+        <View style={styles.profileCard}>
+          <Text style={styles.label}>Sex</Text>
+          <Text style={styles.value}>{userProfile?.sex || "Not set"}</Text>
+        </View>
         {!isDoctor && (() => {
           const hasLinkedDoctor = Boolean(userProfile?.assignedDoctors && userProfile.assignedDoctors.length > 0);
           if (hasLinkedDoctor) {

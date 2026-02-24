@@ -100,6 +100,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
               role: (rawProfile as any).role,
               name: (rawProfile as UserProfile).name?.trim() || nameToUse || undefined,
               dateOfBirth: (rawProfile as UserProfile).dateOfBirth,
+              sex: (rawProfile as UserProfile).sex,
               isPreOp: rawProfile.isPreOp,
               surgeryDate: rawProfile.surgeryDate,
               surgeryType: rawProfile.surgeryType as UserProfile["surgeryType"],
