@@ -197,6 +197,7 @@ export default function Auth() {
                       </View>
                       <TextInput
                         placeholder="John"
+                        placeholderTextColor="#7A9C8A"
                         value={firstName}
                         onChangeText={setFirstName}
                         style={styles.input}
@@ -206,13 +207,14 @@ export default function Auth() {
                     </View>
                   </View>
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Middle Name (optional)</Text>
+                    <Text style={styles.label}>Middle Name (Optional)</Text>
                     <View style={styles.inputWrapper}>
                       <View style={styles.iconLeft}>
                         <User size={16} color="#94a3b8" />
                       </View>
                       <TextInput
                         placeholder="Michael"
+                        placeholderTextColor="#7A9C8A"
                         value={middleName}
                         onChangeText={setMiddleName}
                         style={styles.input}
@@ -229,6 +231,7 @@ export default function Auth() {
                       </View>
                       <TextInput
                         placeholder="Doe"
+                        placeholderTextColor="#7A9C8A"
                         value={lastName}
                         onChangeText={setLastName}
                         style={styles.input}
@@ -248,6 +251,7 @@ export default function Auth() {
                   </View>
                   <TextInput
                     placeholder="you@example.com"
+                    placeholderTextColor="#7A9C8A"
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -266,6 +270,7 @@ export default function Auth() {
                   </View>
                   <TextInput
                     placeholder="Enter your Password"
+                    placeholderTextColor="#7A9C8A"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}

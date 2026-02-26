@@ -18,6 +18,7 @@ export interface UserProfile {
   name?: string;
   dateOfBirth?: string;
   sex?: string; 
+  weight?: string;
   isPreOp?: boolean;
   surgeryDate?: string;
   surgeryType?: "Gastric Sleeve" | "Gastric Bypass" | "Duodenal Switch";
