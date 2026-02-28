@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import ProgressRing from "@/components/ProgressRing";
 import EditLogModal from "@/components/EditLogModal";
 import { getMealDisplayName } from "@/utils/mealDisplay";
+import { calculatePostOpTime } from "@/utils/formatters";
 
 const isSameCalendarDay = (logTimestamp: Date, ref: Date) =>
   logTimestamp.getFullYear() === ref.getFullYear() &&
@@ -84,13 +85,12 @@ export default function Dashboard() {
   };
 
   const phase = getPhase();
-  const displayDays =
-    typeof daysPostOp === "number" && !isNaN(daysPostOp) ? daysPostOp : 0;
+  const postOpLabel = calculatePostOpTime(userProfile?.surgeryDate);
   const subtitleText = isPreOp
     ? "Pre-Op"
-    : daysPostOp === null
-    ? "Pre-Op"
-    : `Day ${displayDays} Post-Op`;
+    : postOpLabel
+    ? postOpLabel
+    : "Pre-Op";
 
   const totalProtein = todayLogs.reduce((sum, log) => sum + log.protein, 0);
   const totalCalories = todayLogs.reduce((sum, log) => sum + log.calories, 0);
