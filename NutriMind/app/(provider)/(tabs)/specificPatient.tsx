@@ -14,11 +14,12 @@ import { ChevronLeft, Activity, Target, TrendingUp } from "lucide-react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { auth } from "@/config/firebase";
 import { API_BASE_URL } from "@/config/api";
+import { formatSurgeryMonthYear, calculatePostOpTime } from "@/utils/formatters";
 
 type PatientData = {
   id: string;
   name: string | null;
-  gender?: string | null;
+  sex?: string | null;
   dateOfBirth?: string | null;
   surgeryType?: string | null;
   surgeryDate?: string | null;
@@ -142,7 +143,7 @@ export default function SpecificPatient() {
           setPatient({
             id: p.uid,
             name: p.name ?? null,
-            gender: p.gender ?? null,
+            sex: p.sex ?? null,
             dateOfBirth: p.dateOfBirth ?? null,
             surgeryType: p.surgeryType ?? null,
             surgeryDate: p.surgeryDate ?? null,
@@ -211,8 +212,8 @@ export default function SpecificPatient() {
                   })() : "n/a"}</Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Gender</Text>
-                <Text style={styles.detailValue}>{patient?.gender ?? "n/a"}</Text>
+                <Text style={styles.detailLabel}>Sex</Text>
+                <Text style={styles.detailValue}>{patient?.sex ?? "n/a"}</Text>
               </View>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Surgery</Text>
@@ -220,11 +221,11 @@ export default function SpecificPatient() {
               </View>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Surgery Date</Text>
-                <Text style={styles.detailValue}>{patient?.surgeryDate ?? "n/a"}</Text>
+                <Text style={styles.detailValue}>{patient?.surgeryDate ? formatSurgeryMonthYear(patient.surgeryDate) : "n/a"}</Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Days Post-Op</Text>
-                <Text style={styles.detailValue}>{daysPostOp != null ? `${daysPostOp} days` : "n/a"}</Text>
+                <Text style={styles.detailLabel}>Post-Op Status</Text>
+                <Text style={styles.detailValue}>{patient?.surgeryDate ? (calculatePostOpTime(patient.surgeryDate) ?? "n/a") : "n/a"}</Text>
               </View>
             </View>
 
