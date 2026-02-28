@@ -14,11 +14,12 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { Camera, Timer, X, Loader2, Mic, Sparkles, Edit3, Check, ChevronDown, ChevronUp } from "lucide-react-native";
+import { Camera, Timer, X, Loader2, Mic, Sparkles, Edit3, Check, ChevronDown, ChevronUp, Calendar } from "lucide-react-native";
 import { useUser } from "@/context/UserContext";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { Audio } from "expo-av";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { API_BASE_URL } from "@/config/api";
 
 type MealType = "Breakfast" | "Lunch" | "Dinner" | "Snack";
@@ -76,6 +77,30 @@ export default function LogMeal() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingInstance, setRecordingInstance] = useState<Audio.Recording | null>(null);
   const [processingLabel, setProcessingLabel] = useState("Analyzing your meal...");
+
+  // Date picker state — defaults to today
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const isToday = (d: Date) => {
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
+  const formatDateLabel = (d: Date) => {
+    if (isToday(d)) return "Today";
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (d.getFullYear() === yesterday.getFullYear() && d.getMonth() === yesterday.getMonth() && d.getDate() === yesterday.getDate()) return "Yesterday";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  const buildTimestampForDate = (date: Date): Date => {
+    const now = new Date();
+    if (isToday(date)) return now;
+    // For past dates, set time to noon local to avoid any timezone edge-case flipping
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
+  };
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const voicePulseAnim = useRef(new Animated.Value(1)).current;
@@ -429,10 +454,11 @@ export default function LogMeal() {
       calories: caloriesValue,
       carbs: carbsValue > 0 ? carbsValue : undefined,
       mealType,
-      timestamp: new Date(),
+      timestamp: buildTimestampForDate(selectedDate),
     });
     setFoodName(""); setIngredients(""); setProtein(""); setCalories(""); setCarbs("");
     setScanResult(null);
+    setSelectedDate(new Date());
     alert("Meal logged successfully!");
   };
 
@@ -451,11 +477,12 @@ export default function LogMeal() {
       carbs: aiResult.totals.carbs > 0 ? aiResult.totals.carbs : undefined,
       fat: aiResult.totals.fat > 0 ? aiResult.totals.fat : undefined,
       mealType,
-      timestamp: new Date(),
+      timestamp: buildTimestampForDate(selectedDate),
     });
 
     setAiResult(null);
     setDescribeText("");
+    setSelectedDate(new Date());
     Alert.alert("Logged!", "Your meal has been logged successfully.");
   };
 
@@ -475,6 +502,43 @@ export default function LogMeal() {
           keyboardDismissMode="on-drag"
         >
           <Text style={styles.title}>Log Food</Text>
+
+          {/* Date selector chip */}
+          <Pressable onPress={() => setShowDatePicker(true)} style={[styles.dateChip, !isToday(selectedDate) && styles.dateChipActive]}>
+            <Calendar size={14} color={isToday(selectedDate) ? "#6B8F7A" : "#004734"} />
+            <Text style={[styles.dateChipText, !isToday(selectedDate) && styles.dateChipTextActive]}>
+              {formatDateLabel(selectedDate)}
+            </Text>
+            {!isToday(selectedDate) && (
+              <Pressable
+                onPress={(e) => { e.stopPropagation(); setSelectedDate(new Date()); }}
+                hitSlop={8}
+              >
+                <X size={14} color="#004734" />
+              </Pressable>
+            )}
+          </Pressable>
+
+          {showDatePicker && (
+            <View style={styles.datePickerContainer}>
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display={Platform.OS === "ios" ? "inline" : "default"}
+                maximumDate={new Date()}
+                onChange={(event: any, date?: Date) => {
+                  if (Platform.OS === "android") setShowDatePicker(false);
+                  if (date) setSelectedDate(date);
+                }}
+                style={Platform.OS === "ios" ? { alignSelf: "center" } : undefined}
+              />
+              {Platform.OS === "ios" && (
+                <Pressable onPress={() => setShowDatePicker(false)} style={styles.datePickerDoneButton}>
+                  <Text style={styles.datePickerDoneText}>Done</Text>
+                </Pressable>
+              )}
+            </View>
+          )}
 
           {/* Meal type pills */}
           <View style={styles.mealTypeRow}>
@@ -1008,7 +1072,33 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 160, flexGrow: 1 },
 
-  title: { fontSize: 20, fontWeight: "600", color: "#004734", textAlign: "center", marginBottom: 16, marginTop: 8 },
+  title: { fontSize: 20, fontWeight: "600", color: "#004734", textAlign: "center", marginBottom: 8, marginTop: 8 },
+
+  dateChip: {
+    flexDirection: "row", alignItems: "center", alignSelf: "center", gap: 6,
+    paddingVertical: 6, paddingHorizontal: 14, borderRadius: 20,
+    backgroundColor: "#F1F8F4", borderWidth: 1, borderColor: "#D4E8DA", marginBottom: 12,
+  },
+  dateChipActive: { backgroundColor: "#FFF3C4", borderColor: "#E6C85E" },
+  dateChipText: { fontSize: 13, fontWeight: "500", color: "#6B8F7A" },
+  dateChipTextActive: { color: "#004734", fontWeight: "600" },
+
+  datePickerContainer: {
+    backgroundColor: "#FFF8E7",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E6D8A8",
+  },
+  datePickerDoneButton: {
+    marginTop: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+    backgroundColor: "#009235",
+    borderRadius: 10,
+  },
+  datePickerDoneText: { color: "#FFFDF4", fontWeight: "600", fontSize: 15 },
 
   mealTypeRow: { flexDirection: "row", gap: 8, marginBottom: 12, flexWrap: "wrap" },
   mealTypeButton: { flex: 1, minWidth: "22%", paddingHorizontal: 8, paddingVertical: 8, borderRadius: 20, backgroundColor: "#FFF8E7", alignItems: "center", borderWidth: 1, borderColor: "#E6D8A8" },
