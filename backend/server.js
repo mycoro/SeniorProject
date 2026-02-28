@@ -596,6 +596,21 @@ app.post("/api/analyze-photo", async (req, res) => {
 });
 
 const port = Number(process.env.PORT) || 3000;
-app.listen(port, "0.0.0.0", () => {
+
+// Prevent process from exiting on uncaught errors (keeps server running, logs instead)
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception:", err);
+});
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled rejection at:", promise, "reason:", reason);
+});
+
+const server = app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on http://localhost:${port}`);
+  console.log("Press Ctrl+C to stop.");
+});
+
+server.on("error", (err) => {
+  console.error("Server error:", err);
+  process.exit(1);
 });
