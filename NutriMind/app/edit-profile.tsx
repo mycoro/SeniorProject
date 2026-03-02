@@ -20,8 +20,8 @@ import { updateProfile } from "firebase/auth";
 import { setUserProfile as saveUserProfile } from "@/config/users";
 
 const surgeryTypes = ["Gastric Sleeve", "Gastric Bypass", "Duodenal Switch"] as const;
-const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
 const sexOptions = ["Male", "Female"];
+const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
 const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian"];
 const defaultTastePreferences = { sweet: 3, spicy: 3, savory: 3, bitter: 3, sour: 3 };
 

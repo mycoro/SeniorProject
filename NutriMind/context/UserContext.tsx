@@ -3,7 +3,7 @@ import { auth } from "@/config/firebase";
 import { db } from "@/config/firebase";
 import { getUserProfile, updateUserProfile } from "@/config/users";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, addDoc, doc, updateDoc, query, orderBy, Timestamp, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, query, orderBy, Timestamp, serverTimestamp, onSnapshot } from "firebase/firestore";
 
 export interface TastePreferences {
   sweet: number;
@@ -102,6 +102,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
               role: (rawProfile as any).role,
               name: (rawProfile as UserProfile).name?.trim() || nameToUse || undefined,
               dateOfBirth: (rawProfile as UserProfile).dateOfBirth,
+              sex: (rawProfile as UserProfile).sex,
               isPreOp: rawProfile.isPreOp,
               surgeryDate: rawProfile.surgeryDate,
               surgeryType: rawProfile.surgeryType as UserProfile["surgeryType"],
@@ -220,6 +221,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         sugar: meal.sugar ?? 0,
         mealType: meal.mealType,
         timestamp: Timestamp.fromDate(meal.timestamp),
+        createdAt: serverTimestamp(),
       });
 
     } catch (error: any) {

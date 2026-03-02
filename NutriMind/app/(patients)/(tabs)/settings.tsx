@@ -7,6 +7,7 @@ import { router } from "expo-router";
 import { useUser } from "@/context/UserContext";
 import { updateUserProfile, getUserProfile } from "@/config/users";
 import { API_BASE_URL } from "@/config/api";
+import { formatSurgeryMonthYear, calculatePostOpTime } from "@/utils/formatters";
 
 export default function Settings() {
   const { userProfile, setUserProfile } = useUser();
@@ -174,6 +175,10 @@ export default function Settings() {
           <Text style={styles.label}>Preferred name</Text>
           <Text style={styles.value}>{userProfile?.name || "Not set"}</Text>
         </Pressable>
+        <View style={styles.profileCard}>
+          <Text style={styles.label}>Sex</Text>
+          <Text style={styles.value}>{userProfile?.sex || "Not set"}</Text>
+        </View>
         {!isDoctor && (() => {
           const hasLinkedDoctor = Boolean(userProfile?.assignedDoctors && userProfile.assignedDoctors.length > 0);
           if (hasLinkedDoctor) {
@@ -240,7 +245,9 @@ export default function Settings() {
             <View style={styles.profileCard}>
               <Text style={styles.label}>Surgery Date</Text>
               <Text style={styles.value}>
-                {userProfile?.surgeryDate || "Not set"}
+                {userProfile?.surgeryDate
+                  ? `${formatSurgeryMonthYear(userProfile.surgeryDate)}${calculatePostOpTime(userProfile.surgeryDate) ? ` (${calculatePostOpTime(userProfile.surgeryDate)})` : ""}`
+                  : "Not set"}
               </Text>
             </View>
             <View style={styles.profileCard}>
