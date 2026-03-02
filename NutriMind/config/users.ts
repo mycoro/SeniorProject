@@ -14,7 +14,8 @@ export type UserProfile = {
   surgeryDate?: string;
   surgeryType?: string;
   hasDiabetes?: boolean;
-  hasDumpingSyndrome?: boolean;
+  hasHighBloodPressure?: boolean;
+  hasHighCholesterol?: boolean;
   intolerances?: string[];
   proteinGoal?: number;
   fluidGoal?: number;

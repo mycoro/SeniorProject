@@ -106,7 +106,8 @@ export default function Onboarding() {
         surgeryDate: formattedDate,
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
         hasDiabetes: existingProfile.hasDiabetes ?? false,
-        hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
+        hasHighBloodPressure: existingProfile.hasHighBloodPressure ?? false,
+        hasHighCholesterol: existingProfile.hasHighCholesterol ?? false,
         intolerances: existingProfile.intolerances ?? [],
         proteinGoal: existingProfile.proteinGoal,
         fluidGoal: existingProfile.fluidGoal,
@@ -126,7 +127,8 @@ export default function Onboarding() {
       surgeryDate: "",
       surgeryType: "Gastric Sleeve",
       hasDiabetes: false,
-      hasDumpingSyndrome: false,
+      hasHighBloodPressure: false,
+      hasHighCholesterol: false,
       intolerances: [],
       tastePreferences: defaultTastePreferences,
       dislikedFoods: "",
@@ -156,7 +158,8 @@ export default function Onboarding() {
         surgeryDate: formattedDate,
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
         hasDiabetes: existingProfile.hasDiabetes ?? false,
-        hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
+        hasHighBloodPressure: existingProfile.hasHighBloodPressure ?? false,
+        hasHighCholesterol: existingProfile.hasHighCholesterol ?? false,
         intolerances: existingProfile.intolerances ?? [],
         proteinGoal: existingProfile.proteinGoal,
         fluidGoal: existingProfile.fluidGoal,
@@ -174,7 +177,8 @@ export default function Onboarding() {
           surgeryDate: formattedDate,
           surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
           hasDiabetes: existingProfile.hasDiabetes ?? false,
-          hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
+          hasHighBloodPressure: existingProfile.hasHighBloodPressure ?? false,
+          hasHighCholesterol: existingProfile.hasHighCholesterol ?? false,
           intolerances: existingProfile.intolerances || [],
           proteinGoal: existingProfile.proteinGoal,
           fluidGoal: existingProfile.fluidGoal,
@@ -317,7 +321,8 @@ export default function Onboarding() {
             surgeryDate: isoDate,
             surgeryType: profile.surgeryType,
             hasDiabetes: profile.hasDiabetes,
-            hasDumpingSyndrome: profile.hasDumpingSyndrome,
+            hasHighBloodPressure: profile.hasHighBloodPressure,
+            hasHighCholesterol: profile.hasHighCholesterol,
             intolerances: profile.intolerances ?? [],
             tastePreferences: profile.tastePreferences ?? defaultTastePreferences,
             dislikedFoods: profile.dislikedFoods ?? "",
@@ -910,22 +915,22 @@ export default function Onboarding() {
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>
-                Do you suffer from Dumping Syndrome?
+                Do you have High Blood Pressure?
               </Text>
               <View style={styles.toggleRow}>
                 <Pressable
                   onPress={() =>
-                    setProfile({ ...profile, hasDumpingSyndrome: true })
+                    setProfile({ ...profile, hasHighBloodPressure: true })
                   }
                   style={[
                     styles.toggleButton,
-                    profile.hasDumpingSyndrome && styles.toggleButtonActive,
+                    profile.hasHighBloodPressure && styles.toggleButtonActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.toggleButtonText,
-                      profile.hasDumpingSyndrome && styles.toggleButtonTextActive,
+                      profile.hasHighBloodPressure && styles.toggleButtonTextActive,
                     ]}
                   >
                     Yes
@@ -933,17 +938,61 @@ export default function Onboarding() {
                 </Pressable>
                 <Pressable
                   onPress={() =>
-                    setProfile({ ...profile, hasDumpingSyndrome: false })
+                    setProfile({ ...profile, hasHighBloodPressure: false })
                   }
                   style={[
                     styles.toggleButton,
-                    !profile.hasDumpingSyndrome && styles.toggleButtonActive,
+                    !profile.hasHighBloodPressure && styles.toggleButtonActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.toggleButtonText,
-                      !profile.hasDumpingSyndrome && styles.toggleButtonTextActive,
+                      !profile.hasHighBloodPressure && styles.toggleButtonTextActive,
+                    ]}
+                  >
+                    No
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>
+                Do you have High Cholesterol?
+              </Text>
+              <View style={styles.toggleRow}>
+                <Pressable
+                  onPress={() =>
+                    setProfile({ ...profile, hasHighCholesterol: true })
+                  }
+                  style={[
+                    styles.toggleButton,
+                    profile.hasHighCholesterol && styles.toggleButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.toggleButtonText,
+                      profile.hasHighCholesterol && styles.toggleButtonTextActive,
+                    ]}
+                  >
+                    Yes
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    setProfile({ ...profile, hasHighCholesterol: false })
+                  }
+                  style={[
+                    styles.toggleButton,
+                    !profile.hasHighCholesterol && styles.toggleButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.toggleButtonText,
+                      !profile.hasHighCholesterol && styles.toggleButtonTextActive,
                     ]}
                   >
                     No
@@ -953,7 +1002,7 @@ export default function Onboarding() {
               <Text style={styles.helpText}>
                 This helps us customize food recommendations
               </Text>
-            </View>
+            </View>            
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>
@@ -1032,7 +1081,7 @@ export default function Onboarding() {
             ))}
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Foods you Dislike</Text>
+              <Text style={styles.sectionLabel}>Disliked Foods</Text>
               <TextInput
                 placeholder="Mushrooms, Sardines ..."
                 placeholderTextColor="#7A9C8A"

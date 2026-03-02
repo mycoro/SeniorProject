@@ -23,7 +23,8 @@ export interface UserProfile {
   surgeryDate?: string;
   surgeryType?: "Gastric Sleeve" | "Gastric Bypass" | "Duodenal Switch";
   hasDiabetes?: boolean;
-  hasDumpingSyndrome?: boolean;
+  hasHighBloodPressure?: boolean;
+  hasHighCholesterol?: boolean;
   intolerances?: string[];
   proteinGoal?: number;
   fluidGoal?: number;
@@ -105,7 +106,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
               surgeryDate: rawProfile.surgeryDate,
               surgeryType: rawProfile.surgeryType as UserProfile["surgeryType"],
               hasDiabetes: rawProfile.hasDiabetes,
-              hasDumpingSyndrome: rawProfile.hasDumpingSyndrome,
+              hasHighBloodPressure: rawProfile.hasHighBloodPressure,
+              hasHighCholesterol: rawProfile.hasHighCholesterol,
               intolerances: rawProfile.intolerances,
               proteinGoal: rawProfile.proteinGoal,
               fluidGoal: rawProfile.fluidGoal,
