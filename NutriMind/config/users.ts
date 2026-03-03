@@ -9,11 +9,13 @@ export type UserProfile = {
   name?: string;
   dateOfBirth?: string;
   sex?: string; 
+  weight?: string;
   isPreOp?: boolean;
   surgeryDate?: string;
   surgeryType?: string;
   hasDiabetes?: boolean;
-  hasDumpingSyndrome?: boolean;
+  hasHighBloodPressure?: boolean;
+  hasHighCholesterol?: boolean;
   intolerances?: string[];
   proteinGoal?: number;
   fluidGoal?: number;

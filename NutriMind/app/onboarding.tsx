@@ -1,4 +1,3 @@
-// @ts-expect-error - React types may not resolve in IDE; runtime is fine
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -102,11 +101,13 @@ export default function Onboarding() {
         name: existingProfile.name || "",
         dateOfBirth: (existingProfile as UserProfile).dateOfBirth ?? "",
         sex: existingProfile.sex || "", 
+        weight: existingProfile.weight ?? "",
         isPreOp: existingProfile.isPreOp ?? false,
         surgeryDate: formattedDate,
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
         hasDiabetes: existingProfile.hasDiabetes ?? false,
-        hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
+        hasHighBloodPressure: existingProfile.hasHighBloodPressure ?? false,
+        hasHighCholesterol: existingProfile.hasHighCholesterol ?? false,
         intolerances: existingProfile.intolerances ?? [],
         proteinGoal: existingProfile.proteinGoal,
         fluidGoal: existingProfile.fluidGoal,
@@ -121,11 +122,13 @@ export default function Onboarding() {
       name: existingProfile?.name || "",
       dateOfBirth: (existingProfile as UserProfile)?.dateOfBirth ?? "",
       sex: "", 
+      weight: "",
       isPreOp: false,
       surgeryDate: "",
       surgeryType: "Gastric Sleeve",
       hasDiabetes: false,
-      hasDumpingSyndrome: false,
+      hasHighBloodPressure: false,
+      hasHighCholesterol: false,
       intolerances: [],
       tastePreferences: defaultTastePreferences,
       dislikedFoods: "",
@@ -155,7 +158,8 @@ export default function Onboarding() {
         surgeryDate: formattedDate,
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
         hasDiabetes: existingProfile.hasDiabetes ?? false,
-        hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
+        hasHighBloodPressure: existingProfile.hasHighBloodPressure ?? false,
+        hasHighCholesterol: existingProfile.hasHighCholesterol ?? false,
         intolerances: existingProfile.intolerances ?? [],
         proteinGoal: existingProfile.proteinGoal,
         fluidGoal: existingProfile.fluidGoal,
@@ -173,7 +177,8 @@ export default function Onboarding() {
           surgeryDate: formattedDate,
           surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
           hasDiabetes: existingProfile.hasDiabetes ?? false,
-          hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
+          hasHighBloodPressure: existingProfile.hasHighBloodPressure ?? false,
+          hasHighCholesterol: existingProfile.hasHighCholesterol ?? false,
           intolerances: existingProfile.intolerances || [],
           proteinGoal: existingProfile.proteinGoal,
           fluidGoal: existingProfile.fluidGoal,
@@ -265,6 +270,14 @@ export default function Onboarding() {
         Alert.alert("Required", "Please select your sex.");
         return;
       }
+      if (!profile.weight) {
+        Alert.alert("Required", "Please enter your current weight.")
+        return;
+      }
+      if (isNaN(Number(profile.weight)) || Number(profile.weight) <= 0) {
+        Alert.alert("Invalid Weight", "Please enter a valid weight in pounds.")
+        return;
+      }
       if (!profile.surgeryDate) {
         Alert.alert("Required", "Please enter your surgery date.");
         return;
@@ -303,11 +316,13 @@ export default function Onboarding() {
             name: nameStr || undefined,
             dateOfBirth: hasValidDob ? dobIso : undefined,
             sex: profile.sex, 
+            weight: profile.weight,
             isPreOp: profile.isPreOp,
             surgeryDate: isoDate,
             surgeryType: profile.surgeryType,
             hasDiabetes: profile.hasDiabetes,
-            hasDumpingSyndrome: profile.hasDumpingSyndrome,
+            hasHighBloodPressure: profile.hasHighBloodPressure,
+            hasHighCholesterol: profile.hasHighCholesterol,
             intolerances: profile.intolerances ?? [],
             tastePreferences: profile.tastePreferences ?? defaultTastePreferences,
             dislikedFoods: profile.dislikedFoods ?? "",
@@ -560,10 +575,11 @@ export default function Onboarding() {
             {/* Optional invite code for patients */}
             {userType !== "doctor" && (
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Invitation Code (optional)</Text>
+                <Text style={styles.sectionLabel}>Invitation Code (Optional)</Text>
                 <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
                   <TextInput
-                    placeholder="Enter code"
+                    placeholder="Enter Code"
+                    placeholderTextColor="#7A9C8A"
                     value={inviteCodeInput}
                     onChangeText={setInviteCodeInput}
                     style={[styles.textInput, { flex: 1 }]}
@@ -592,10 +608,11 @@ export default function Onboarding() {
             )}
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Preferred name</Text>
+              <Text style={styles.sectionLabel}>Preferred Name</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="e.g. Alex"
+                placeholder="Alex"
+                placeholderTextColor="#7A9C8A"
                 value={profile.name || ""}
                 onChangeText={(text) => setProfile({ ...profile, name: text })}
                 autoCapitalize="words"
@@ -615,10 +632,11 @@ export default function Onboarding() {
                 style={styles.dateInputContainer}
               >
                 <TextInput
-                  placeholder="Tap to select (for age-based advice)"
+                  placeholder="MM/DD/YYYY"
+                  placeholderTextColor="#7A9C8A"
                   value={profile.dateOfBirth ? formatDobDisplay(profile.dateOfBirth) : ""}
                   editable={false}
-                  style={styles.textInput}
+                  style={styles.textInputCalendar}
                 />
                 <Calendar size={20} color="#008080" />
               </Pressable>
@@ -695,6 +713,18 @@ export default function Onboarding() {
             </View>
 
             <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Current Weight (In Pounds)</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter Weight"
+                placeholderTextColor="#7A9C8A"
+                value={profile.weight || ""}
+                onChangeText={(text) => setProfile({ ...profile, weight: text })}
+                keyboardType="numeric"
+              />
+            </View>        
+
+            <View style={styles.section}>
               <Text style={styles.sectionLabel}>Are you Pre-Op or Post-Op?</Text>
               <View style={styles.toggleRow}>
                 <Pressable
@@ -740,9 +770,10 @@ export default function Onboarding() {
               >
                 <TextInput
                   placeholder="MM/DD/YYYY"
+                  placeholderTextColor="#7A9C8A"
                   value={profile.surgeryDate}
                   onChangeText={handleDateTextChange}
-                  style={styles.textInput}
+                  style={styles.textInputCalendar}
                   editable={true}
                   keyboardType="numeric"
                   maxLength={10}
@@ -884,22 +915,22 @@ export default function Onboarding() {
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>
-                Do you suffer from Dumping Syndrome?
+                Do you have High Blood Pressure?
               </Text>
               <View style={styles.toggleRow}>
                 <Pressable
                   onPress={() =>
-                    setProfile({ ...profile, hasDumpingSyndrome: true })
+                    setProfile({ ...profile, hasHighBloodPressure: true })
                   }
                   style={[
                     styles.toggleButton,
-                    profile.hasDumpingSyndrome && styles.toggleButtonActive,
+                    profile.hasHighBloodPressure && styles.toggleButtonActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.toggleButtonText,
-                      profile.hasDumpingSyndrome && styles.toggleButtonTextActive,
+                      profile.hasHighBloodPressure && styles.toggleButtonTextActive,
                     ]}
                   >
                     Yes
@@ -907,17 +938,61 @@ export default function Onboarding() {
                 </Pressable>
                 <Pressable
                   onPress={() =>
-                    setProfile({ ...profile, hasDumpingSyndrome: false })
+                    setProfile({ ...profile, hasHighBloodPressure: false })
                   }
                   style={[
                     styles.toggleButton,
-                    !profile.hasDumpingSyndrome && styles.toggleButtonActive,
+                    !profile.hasHighBloodPressure && styles.toggleButtonActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.toggleButtonText,
-                      !profile.hasDumpingSyndrome && styles.toggleButtonTextActive,
+                      !profile.hasHighBloodPressure && styles.toggleButtonTextActive,
+                    ]}
+                  >
+                    No
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>
+                Do you have High Cholesterol?
+              </Text>
+              <View style={styles.toggleRow}>
+                <Pressable
+                  onPress={() =>
+                    setProfile({ ...profile, hasHighCholesterol: true })
+                  }
+                  style={[
+                    styles.toggleButton,
+                    profile.hasHighCholesterol && styles.toggleButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.toggleButtonText,
+                      profile.hasHighCholesterol && styles.toggleButtonTextActive,
+                    ]}
+                  >
+                    Yes
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    setProfile({ ...profile, hasHighCholesterol: false })
+                  }
+                  style={[
+                    styles.toggleButton,
+                    !profile.hasHighCholesterol && styles.toggleButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.toggleButtonText,
+                      !profile.hasHighCholesterol && styles.toggleButtonTextActive,
                     ]}
                   >
                     No
@@ -927,11 +1002,11 @@ export default function Onboarding() {
               <Text style={styles.helpText}>
                 This helps us customize food recommendations
               </Text>
-            </View>
+            </View>            
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>
-                Food Intolerances (select all that apply)
+                Food Intolerances (Select All That Apply)
               </Text>
               <View style={styles.intoleranceRow}>
                 {intoleranceOptions.map((item) => (
@@ -970,7 +1045,7 @@ export default function Onboarding() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.cardTitle}>Food Preferences</Text>
                 <Text style={styles.cardSubtitle}>Help us personalize your meals</Text>
-                <Text style={styles.cardSubtitle}>With each taste preference, rank them from 1 (Do not like) to 5 (Do like)</Text>
+                <Text style={styles.cardSubtitle}>For each taste preference, rank them from 1 (Dislike) to 5 (Favor)</Text>
               </View>
             </View>
 
@@ -1006,9 +1081,10 @@ export default function Onboarding() {
             ))}
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Foods you Dislike</Text>
+              <Text style={styles.sectionLabel}>Disliked Foods</Text>
               <TextInput
-                placeholder="e.g. mushrooms, seafood..."
+                placeholder="Mushrooms, Sardines ..."
+                placeholderTextColor="#7A9C8A"
                 value={profile.dislikedFoods ?? ""}
                 onChangeText={(text) =>
                   setProfile({ ...profile, dislikedFoods: text })
@@ -1019,7 +1095,7 @@ export default function Onboarding() {
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>
-                Favorite Cuisines (select all that apply)
+                Favorite Cuisines (Select All That Apply)
               </Text>
               <View style={styles.intoleranceRow}>
                 {cuisineOptions.map((cuisine) => (
@@ -1060,7 +1136,8 @@ export default function Onboarding() {
               {showOtherCuisineInput && (
                 <View style={{ marginTop: 10 }}>
                   <TextInput
-                    placeholder="Enter other cuisines (comma separated)"
+                    placeholder="French, German ..."
+                    placeholderTextColor="#7A9C8A"
                     value={otherCuisineText}
                     onChangeText={(text) => {
                       setOtherCuisineText(text);
@@ -1085,7 +1162,8 @@ export default function Onboarding() {
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Allergies</Text>
               <TextInput
-                placeholder="e.g. nuts, seafood..."
+                placeholder="Nuts, Shellfish ..."
+                placeholderTextColor="#7A9C8A"
                 value={(profile.allergies ?? []).join(", ")}
                 onChangeText={(text) =>
                   setProfile({
@@ -1321,9 +1399,21 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
+    backgroundColor: '#FFFDF4',
+    borderWidth: 1,
+    borderColor: '#E6DDC8',
+    borderRadius: 12,
     paddingVertical: 14,
-    paddingHorizontal: 18,
-    fontSize: 15,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: "#004734",
+  },
+
+  textInputCalendar: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
     color: "#004734",
   },
 
