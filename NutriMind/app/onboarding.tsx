@@ -1160,7 +1160,7 @@ export default function Onboarding() {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Allergies</Text>
+              <Text style={styles.sectionLabel}>Food Allergies</Text>
               <TextInput
                 placeholder="Nuts, Shellfish ..."
                 placeholderTextColor="#7A9C8A"
