@@ -1,4 +1,3 @@
-// @ts-expect-error - React types may not resolve in IDE; runtime is fine
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -1083,7 +1082,7 @@ export default function Onboarding() {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Allergies</Text>
+              <Text style={styles.sectionLabel}>Food Allergies</Text>
               <TextInput
                 placeholder="e.g. nuts, seafood..."
                 value={(profile.allergies ?? []).join(", ")}
