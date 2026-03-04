@@ -231,7 +231,7 @@ export default function Onboarding() {
     // User type selection
     if (step === 0) {
       if (!userType) {
-        Alert.alert("Required", "Please select whether you're a patient or doctor.");
+        Alert.alert("Required", "Please select whether you're a patient or provider.");
         return;
       }
       // If doctor, redirect to doctor onboarding
@@ -550,7 +550,7 @@ export default function Onboarding() {
                   styles.userTypeCardTitle,
                   userType === "doctor" && styles.userTypeCardTitleActive,
                 ]}>
-                  Doctor
+                  Provider
                 </Text>
                 <Text style={styles.userTypeDescription}>
                   Monitor and support your patients

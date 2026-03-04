@@ -135,7 +135,7 @@ export default function Settings() {
             <Text style={styles.warningTitle}>Profile Incomplete</Text>
             <Text style={styles.warningText}>
               {isDoctor 
-                ? "Please complete your profile to access all doctor features."
+                ? "Please complete your profile to access all provider features."
                 : "Please complete your profile to use all features including AI photo scanning."
               }
             </Text>

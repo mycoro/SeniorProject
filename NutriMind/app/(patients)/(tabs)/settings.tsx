@@ -136,7 +136,7 @@ export default function Settings() {
             <Text style={styles.warningTitle}>Profile Incomplete</Text>
             <Text style={styles.warningText}>
               {isDoctor 
-                ? "Please complete your profile to access all doctor features."
+                ? "Please complete your profile to access all provider features."
                 : "Please complete your profile to use all features including AI photo scanning."
               }
             </Text>
@@ -186,7 +186,7 @@ export default function Settings() {
               <View style={[styles.profileCard, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}> 
                 <View>
                   <Text style={styles.label}>Invitation code</Text>
-                  <Text style={styles.value}>Successfully linked to my doctor</Text>
+                  <Text style={styles.value}>Successfully linked to my provider</Text>
                 </View>
               </View>
             );
@@ -198,7 +198,7 @@ export default function Settings() {
             >
               <View>
                 <Text style={styles.label}>Invitation code</Text>
-                <Text style={styles.value}>Apply a code from your doctor</Text>
+                <Text style={styles.value}>Apply a code from your provider</Text>
               </View>
               <Text style={{ color: '#008080', fontWeight: '700' }}>Apply</Text>
             </Pressable>

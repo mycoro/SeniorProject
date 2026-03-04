@@ -93,7 +93,7 @@ export default function DoctorOnboarding() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Doctor Setup</Text>
+          <Text style={styles.title}>Provider Setup</Text>
           <Text style={styles.subtitle}>Step {step} of 2</Text>
         </View>
 
