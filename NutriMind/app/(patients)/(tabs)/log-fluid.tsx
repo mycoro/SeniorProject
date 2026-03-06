@@ -46,9 +46,9 @@ export default function LogFluid() {
   const [fatInput, setFatInput] = useState("");
   const [sugarInput, setSugarInput] = useState("");
 
-  // Date selector — default to today, no future dates
-  const [selectedFluidDate, setSelectedFluidDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  // Date & time selector — default to now, no future dates
+  const [selectedFluidDateTime, setSelectedFluidDateTime] = useState(new Date());
+  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
 
   const isToday = (d: Date) => {
     const now = new Date();
@@ -61,11 +61,6 @@ export default function LogFluid() {
     yesterday.setDate(yesterday.getDate() - 1);
     if (d.getFullYear() === yesterday.getFullYear() && d.getMonth() === yesterday.getMonth() && d.getDate() === yesterday.getDate()) return "Yesterday";
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  };
-
-  const buildTimestampForDate = (date: Date): Date => {
-    if (isToday(date)) return new Date();
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
   };
 
   const getCaloriesForFluid = (type: string, ounces: number): number => {
@@ -154,7 +149,7 @@ export default function LogFluid() {
       fat,
       sugar,
       mealType: "Fluid",
-      timestamp: buildTimestampForDate(selectedFluidDate),
+      timestamp: selectedFluidDateTime,
     };
 
     await addMealLog(fluidLog);
@@ -281,35 +276,35 @@ export default function LogFluid() {
 
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Date consumed</Text>
-          <Pressable onPress={() => setShowDatePicker(true)} style={[styles.dateChip, !isToday(selectedFluidDate) && styles.dateChipActive]}>
-            <Calendar size={14} color={isToday(selectedFluidDate) ? "#6B8F7A" : "#004734"} />
-            <Text style={[styles.dateChipText, !isToday(selectedFluidDate) && styles.dateChipTextActive]}>
-              {formatDateLabel(selectedFluidDate)}
+          <Pressable onPress={() => setShowDateTimePicker(true)} style={[styles.dateChip, !isToday(selectedFluidDateTime) && styles.dateChipActive]}>
+            <Calendar size={14} color={isToday(selectedFluidDateTime) ? "#6B8F7A" : "#004734"} />
+            <Text style={[styles.dateChipText, !isToday(selectedFluidDateTime) && styles.dateChipTextActive]}>
+              {formatDateLabel(selectedFluidDateTime)}
             </Text>
-            {!isToday(selectedFluidDate) && (
+            {!isToday(selectedFluidDateTime) && (
               <Pressable
-                onPress={(e) => { e.stopPropagation(); setSelectedFluidDate(new Date()); }}
+                onPress={(e) => { e.stopPropagation(); setSelectedFluidDateTime(new Date()); }}
                 hitSlop={8}
               >
                 <X size={14} color="#004734" />
               </Pressable>
             )}
           </Pressable>
-          {showDatePicker && (
+          {showDateTimePicker && (
             <View style={styles.datePickerContainer}>
               <DateTimePicker
-                value={selectedFluidDate}
-                mode="date"
-                display={Platform.OS === "ios" ? "inline" : "default"}
+                value={selectedFluidDateTime}
+                mode="datetime"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
                 maximumDate={new Date()}
                 onChange={(event: any, date?: Date) => {
-                  if (Platform.OS === "android") setShowDatePicker(false);
-                  if (date) setSelectedFluidDate(date);
+                  if (Platform.OS === "android") setShowDateTimePicker(false);
+                  if (date) setSelectedFluidDateTime(date);
                 }}
                 style={Platform.OS === "ios" ? { alignSelf: "center" } : undefined}
               />
               {Platform.OS === "ios" && (
-                <Pressable onPress={() => setShowDatePicker(false)} style={styles.datePickerDoneButton}>
+                <Pressable onPress={() => setShowDateTimePicker(false)} style={styles.datePickerDoneButton}>
                   <Text style={styles.datePickerDoneText}>Done</Text>
                 </Pressable>
               )}

@@ -20,9 +20,9 @@ import { updateProfile } from "firebase/auth";
 import { setUserProfile as saveUserProfile } from "@/config/users";
 
 const surgeryTypes = ["Gastric Sleeve", "Gastric Bypass", "Duodenal Switch"] as const;
-const sexOptions = ["Male", "Female"];
+const sexOptions = ["Male", "Female", "Other"];
 const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
-const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian"];
+const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian", "Other"];
 const defaultTastePreferences = { sweet: 3, spicy: 3, savory: 3, bitter: 3, sour: 3 };
 
 function formatDateUS(date: Date | string) {
@@ -83,6 +83,7 @@ export default function EditProfile() {
     tastePreferences: defaultTastePreferences,
     dislikedFoods: "",
     favoriteCuisines: [],
+    allergies: [],
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
@@ -123,6 +124,7 @@ export default function EditProfile() {
       tastePreferences: existingProfile.tastePreferences ?? defaultTastePreferences,
       dislikedFoods: existingProfile.dislikedFoods ?? "",
       favoriteCuisines: existingProfile.favoriteCuisines ?? [],
+      allergies: existingProfile.allergies ?? [],
     });
     if (parsed) setTempDate(parsed);
   }, [existingProfile]);
@@ -211,6 +213,7 @@ export default function EditProfile() {
         tastePreferences: profile.tastePreferences ?? defaultTastePreferences,
         dislikedFoods: profile.dislikedFoods ?? "",
         favoriteCuisines: profile.favoriteCuisines ?? [],
+        allergies: profile.allergies ?? [],
       });
 
       setUserProfile({
@@ -224,7 +227,7 @@ export default function EditProfile() {
         surgeryType: profile.surgeryType,
         hasDiabetes: profile.hasDiabetes,
         hasHighBloodPressure: profile.hasHighBloodPressure,
-        hasHighCholesterol: profile.hasHighBloodPressure,
+        hasHighCholesterol: profile.hasHighCholesterol,
         intolerances: profile.intolerances ?? [],
         proteinGoal: profile.proteinGoal,
         fluidGoal: profile.fluidGoal,
@@ -232,6 +235,7 @@ export default function EditProfile() {
         tastePreferences: profile.tastePreferences ?? defaultTastePreferences,
         dislikedFoods: profile.dislikedFoods ?? "",
         favoriteCuisines: profile.favoriteCuisines ?? [],
+        allergies: profile.allergies ?? [],
       } as UserProfile);
       setIsOnboarded(true);
 
@@ -566,6 +570,22 @@ export default function EditProfile() {
                 </Pressable>
               ))}
             </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Food Allergies</Text>
+            <TextInput
+              placeholder="Nuts, Shellfish ..."
+              placeholderTextColor="#7A9C8A"
+              value={(profile.allergies ?? []).join(", ")}
+              onChangeText={(text) =>
+                setProfile((p) => ({
+                  ...p,
+                  allergies: text.split(",").map((a) => a.trim()).filter(Boolean),
+                }))
+              }
+              style={styles.textInput}
+            />
           </View>
         </View>
 

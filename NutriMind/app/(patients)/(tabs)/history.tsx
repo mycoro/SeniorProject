@@ -11,7 +11,7 @@ import { ChevronLeft, ChevronRight, Filter, Clock } from "lucide-react-native";
 import { useUser, MealLog } from "@/context/UserContext";
 import ProgressRing from "@/components/ProgressRing";
 import EditLogModal from "@/components/EditLogModal";
-import { getMealDisplayName } from "@/utils/mealDisplay";
+import { getMealDisplayName, getVitaminAmount, getVitaminBaseName } from "@/utils/mealDisplay";
 
 const sameCalendarDay = (logTimestamp: Date, year: number, month: number, day: number) =>
   logTimestamp.getFullYear() === year &&
@@ -74,7 +74,7 @@ const getMealLogsForDate = (logs: MealLog[], date: Date) => {
     })
     .map((log) => {
       const logTimestamp = log.timestamp instanceof Date ? log.timestamp : new Date(log.timestamp);
-      const displayType = isFluidLog(log.name) ? "Fluid" : (log.mealType ?? "Meal");
+      const displayType = isFluidLog(log.name) ? "Fluid" : (log.mealType === "Vitamin" ? "Vitamin" : (log.mealType ?? "Meal"));
       return {
         id: log.id,
         name: log.name,
@@ -304,7 +304,9 @@ export default function History() {
                                 ? "#008080"
                                 : proteinPercent >= 50
                                 ? "#5eead4"
-                                : "#e2e8f0",
+                                : proteinPercent > 0
+                                ? "#b8e6e6"
+                                : "#c4e8e8",
                           },
                         ]}
                       />
@@ -317,7 +319,9 @@ export default function History() {
                                 ? "#3b82f6"
                                 : waterPercent >= 50
                                 ? "#93c5fd"
-                                : "#e2e8f0",
+                                : waterPercent > 0
+                                ? "#bfdbfe"
+                                : "#dbeafe",
                           },
                         ]}
                       />
@@ -330,7 +334,9 @@ export default function History() {
                                 ? "#f97316"
                                 : caloriesPercent >= 50
                                 ? "#fdba74"
-                                : "#e2e8f0",
+                                : caloriesPercent > 0
+                                ? "#fed7aa"
+                                : "#ffedd5",
                           },
                         ]}
                       />
@@ -386,7 +392,7 @@ export default function History() {
             </View>
 
             <View style={styles.mealsSection}>
-              <Text style={styles.mealsTitle}>Meals & fluids</Text>
+              <Text style={styles.mealsTitle}>Meals, fluids & vitamins</Text>
               {loading ? (
                 <View style={styles.emptyMeals}>
                   <Text style={styles.emptyMealsText}>Loading...</Text>
@@ -395,7 +401,7 @@ export default function History() {
                 <View style={styles.mealsList}>
                   {selectedMeals.length === 0 ? (
                     <View style={styles.emptyMeals}>
-                      <Text style={styles.emptyMealsText}>No meals or fluids logged for this day</Text>
+                      <Text style={styles.emptyMealsText}>No meals, fluids or vitamins logged for this day</Text>
                       {dailyLogs.length > 0 && (
                         <Text style={[styles.emptyMealsText, { fontSize: 12, marginTop: 4 }]}>
                           ({dailyLogs.length} total meals in database)
@@ -405,6 +411,7 @@ export default function History() {
                   ) : (
                     selectedMeals.map((meal, index) => {
                       const fullLog = dailyLogs.find((l) => l.id === meal.id);
+                      const vitAmount = getVitaminAmount(meal.name);
                       return (
                         <Pressable
                           key={meal.id ?? index}
@@ -413,18 +420,26 @@ export default function History() {
                         >
                           <View style={styles.mealLeft}>
                             <Clock size={16} color="#94a3b8" />
-                            <View style={{ flex: 1}}>
-                              <Text style={styles.mealName} numberOfLines={2} ellipsizeMode="tail">{getMealDisplayName(meal.name)}</Text>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.mealName} numberOfLines={2} ellipsizeMode="tail">
+                                {meal.type === "Vitamin" ? getVitaminBaseName(meal.name) : getMealDisplayName(meal.name)}
+                              </Text>
                               <Text style={styles.mealDetails}>
                                 {meal.type} at {meal.time}
                               </Text>
                             </View>
                           </View>
                           <View style={styles.mealRight}>
-                            <Text style={styles.mealProtein}>{meal.protein}g</Text>
-                            <Text style={styles.mealCalories}>
-                              {meal.calories} kcal
-                            </Text>
+                            {meal.type === "Vitamin" ? (
+                              <Text style={styles.mealProtein}>{vitAmount ?? "—"}</Text>
+                            ) : (
+                              <>
+                                <Text style={styles.mealProtein}>{meal.protein}g</Text>
+                                <Text style={styles.mealCalories}>
+                                  {meal.calories} kcal
+                                </Text>
+                              </>
+                            )}
                           </View>
                         </Pressable>
                       );
@@ -437,7 +452,7 @@ export default function History() {
         </>
       ) : (
         <View style={styles.listView}>
-          {Array.from({ length: 7 }).map((_, index) => {
+          {Array.from({ length: 30 }).map((_, index) => {
             const date = new Date();
             date.setDate(date.getDate() - index);
             const dateKey = date.toISOString().slice(0, 10);
@@ -482,6 +497,16 @@ export default function History() {
                     <>
                       {visibleMeals.map((meal, mealIndex) => {
                         const fullLog = dailyLogs.find((l) => l.id === meal.id);
+                        const vitAmount = getVitaminAmount(meal.name);
+                        const amountDisplay = meal.type === "Vitamin"
+                          ? (vitAmount ?? "—")
+                          : (vitAmount ?? `${meal.protein}g`);
+                        const rightLabel = meal.type === "Vitamin"
+                          ? (vitAmount ?? "—")
+                          : `${meal.calories} kcal`;
+                        const subtitle = meal.type === "Vitamin"
+                          ? `${meal.type} · ${meal.time}`
+                          : `${meal.type ?? "Meal"} · ${amountDisplay}`;
                         return (
                           <Pressable
                             key={meal.id ?? mealIndex}
@@ -489,10 +514,12 @@ export default function History() {
                             onPress={() => fullLog && setEditLog(fullLog)}
                           >
                             <View style={{ flex: 1 }}>
-                              <Text style={styles.listMealName} numberOfLines={2} ellipsizeMode="tail">{getMealDisplayName(meal.name)}</Text>
-                              <Text style={styles.listMealType}>{meal.type ?? "Meal"} · {meal.protein}g</Text>
+                              <Text style={styles.listMealName} numberOfLines={2} ellipsizeMode="tail">
+                                {meal.type === "Vitamin" ? getVitaminBaseName(meal.name) : getMealDisplayName(meal.name)}
+                              </Text>
+                              <Text style={styles.listMealType}>{subtitle}</Text>
                             </View>
-                            <Text style={styles.listMealProtein}>{meal.calories} kcal</Text>
+                            <Text style={styles.listMealProtein}>{rightLabel}</Text>
                           </Pressable>
                         );
                       })}
