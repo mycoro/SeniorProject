@@ -98,8 +98,27 @@ export async function setUserProfile(
   profile: Partial<UserProfile>
 ) {
   const ref = doc(db, "users", uid);
-  await setDoc(ref, {
-    ...profile,
-    updatedAt: serverTimestamp(),
-  }, { merge: true });
+  // Clean the profile object to remove any `undefined` values. Firestore
+  // rejects writes that contain undefined fields (see error reported by
+  // the client). Only set keys that are explicitly provided.
+  const cleaned: Record<string, any> = {};
+  Object.entries(profile).forEach(([k, v]) => {
+    if (v !== undefined) cleaned[k] = v;
+  });
+
+  if (Object.keys(cleaned).length === 0) {
+    // Nothing to set from the provided profile; still update the `updatedAt`
+    // so callers that rely on this timestamp get a refresh.
+    await updateDoc(ref, { updatedAt: serverTimestamp() });
+    return;
+  }
+
+  await setDoc(
+    ref,
+    {
+      ...cleaned,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 }
