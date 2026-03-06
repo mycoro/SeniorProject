@@ -229,8 +229,8 @@ export default function Dashboard() {
                 <View style={styles.proteinBadge}>
                   <Text style={styles.proteinText}>{item.protein}g</Text>
                 </View>
-                <View>
-                  <Text style={styles.mealName}>{getMealDisplayName(item.name)}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.mealName} numberOfLines={2} ellipsizeMode="tail">{getMealDisplayName(item.name)}</Text>
                   <Text style={styles.mealTime}>{item.mealType} · {item.time}</Text>
                 </View>
               </View>
@@ -374,6 +374,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    flex: 1
   },
 
   proteinBadge: {
@@ -394,6 +395,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#004734",
     fontSize: 14,
+    flexShrink: 1,
   },
   mealTime: {
     fontSize: 12,

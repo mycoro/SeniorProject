@@ -32,7 +32,7 @@ import { setUserProfile as saveUserProfile, getUserProfile } from "@/config/user
 
 const surgeryTypes = ["Gastric Sleeve", "Gastric Bypass", "Duodenal Switch"];
 const sexOptions = ["Male", "Female"]; 
-const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
+const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs", "Other"];
 const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian", "Other"];
 const defaultTastePreferences = { sweet: 3, spicy: 3, savory: 3, bitter: 3, sour: 3 };
 
@@ -46,8 +46,6 @@ export default function Onboarding() {
   }, [step, userType]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
-  const [showOtherCuisineInput, setShowOtherCuisineInput] = useState(false);
-  const [otherCuisineText, setOtherCuisineText] = useState("");
 
   const formatDateUS = (date: Date | string) => {
     if (!date) return "";
@@ -461,9 +459,50 @@ export default function Onboarding() {
     }
   };
 
+  const toggleCuisine = (cuisine: string) => {
+
+  if (cuisine === "Other") {
+    setShowOtherCuisineInput((prev) => !prev);
+    return;
+  }
+
+  setProfile((prev) => {
+    const list = prev.favoriteCuisines ?? [];
+
+    return {
+      ...prev,
+      favoriteCuisines: list.includes(cuisine)
+        ? list.filter((c) => c !== cuisine)
+        : [...list, cuisine],
+    };
+  });
+};
+
+const addOtherCuisine = () => {
+  if (!otherCuisineText.trim()) return;
+
+  setProfile((prev) => ({
+    ...prev,
+    favoriteCuisines: [
+      ...(prev.favoriteCuisines ?? []),
+      otherCuisineText.trim(),
+    ],
+  }));
+
+  setOtherCuisineText("");
+  setShowOtherCuisineInput(false);
+};
+
   const toggleIntolerance = (intolerance: string) => {
+
+    if (intolerance === "Other") {
+      setShowOtherIntoleranceInput((prev) => !prev);
+      return;
+    }
+
     setProfile((prev) => {
       const list = prev.intolerances ?? [];
+
       return {
         ...prev,
         intolerances: list.includes(intolerance)
@@ -472,6 +511,27 @@ export default function Onboarding() {
       };
     });
   };
+
+  const addOtherIntolerance = () => {
+  if (!otherIntoleranceText.trim()) return;
+
+  setProfile((prev) => ({
+    ...prev,
+    intolerances: [
+      ...(prev.intolerances ?? []),
+      otherIntoleranceText.trim(),
+    ],
+  }));
+
+  setOtherIntoleranceText("");
+  setShowOtherIntoleranceInput(false);
+};
+
+  const [showOtherCuisineInput, setShowOtherCuisineInput] = useState(false);
+  const [otherCuisineText, setOtherCuisineText] = useState("");
+
+  const [showOtherIntoleranceInput, setShowOtherIntoleranceInput] = useState(false);
+  const [otherIntoleranceText, setOtherIntoleranceText] = useState("");
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1012,26 +1072,67 @@ export default function Onboarding() {
                 {intoleranceOptions.map((item) => (
                   <Pressable
                     key={item}
-                    onPress={() => toggleIntolerance(item)}
+                    onPress={() => {
+                      if (item === "Other") {
+                        setShowOtherIntoleranceInput((prev) => !prev);
+                        return;
+                      }
+                      toggleIntolerance(item);
+                    }}
                     style={[
                       styles.intoleranceButton,
-                      (profile.intolerances ?? []).includes(item) &&
-                        styles.intoleranceButtonActive,
+                      item === "Other"
+                        ? showOtherIntoleranceInput && styles.intoleranceButtonActive
+                        : (profile.intolerances ?? []).includes(item) &&
+                          styles.intoleranceButtonActive,
                     ]}
                   >
                     <Text
                       style={[
                         styles.intoleranceButtonText,
-                        (profile.intolerances ?? []).includes(item) &&
-                          styles.intoleranceButtonTextActive,
+                        item === "Other"
+                          ? showOtherIntoleranceInput && styles.intoleranceButtonTextActive
+                          : (profile.intolerances ?? []).includes(item) &&
+                            styles.intoleranceButtonTextActive,
                       ]}
                     >
-                      {(profile.intolerances ?? []).includes(item) && "✓ "}
-                      {item}
+                      {item === "Other" && showOtherIntoleranceInput && "✓ "}
+                      {item !== "Other" &&
+                        (profile.intolerances ?? []).includes(item) &&
+                          "✓ "}
+                        {item}
                     </Text>
                   </Pressable>
                 ))}
               </View>
+              {showOtherIntoleranceInput && (
+  <View style={{ marginTop: 10 }}>
+    <TextInput
+      placeholder="Shellfish, Mushrooms ..."
+      placeholderTextColor="#7A9C8A"
+      value={otherIntoleranceText}
+      onChangeText={(text) => {
+        setOtherIntoleranceText(text);
+
+        const parsed = text
+          .split(",")
+          .map((i) => i.trim())
+          .filter(Boolean);
+
+        setProfile({
+          ...profile,
+          intolerances: [
+            ...(profile.intolerances ?? []).filter((i) =>
+              intoleranceOptions.includes(i)
+            ),
+            ...parsed,
+          ],
+        });
+      }}
+      style={styles.textInput}
+    />
+  </View>
+)}
             </View>
           </View>
         )}
@@ -1133,30 +1234,34 @@ export default function Onboarding() {
                 ))}
               </View>
 
-              {showOtherCuisineInput && (
-                <View style={{ marginTop: 10 }}>
-                  <TextInput
-                    placeholder="French, German ..."
-                    placeholderTextColor="#7A9C8A"
-                    value={otherCuisineText}
-                    onChangeText={(text) => {
-                      setOtherCuisineText(text);
-                      const parsed = text
-                        .split(",")
-                        .map((c) => c.trim())
-                        .filter(Boolean);
-                      setProfile({
-                        ...profile,
-                        favoriteCuisines: [
-                          ...(profile.favoriteCuisines ?? []).filter(c => c !== "Other"),
-                          ...parsed,
-                        ],
-                      });
-                    }}
-                    style={styles.textInput}
-                  />
-                </View>
-              )}
+             {showOtherCuisineInput && (
+  <View style={{ marginTop: 10 }}>
+    <TextInput
+      placeholder="Thai, Ethiopian ..."
+      placeholderTextColor="#7A9C8A"
+      value={otherCuisineText}
+      onChangeText={(text) => {
+        setOtherCuisineText(text);
+
+        const parsed = text
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean);
+
+        setProfile({
+          ...profile,
+          favoriteCuisines: [
+            ...(profile.favoriteCuisines ?? []).filter((c) =>
+              cuisineOptions.includes(c)
+            ),
+            ...parsed,
+          ],
+        });
+      }}
+      style={styles.textInput}
+    />
+  </View>
+)}
             </View>
 
             <View style={styles.section}>
@@ -1557,4 +1662,18 @@ const styles = StyleSheet.create({
   datePickerDone: {
     padding: 6,
   },
+  addButton: {
+  backgroundColor: "#5DAF6A",
+  paddingVertical: 10,
+  paddingHorizontal: 16,
+  borderRadius: 8,
+  alignItems: "center",
+  marginTop: 8,
+},
+
+addButtonText: {
+  color: "#FFFFFF",
+  fontWeight: "600",
+  fontSize: 14,
+},
 });
