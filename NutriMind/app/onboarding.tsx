@@ -102,6 +102,8 @@ export default function Onboarding() {
         dateOfBirth: (existingProfile as UserProfile).dateOfBirth ?? "",
         sex: existingProfile.sex || "", 
         weight: existingProfile.weight ?? "",
+        goalWeight: (existingProfile as any).goalWeight ? String((existingProfile as any).goalWeight) : "",
+        weightDate: (existingProfile as any).weightDate ? String((existingProfile as any).weightDate) : toISODate(new Date()),
         isPreOp: existingProfile.isPreOp ?? false,
         surgeryDate: formattedDate,
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
@@ -123,6 +125,8 @@ export default function Onboarding() {
       dateOfBirth: (existingProfile as UserProfile)?.dateOfBirth ?? "",
       sex: "", 
       weight: "",
+      goalWeight: "",
+      weightDate: toISODate(new Date()),
       isPreOp: false,
       surgeryDate: "",
       surgeryType: "Gastric Sleeve",
@@ -144,6 +148,8 @@ export default function Onboarding() {
     d.setFullYear(d.getFullYear() - 30);
     return d;
   });
+  const [showWeightDatePicker, setShowWeightDatePicker] = useState(false);
+  const [tempWeightDate, setTempWeightDate] = useState(() => new Date());
 
   useEffect(() => {
     if (existingProfile && existingProfile.surgeryDate) {
@@ -278,6 +284,23 @@ export default function Onboarding() {
         Alert.alert("Invalid Weight", "Please enter a valid weight in pounds.")
         return;
       }
+      // validate weight date if provided (must not be in the future)
+      if (profile.weightDate) {
+        const pd = parseUSDate(profile.weightDate as string) || new Date(String(profile.weightDate));
+        if (!pd || isNaN(pd.getTime())) {
+          Alert.alert("Invalid Date", "Please select a valid weight date.");
+          return;
+        }
+        const now = new Date();
+        if (pd.getTime() > now.getTime()) {
+          Alert.alert("Invalid Date", "Weight date cannot be in the future.");
+          return;
+        }
+      }
+      if (profile.goalWeight && (isNaN(Number(profile.goalWeight)) || Number(profile.goalWeight) <= 0)) {
+        Alert.alert("Invalid Goal Weight", "Please enter a valid goal weight in pounds or leave it blank.");
+        return;
+      }
       if (!profile.surgeryDate) {
         Alert.alert("Required", "Please enter your surgery date.");
         return;
@@ -317,6 +340,7 @@ export default function Onboarding() {
             dateOfBirth: hasValidDob ? dobIso : undefined,
             sex: profile.sex, 
             weight: profile.weight,
+            goalWeight: profile.goalWeight ? Number(profile.goalWeight) : undefined,
             isPreOp: profile.isPreOp,
             surgeryDate: isoDate,
             surgeryType: profile.surgeryType,
@@ -341,6 +365,33 @@ export default function Onboarding() {
           } catch (e) {
             console.error('Failed to refresh profile after save:', e);
             setUserProfile({ ...profile, dateOfBirth: hasValidDob ? dobIso : undefined } as UserProfile);
+          }
+          // If the user provided a weight, post a weight log (allowing an explicit recorded date)
+          try {
+            if (profile.weight && user) {
+              const idToken = await user.getIdToken();
+              const body: any = { patientId: user.uid, weight: Number(profile.weight) };
+              if (profile.weightDate) {
+                // normalize any provided date into YYYY-MM-DD
+                try {
+                  const parsed = new Date(profile.weightDate);
+                  if (!isNaN(parsed.getTime())) {
+                    body.weightdate = `${parsed.getFullYear()}-${String(parsed.getMonth()+1).padStart(2,'0')}-${String(parsed.getDate()).padStart(2,'0')}`;
+                  }
+                } catch {}
+              }
+              const r = await fetch(`${API_BASE_URL}/api/doctor/patient/weight`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+                body: JSON.stringify(body),
+              });
+              if (!r.ok) {
+                const jr = await r.json().catch(() => ({}));
+                console.warn('Failed to post onboarding weight log:', jr);
+              }
+            }
+          } catch (e) {
+            console.error('Error posting onboarding weight log:', e);
           }
           setIsOnboarded(true);
           router.replace("/(patients)/(tabs)/dashboard" as import("expo-router").Href);
@@ -723,6 +774,75 @@ export default function Onboarding() {
                 keyboardType="numeric"
               />
             </View>        
+
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Weight Date (When measurement taken)</Text>
+              <Pressable
+                onPress={() => {
+                  // initialize the temp date to the profile date if available
+                  if (profile.weightDate) {
+                    const d = new Date(profile.weightDate.slice(0,10));
+                    if (!isNaN(d.getTime())) setTempWeightDate(d);
+                  }
+                  setShowWeightDatePicker(true);
+                }}
+                style={styles.dateInputContainer}
+              >
+                <TextInput
+                  placeholder="MM/DD/YYYY"
+                  placeholderTextColor="#7A9C8A"
+                  value={profile.weightDate ? formatDateUS(profile.weightDate) : formatDateUS(tempWeightDate)}
+                  editable={false}
+                  style={styles.textInputCalendar}
+                />
+                <Calendar size={20} color="#008080" />
+              </Pressable>
+              {showWeightDatePicker && (
+                <>
+                  {Platform.OS === "ios" && (
+                    <View style={styles.datePickerContainer}>
+                      <View style={styles.datePickerHeader}>
+                        <Pressable onPress={() => setShowWeightDatePicker(false)} style={styles.datePickerCancel}>
+                          <Text style={styles.datePickerCancelText}>Cancel</Text>
+                        </Pressable>
+                        <Text style={styles.datePickerTitle}>Weight Date</Text>
+                        <Pressable
+                          onPress={() => {
+                            setProfile({ ...profile, weightDate: toISODate(tempWeightDate) });
+                            setShowWeightDatePicker(false);
+                          }}
+                          style={styles.datePickerDone}
+                        >
+                          <Text style={styles.datePickerDoneText}>Done</Text>
+                        </Pressable>
+                      </View>
+                      <DateTimePicker
+                        value={tempWeightDate}
+                        mode="date"
+                        display="spinner"
+                        onChange={(_, d) => d && setTempWeightDate(d)}
+                        maximumDate={new Date()}
+                        minimumDate={new Date(1900, 0, 1)}
+                        textColor="#1e293b"
+                      />
+                    </View>
+                  )}
+                  {Platform.OS === "android" && (
+                    <DateTimePicker
+                      value={tempWeightDate}
+                      mode="date"
+                      display="default"
+                      onChange={(_, selectedDate) => {
+                        setShowWeightDatePicker(false);
+                        if (selectedDate) setProfile({ ...profile, weightDate: toISODate(selectedDate) });
+                      }}
+                      maximumDate={new Date()}
+                      minimumDate={new Date(1900, 0, 1)}
+                    />
+                  )}
+                </>
+              )}
+            </View>
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Are you Pre-Op or Post-Op?</Text>

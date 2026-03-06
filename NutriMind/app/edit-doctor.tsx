@@ -3,6 +3,7 @@ import { SafeAreaView, ScrollView, View, Text, TextInput, Pressable, StyleSheet,
 import { ChevronLeft } from "lucide-react-native";
 import { router } from "expo-router";
 import { useUser, UserProfile } from "@/context/UserContext";
+import type { UserProfile as FirestoreUserProfile } from "@/config/users";
 import { auth } from "@/config/firebase";
 import { updateProfile } from "firebase/auth";
 import { setUserProfile as saveUserProfile } from "@/config/users";
@@ -67,7 +68,7 @@ export default function EditDoctor() {
         licenseNumber: form.licenseNumber || null,
         yearsExperience: form.yearsExperience || null,
         practiceType: practiceType || null,
-      } as Partial<UserProfile>);
+      } as Partial<FirestoreUserProfile>);
 
       setUserProfile({
         ...(existingProfile || {}),

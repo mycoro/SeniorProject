@@ -17,6 +17,8 @@ export default function Settings() {
   const [proteinGoal, setProteinGoal] = useState("");
   const [fluidGoal, setFluidGoal] = useState("");
   const [calorieGoal, setCalorieGoal] = useState("");
+  const [showGoalWeightModal, setShowGoalWeightModal] = useState(false);
+  const [goalWeightInput, setGoalWeightInput] = useState("");
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteCodeInput, setInviteCodeInput] = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -96,6 +98,31 @@ export default function Settings() {
     } catch (e) {
       console.error("Error saving name:", e);
       Alert.alert("Error", "Failed to save preferred name. Please try again.");
+    }
+  };
+
+  const handleSaveGoalWeight = async () => {
+    const trimmed = (goalWeightInput || "").toString().trim();
+    if (!trimmed) {
+      Alert.alert("Required", "Please enter your goal weight in pounds.");
+      return;
+    }
+    const numeric = Number(trimmed);
+    if (isNaN(numeric) || numeric <= 0) {
+      Alert.alert("Invalid", "Please enter a valid goal weight (positive number).");
+      return;
+    }
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await updateUserProfile(user.uid, { goalWeight: numeric });
+      setUserProfile({ ...userProfile, goalWeight: numeric } as any);
+      setShowGoalWeightModal(false);
+      setGoalWeightInput("");
+      Alert.alert("Saved", "Your goal weight has been updated.");
+    } catch (e) {
+      console.error('Error saving goal weight:', e);
+      Alert.alert('Error', 'Failed to save goal weight. Please try again.');
     }
   };
 
@@ -210,6 +237,17 @@ export default function Settings() {
             {userProfile?.isPreOp === true ? "Pre-Op" : userProfile?.isPreOp === false ? "Post-Op" : "Not set"}
           </Text>
         </View>
+        <Pressable
+          style={styles.profileCard}
+          onPress={() => {
+            // Prefill with existing goalWeight or fallback to current weight
+            setGoalWeightInput((userProfile?.goalWeight ?? userProfile?.weight ?? "")?.toString());
+            setShowGoalWeightModal(true);
+          }}
+        >
+          <Text style={styles.label}>Goal Weight</Text>
+          <Text style={styles.value}>{userProfile?.goalWeight ? `${userProfile.goalWeight} lbs` : "Not set - Tap to set"}</Text>
+        </Pressable>
         
         {isDoctor ? (
           <>
@@ -325,6 +363,42 @@ export default function Settings() {
               </Pressable>
               <Pressable
                 onPress={handleSaveName}
+                style={[styles.modalButton, styles.saveButtonModal]}
+              >
+                <Text style={styles.saveButtonText}>Save</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showGoalWeightModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => { setShowGoalWeightModal(false); setGoalWeightInput(""); }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Goal Weight</Text>
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="e.g. 140"
+                value={goalWeightInput}
+                onChangeText={setGoalWeightInput}
+                keyboardType="numeric"
+              />
+            </View>
+            <View style={styles.modalButtons}>
+              <Pressable
+                onPress={() => { setShowGoalWeightModal(false); setGoalWeightInput(""); }}
+                style={[styles.modalButton, styles.cancelButton]}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleSaveGoalWeight}
                 style={[styles.modalButton, styles.saveButtonModal]}
               >
                 <Text style={styles.saveButtonText}>Save</Text>

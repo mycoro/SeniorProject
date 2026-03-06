@@ -16,6 +16,7 @@ export type UserProfile = {
   hasDiabetes?: boolean;
   hasHighBloodPressure?: boolean;
   hasHighCholesterol?: boolean;
+  hasDumpingSyndrome?: boolean;
   intolerances?: string[];
   proteinGoal?: number;
   fluidGoal?: number;
@@ -24,6 +25,11 @@ export type UserProfile = {
   dislikedFoods?: string;
   favoriteCuisines?: string[];
   allergies?: string[];
+  // Weight-related fields
+  currentWeight?: number | null;
+  startingWeight?: number | null;
+  goalWeight?: number | null;
+  weightDate?: string | null;
   createdAt: any;
   updatedAt: any;
 };

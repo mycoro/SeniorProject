@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { Camera, Timer, X, Loader2, Mic, Sparkles, Edit3, Check, ChevronDown, ChevronUp, Calendar } from "lucide-react-native";
 import { useUser } from "@/context/UserContext";
+import { auth } from "@/config/firebase";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { Audio } from "expo-av";
@@ -42,7 +43,7 @@ interface AIResult {
 }
 
 export default function LogMeal() {
-  const { addMealLog, userProfile } = useUser();
+  const { addMealLog, userProfile, setUserProfile } = useUser();
   const [mealType, setMealType] = useState<MealType>("Breakfast");
   const [entryMode, setEntryMode] = useState<EntryMode>("ai");
   const [isScanning, setIsScanning] = useState(false);
@@ -81,6 +82,9 @@ export default function LogMeal() {
   // Date picker state — defaults to today
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showWeightModal, setShowWeightModal] = useState(false);
+  const [weightInput, setWeightInput] = useState("");
+  
 
   const isToday = (d: Date) => {
     const now = new Date();
@@ -240,7 +244,6 @@ export default function LogMeal() {
           userProfile: {
             surgeryDate: userProfile.surgeryDate,
             surgeryType: userProfile.surgeryType,
-            hasDumpingSyndrome: userProfile.hasDumpingSyndrome,
             hasDiabetes: userProfile.hasDiabetes,
             intolerances: userProfile.intolerances || [],
             tastePreferences: userProfile.tastePreferences,
@@ -518,6 +521,59 @@ export default function LogMeal() {
               </Pressable>
             )}
           </Pressable>
+
+          {/* Patient weight entry (self) */}
+          <View style={{marginTop:10, marginBottom:8, flexDirection:'row'}}>
+            <Pressable onPress={() => setShowWeightModal(true)} style={[styles.modeButton, {backgroundColor:'#FFFDF4', paddingHorizontal:12}] }>
+              <Text style={[styles.modeButtonText, {color:'#004734'}]}>Record Weight</Text>
+            </Pressable>
+          </View>
+
+          {/* Patient weight modal */}
+          <Modal visible={showWeightModal} transparent animationType="fade" onRequestClose={() => setShowWeightModal(false)}>
+            <View style={{flex:1, backgroundColor:'rgba(0,0,0,0.4)', justifyContent:'center', alignItems:'center'}}>
+              <View style={{width:'90%', backgroundColor:'#fff', borderRadius:12, padding:14}}>
+                <Text style={{fontSize:16, fontWeight:'700', color:'#004734', marginBottom:8}}>Record Weight</Text>
+                <Text style={{fontSize:13, color:'#3F5E52', marginBottom:8}}>Enter your weight (lbs)</Text>
+                <View style={{backgroundColor:'#FFFDF4', borderRadius:8, padding:8, borderWidth:1, borderColor:'#D6C89A', marginBottom:8}}>
+                  <TextInput keyboardType="numeric" value={weightInput} onChangeText={setWeightInput} placeholder="e.g. 150" style={{fontSize:18, color:'#004734'}} />
+                </View>
+                {/* Measurement date removed from modal — use header date selector instead */}
+                <View style={{flexDirection:'row', justifyContent:'flex-end', gap:12, marginTop:12}}>
+                  <Pressable onPress={() => { setShowWeightModal(false); setWeightInput(''); }} style={{padding:8}}><Text style={{color:'#6B7280'}}>Cancel</Text></Pressable>
+                  <Pressable onPress={async () => {
+                    try {
+                      const val = Number(weightInput);
+                      if (isNaN(val)) { Alert.alert('Invalid', 'Please enter a numeric weight'); return; }
+                      const user = auth.currentUser;
+                      if (!user) { Alert.alert('Auth', 'Not authenticated'); return; }
+                      const idToken = await user.getIdToken();
+                      // normalize selected date to YYYY-MM-DD and send as `weightdate`
+                      const sd = selectedDate || new Date();
+                      const weightDateIso = `${sd.getFullYear()}-${String(sd.getMonth()+1).padStart(2,'0')}-${String(sd.getDate()).padStart(2,'0')}`;
+                      const resp = await fetch(`${API_BASE_URL}/api/doctor/patient/weight`, {
+                        method: 'POST',
+                        headers: { 'Content-Type':'application/json', Authorization: `Bearer ${idToken}` },
+                        body: JSON.stringify({ patientId: user.uid, weight: val, weightdate: weightDateIso })
+                      });
+                      const j = await resp.json().catch(() => null);
+                      if (!resp.ok) { Alert.alert('Error', j?.error || 'Failed to save weight'); return; }
+                      // update local user profile using server-returned currentWeight (may be null for past dates)
+                      setUserProfile(p => p ? { ...p, currentWeight: (j && typeof j.currentWeight !== 'undefined') ? j.currentWeight : p.currentWeight, weightDate: (j && j.updatedCurrentWeight) ? weightDateIso : p.weightDate } : p);
+                      setShowWeightModal(false);
+                      setWeightInput('');
+                      Alert.alert('Saved', 'Weight recorded.');
+                    } catch (err) {
+                      console.error('save weight (patient)', err);
+                      Alert.alert('Error', 'Failed to save weight');
+                    }
+                  }} style={{backgroundColor:'#009235', paddingHorizontal:12, paddingVertical:8, borderRadius:8}}><Text style={{color:'white', fontWeight:'700'}}>Save</Text></Pressable>
+                </View>
+              </View>
+            </View>
+          </Modal>
+
+          {/* weight date picker removed — date is selected via header date selector */}
 
           {showDatePicker && (
             <View style={styles.datePickerContainer}>

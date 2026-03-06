@@ -193,7 +193,6 @@ export default function Chat() {
             surgeryDate: userProfile.surgeryDate,
             surgeryType: userProfile.surgeryType,
             isPreOp: userProfile.isPreOp ?? false,
-            hasDumpingSyndrome: userProfile.hasDumpingSyndrome,
             hasDiabetes: userProfile.hasDiabetes,
             intolerances: userProfile.intolerances || [],
             proteinGoal: userProfile.proteinGoal,
