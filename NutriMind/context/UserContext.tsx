@@ -19,12 +19,18 @@ export interface UserProfile {
   dateOfBirth?: string;
   sex?: string; 
   weight?: string;
+  // Weight fields (may be number in stored profile, but UI sometimes uses string during onboarding)
+  currentWeight?: number | string;
+  startingWeight?: number | string;
+  goalWeight?: number | string;
+  weightDate?: string;
   isPreOp?: boolean;
   surgeryDate?: string;
   surgeryType?: "Gastric Sleeve" | "Gastric Bypass" | "Duodenal Switch";
   hasDiabetes?: boolean;
   hasHighBloodPressure?: boolean;
   hasHighCholesterol?: boolean;
+  hasDumpingSyndrome?: boolean;
   intolerances?: string[];
   proteinGoal?: number;
   fluidGoal?: number;
@@ -48,7 +54,7 @@ export type MealLogUpdate = Partial<Omit<MealLog, "id">>;
 interface UserContextType {
   userProfile: UserProfile | null;
   userRole: "patient" | "healthcare_prof" | null;
-  setUserProfile: (profile: UserProfile | null) => void;
+  setUserProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
   isOnboarded: boolean;
   setIsOnboarded: (value: boolean) => void;
   dailyLogs: MealLog[];
@@ -117,6 +123,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
               dislikedFoods: (rawProfile as UserProfile).dislikedFoods,
               favoriteCuisines: (rawProfile as UserProfile).favoriteCuisines,
               allergies: (rawProfile as UserProfile).allergies,
+              // weight fields
+              currentWeight: (rawProfile as any).currentWeight ?? (rawProfile as any).weight ?? undefined,
+              startingWeight: (rawProfile as any).startingWeight ?? undefined,
+              goalWeight: (rawProfile as any).goalWeight ?? undefined,
+                weightDate: (rawProfile as any).weightDate ?? undefined,
+                hasDumpingSyndrome: (rawProfile as any).hasDumpingSyndrome ?? undefined,
               isDoctor: (rawProfile as any).isDoctor,
               specialty: (rawProfile as any).specialty,
               licenseNumber: (rawProfile as any).licenseNumber ?? null,

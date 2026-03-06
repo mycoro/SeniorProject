@@ -12,6 +12,31 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Weight logs - enforce strict schema: recordedBy, timestamp, weightdate (YYYY-MM-DD), value
+    match /users/{userId}/weightLogs/{logId} {
+      // reads allowed to the owner or assigned doctors
+      allow get, list: if request.auth != null && (
+        request.auth.uid == userId || (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'healthcare_prof' &&
+          (get(/databases/$(database)/documents/users/$(userId)).data.assignedDoctors is list && request.auth.uid in get(/databases/$(database)/documents/users/$(userId)).data.assignedDoctors)
+        )
+      );
+
+      // Creates/updates: only the patient themselves may write weight logs and the document
+      // must include required fields with correct types/format.
+      allow create, update: if request.auth != null && request.auth.uid == userId
+        && request.resource.data.recordedBy is string
+        && request.resource.data.recordedBy == userId
+        && request.resource.data.timestamp is timestamp
+        && request.resource.data.weightdate is string
+        && request.resource.data.weightdate.matches('\\d{4}-\\d{2}-\\d{2}')
+        && (request.resource.data.value is number || request.resource.data.value is int)
+        && request.resource.data.value > 0;
+
+      // Deletes only by the patient themselves
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
     // Doctor access: doctors can read patient nutrition data only if they are assigned
     // This assumes each patient user doc contains an `assignedDoctors` array of UIDs
     match /users/{patientId}/mealLogs_readonly/{entryId} {

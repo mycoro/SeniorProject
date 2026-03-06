@@ -12,6 +12,7 @@ import {
 import { ChevronLeft, ChevronRight, User, Briefcase } from "lucide-react-native";
 import { router } from "expo-router";
 import { useUser, UserProfile } from "@/context/UserContext";
+import type { UserProfile as FirestoreUserProfile } from "@/config/users";
 import { auth } from "@/config/firebase";
 import { setUserProfile as saveUserProfile } from "@/config/users";
 
@@ -60,7 +61,7 @@ export default function DoctorOnboarding() {
           licenseNumber: doctorInfo.licenseNumber ?? null,
           yearsExperience: doctorInfo.yearsExperience ?? null,
           practiceType: doctorInfo.practiceType ?? null,
-        } as UserProfile);
+        } as Partial<FirestoreUserProfile>);
 
         setUserProfile({
           role: "healthcare_prof",

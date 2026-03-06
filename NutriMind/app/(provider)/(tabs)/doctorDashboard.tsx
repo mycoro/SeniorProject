@@ -10,7 +10,7 @@ import {
   TextInput,
 } from "react-native";
 import { HeartPulse, ChevronRight, Search } from "lucide-react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useUser } from "@/context/UserContext";
 import { auth } from "@/config/firebase";
 import { API_BASE_URL } from "@/config/api";
@@ -68,6 +68,10 @@ export default function DoctorDashboard() {
     });
   };
 
+  
+
+  const params = useLocalSearchParams();
+
   useEffect(() => {
     let mounted = true;
     const fetchPatients = async () => {
@@ -87,11 +91,11 @@ export default function DoctorDashboard() {
           headers: { Authorization: `Bearer ${idToken}` },
         });
         if (!res.ok) {
-          let errJson = null;
+          let errJson: any = null;
           try {
             errJson = await res.json();
           } catch {}
-          setError(errJson?.error || "Failed to load patients");
+          setError((errJson && errJson.error) || "Failed to load patients");
           setPatients([]);
           setLoading(false);
           return;
@@ -117,7 +121,7 @@ export default function DoctorDashboard() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [params?.refreshed]);
 
   // Color pattern: green, orange, yellow
   const getPatientColor = (index: number) => {
@@ -168,31 +172,31 @@ export default function DoctorDashboard() {
           ) : (
             filteredPatients.map((patient, index) => (
               <Pressable
-                key={patient.id}
-                style={[
-                  styles.patientCard,
-                  index < filteredPatients.length - 1 && styles.patientDivider,
-                ]}
-                onPress={() => handlePatientPress(patient.id)}
-              >
-                <View style={styles.patientLeft}>
-                  <HeartPulse
-                    size={28}
-                    color={getPatientColor(index)}
-                    strokeWidth={2}
-                  />
-                  <View style={styles.patientInfo}>
-                    <Text style={styles.patientName}>{patient.name ?? ""}</Text>
-                    {(patient.surgeryType || patient.surgeryDate) ? (
-                      <Text style={styles.patientSubtitle}>
-                        {patient.surgeryType ?? ""}
-                        {patient.surgeryDate ? ` • ${getSurgeryDisplayText(patient.surgeryDate)}` : ""}
-                      </Text>
-                    ) : null}
+                  key={patient.id}
+                  style={[
+                    styles.patientCard,
+                    index < filteredPatients.length - 1 && styles.patientDivider,
+                  ]}
+                  onPress={() => handlePatientPress(patient.id)}
+                >
+                  <View style={styles.patientLeft}>
+                    <HeartPulse
+                      size={28}
+                      color={getPatientColor(index)}
+                      strokeWidth={2}
+                    />
+                    <View style={styles.patientInfo}>
+                      <Text style={styles.patientName}>{patient.name ?? ""}</Text>
+                      {(patient.surgeryType || patient.surgeryDate) ? (
+                        <Text style={styles.patientSubtitle}>
+                          {patient.surgeryType ?? ""}
+                          {patient.surgeryDate ? ` • ${getSurgeryDisplayText(patient.surgeryDate)}` : ""}
+                        </Text>
+                      ) : null}
+                    </View>
                   </View>
-                </View>
-                <ChevronRight size={20} color="#7A9C8A" />
-              </Pressable>
+                  <ChevronRight size={20} color="#7A9C8A" />
+                </Pressable>
             ))
           )}
         </View>
@@ -298,4 +302,5 @@ const styles = StyleSheet.create({
     color: "#3F5E52",
     marginTop: 2,
   },
+  
 });
