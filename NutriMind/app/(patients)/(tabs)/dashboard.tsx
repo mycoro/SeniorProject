@@ -226,8 +226,8 @@ export default function Dashboard() {
               onPress={() => setEditLog(item)}
             >
               <View style={styles.mealLeft}>
-                <View>
-                  <Text style={styles.mealName}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.mealName} numberOfLines={2} ellipsizeMode="tail">
                     {item.mealType === "Vitamin" ? getVitaminBaseName(item.name) : getMealDisplayName(item.name)}
                   </Text>
                   <Text style={styles.mealTime}>{item.mealType} · {item.time}</Text>
@@ -376,12 +376,14 @@ const styles = StyleSheet.create({
   mealLeft: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
   },
 
   mealName: {
     fontWeight: "600",
     color: "#004734",
     fontSize: 14,
+    flexShrink: 1,
   },
   mealTime: {
     fontSize: 12,

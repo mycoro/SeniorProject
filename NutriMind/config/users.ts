@@ -98,12 +98,15 @@ export async function setUserProfile(
   profile: Partial<UserProfile>
 ) {
   const ref = doc(db, "users", uid);
+  // Clean the profile object to remove any `undefined` values. Firestore
+  // rejects writes that contain undefined fields. Only set keys that are explicitly provided.
   const cleaned: Record<string, any> = {};
   Object.entries(profile).forEach(([k, v]) => {
     if (v !== undefined) cleaned[k] = v;
   });
-  await setDoc(ref, {
-    ...cleaned,
-    updatedAt: serverTimestamp(),
-  }, { merge: true });
+  if (Object.keys(cleaned).length === 0) {
+    await updateDoc(ref, { updatedAt: serverTimestamp() });
+    return;
+  }
+  await setDoc(ref, { ...cleaned, updatedAt: serverTimestamp() }, { merge: true });
 }

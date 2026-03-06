@@ -420,8 +420,8 @@ export default function History() {
                         >
                           <View style={styles.mealLeft}>
                             <Clock size={16} color="#94a3b8" />
-                            <View>
-                              <Text style={styles.mealName}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.mealName} numberOfLines={2} ellipsizeMode="tail">
                                 {meal.type === "Vitamin" ? getVitaminBaseName(meal.name) : getMealDisplayName(meal.name)}
                               </Text>
                               <Text style={styles.mealDetails}>
@@ -513,8 +513,8 @@ export default function History() {
                             style={styles.listMealItem}
                             onPress={() => fullLog && setEditLog(fullLog)}
                           >
-                            <View>
-                              <Text style={styles.listMealName}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.listMealName} numberOfLines={2} ellipsizeMode="tail">
                                 {meal.type === "Vitamin" ? getVitaminBaseName(meal.name) : getMealDisplayName(meal.name)}
                               </Text>
                               <Text style={styles.listMealType}>{subtitle}</Text>
@@ -742,11 +742,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    flex: 1,
   },
   mealName: {
     fontSize: 14,
     fontWeight: "600",
     color: "#004734",
+    flexWrap: "wrap",
+    flexShrink: 1
   },
   mealDetails: {
     fontSize: 12,
@@ -802,6 +805,8 @@ const styles = StyleSheet.create({
   listMealName: {
     fontSize: 14,
     color: "#004734",
+    flexWrap: "wrap",
+    flexShrink: 1,
   },
   listMealType: {
     fontSize: 12,
