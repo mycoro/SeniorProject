@@ -71,7 +71,7 @@ export interface MealLog {
   carbs?: number;
   fat?: number;
   sugar?: number;
-  mealType: "Breakfast" | "Lunch" | "Dinner" | "Snack" | "Fluid";
+  mealType: "Breakfast" | "Lunch" | "Dinner" | "Snack" | "Fluid" | "Vitamin";
   timestamp: Date;
 }
 
@@ -170,7 +170,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                     : new Date(ts);
                 const mealType = data.mealType;
                 const validMealType =
-                  mealType === "Breakfast" || mealType === "Lunch" || mealType === "Dinner" || mealType === "Snack" || mealType === "Fluid"
+                  mealType === "Breakfast" || mealType === "Lunch" || mealType === "Dinner" || mealType === "Snack" || mealType === "Fluid" || mealType === "Vitamin"
                     ? mealType
                     : "Snack";
                 loadedLogs.push({

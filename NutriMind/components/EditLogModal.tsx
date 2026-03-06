@@ -14,7 +14,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useUser, MealLog } from "@/context/UserContext";
 import { parseMealNameForEdit } from "@/utils/mealDisplay";
 
-const mealTypes = ["Breakfast", "Lunch", "Dinner", "Snack", "Fluid"] as const;
+const mealTypes = ["Breakfast", "Lunch", "Dinner", "Snack", "Fluid", "Vitamin"] as const;
 
 type Props = {
   visible: boolean;

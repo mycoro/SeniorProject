@@ -98,8 +98,12 @@ export async function setUserProfile(
   profile: Partial<UserProfile>
 ) {
   const ref = doc(db, "users", uid);
+  const cleaned: Record<string, any> = {};
+  Object.entries(profile).forEach(([k, v]) => {
+    if (v !== undefined) cleaned[k] = v;
+  });
   await setDoc(ref, {
-    ...profile,
+    ...cleaned,
     updatedAt: serverTimestamp(),
   }, { merge: true });
 }

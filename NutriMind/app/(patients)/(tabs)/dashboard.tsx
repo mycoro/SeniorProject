@@ -5,7 +5,7 @@ import { useUser, MealLog } from "@/context/UserContext";
 import { router } from "expo-router";
 import ProgressRing from "@/components/ProgressRing";
 import EditLogModal from "@/components/EditLogModal";
-import { getMealDisplayName } from "@/utils/mealDisplay";
+import { getMealDisplayName, getVitaminAmount, getVitaminBaseName } from "@/utils/mealDisplay";
 import { calculatePostOpTime } from "@/utils/formatters";
 
 const isSameCalendarDay = (logTimestamp: Date, ref: Date) =>
@@ -226,15 +226,18 @@ export default function Dashboard() {
               onPress={() => setEditLog(item)}
             >
               <View style={styles.mealLeft}>
-                <View style={styles.proteinBadge}>
-                  <Text style={styles.proteinText}>{item.protein}g</Text>
-                </View>
                 <View>
-                  <Text style={styles.mealName}>{getMealDisplayName(item.name)}</Text>
+                  <Text style={styles.mealName}>
+                    {item.mealType === "Vitamin" ? getVitaminBaseName(item.name) : getMealDisplayName(item.name)}
+                  </Text>
                   <Text style={styles.mealTime}>{item.mealType} · {item.time}</Text>
                 </View>
               </View>
-              <Text style={styles.mealCalories}>{item.calories} kcal</Text>
+              {item.mealType === "Vitamin" ? (
+                <Text style={styles.mealCalories}>{getVitaminAmount(item.name) ?? "—"}</Text>
+              ) : (
+                <Text style={styles.mealCalories}>{item.calories} kcal</Text>
+              )}
             </Pressable>
             ))
           )}
@@ -373,21 +376,6 @@ const styles = StyleSheet.create({
   mealLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-  },
-
-  proteinBadge: {
-    width: 36,
-    height: 36,
-    backgroundColor: "#FFBF48",
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  proteinText: {
-    color: "#004734",
-    fontSize: 12,
-    fontWeight: "700",
   },
 
   mealName: {

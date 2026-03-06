@@ -79,9 +79,9 @@ export default function LogMeal() {
   const [recordingInstance, setRecordingInstance] = useState<Audio.Recording | null>(null);
   const [processingLabel, setProcessingLabel] = useState("Analyzing your meal...");
 
-  // Date picker state — defaults to today
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  // Date & time picker — defaults to now
+  const [selectedDateTime, setSelectedDateTime] = useState(new Date());
+  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [showWeightModal, setShowWeightModal] = useState(false);
   const [weightInput, setWeightInput] = useState("");
   
@@ -97,13 +97,6 @@ export default function LogMeal() {
     yesterday.setDate(yesterday.getDate() - 1);
     if (d.getFullYear() === yesterday.getFullYear() && d.getMonth() === yesterday.getMonth() && d.getDate() === yesterday.getDate()) return "Yesterday";
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  };
-
-  const buildTimestampForDate = (date: Date): Date => {
-    const now = new Date();
-    if (isToday(date)) return now;
-    // For past dates, set time to noon local to avoid any timezone edge-case flipping
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
   };
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -457,11 +450,11 @@ export default function LogMeal() {
       calories: caloriesValue,
       carbs: carbsValue > 0 ? carbsValue : undefined,
       mealType,
-      timestamp: buildTimestampForDate(selectedDate),
+      timestamp: selectedDateTime,
     });
     setFoodName(""); setIngredients(""); setProtein(""); setCalories(""); setCarbs("");
     setScanResult(null);
-    setSelectedDate(new Date());
+    setSelectedDateTime(new Date());
     alert("Meal logged successfully!");
   };
 
@@ -480,12 +473,12 @@ export default function LogMeal() {
       carbs: aiResult.totals.carbs > 0 ? aiResult.totals.carbs : undefined,
       fat: aiResult.totals.fat > 0 ? aiResult.totals.fat : undefined,
       mealType,
-      timestamp: buildTimestampForDate(selectedDate),
+      timestamp: selectedDateTime,
     });
 
     setAiResult(null);
     setDescribeText("");
-    setSelectedDate(new Date());
+    setSelectedDateTime(new Date());
     Alert.alert("Logged!", "Your meal has been logged successfully.");
   };
 
@@ -506,15 +499,15 @@ export default function LogMeal() {
         >
           <Text style={styles.title}>Log Food</Text>
 
-          {/* Date selector chip */}
-          <Pressable onPress={() => setShowDatePicker(true)} style={[styles.dateChip, !isToday(selectedDate) && styles.dateChipActive]}>
-            <Calendar size={14} color={isToday(selectedDate) ? "#6B8F7A" : "#004734"} />
-            <Text style={[styles.dateChipText, !isToday(selectedDate) && styles.dateChipTextActive]}>
-              {formatDateLabel(selectedDate)}
+          {/* Date & time selector chip */}
+          <Pressable onPress={() => setShowDateTimePicker(true)} style={[styles.dateChip, !isToday(selectedDateTime) && styles.dateChipActive]}>
+            <Calendar size={14} color={isToday(selectedDateTime) ? "#6B8F7A" : "#004734"} />
+            <Text style={[styles.dateChipText, !isToday(selectedDateTime) && styles.dateChipTextActive]}>
+              {formatDateLabel(selectedDateTime)}
             </Text>
-            {!isToday(selectedDate) && (
+            {!isToday(selectedDateTime) && (
               <Pressable
-                onPress={(e) => { e.stopPropagation(); setSelectedDate(new Date()); }}
+                onPress={(e) => { e.stopPropagation(); setSelectedDateTime(new Date()); }}
                 hitSlop={8}
               >
                 <X size={14} color="#004734" />
@@ -549,7 +542,7 @@ export default function LogMeal() {
                       if (!user) { Alert.alert('Auth', 'Not authenticated'); return; }
                       const idToken = await user.getIdToken();
                       // normalize selected date to YYYY-MM-DD and send as `weightdate`
-                      const sd = selectedDate || new Date();
+                      const sd = selectedDateTime || new Date();
                       const weightDateIso = `${sd.getFullYear()}-${String(sd.getMonth()+1).padStart(2,'0')}-${String(sd.getDate()).padStart(2,'0')}`;
                       const resp = await fetch(`${API_BASE_URL}/api/doctor/patient/weight`, {
                         method: 'POST',
@@ -575,21 +568,21 @@ export default function LogMeal() {
 
           {/* weight date picker removed — date is selected via header date selector */}
 
-          {showDatePicker && (
+          {showDateTimePicker && (
             <View style={styles.datePickerContainer}>
               <DateTimePicker
-                value={selectedDate}
-                mode="date"
-                display={Platform.OS === "ios" ? "inline" : "default"}
+                value={selectedDateTime}
+                mode="datetime"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
                 maximumDate={new Date()}
                 onChange={(event: any, date?: Date) => {
-                  if (Platform.OS === "android") setShowDatePicker(false);
-                  if (date) setSelectedDate(date);
+                  if (Platform.OS === "android") setShowDateTimePicker(false);
+                  if (date) setSelectedDateTime(date);
                 }}
                 style={Platform.OS === "ios" ? { alignSelf: "center" } : undefined}
               />
               {Platform.OS === "ios" && (
-                <Pressable onPress={() => setShowDatePicker(false)} style={styles.datePickerDoneButton}>
+                <Pressable onPress={() => setShowDateTimePicker(false)} style={styles.datePickerDoneButton}>
                   <Text style={styles.datePickerDoneText}>Done</Text>
                 </Pressable>
               )}
