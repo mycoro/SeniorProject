@@ -8,8 +8,10 @@ import {
   SafeAreaView,
   StyleSheet,
   Alert,
+  Platform,
 } from "react-native";
-import { Droplets, ArrowLeft } from "lucide-react-native";
+import { Droplets, ArrowLeft, Calendar, X } from "lucide-react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useUser, MealLog } from "@/context/UserContext";
 import { router } from "expo-router";
 
@@ -43,6 +45,28 @@ export default function LogFluid() {
   const [carbsInput, setCarbsInput] = useState("");
   const [fatInput, setFatInput] = useState("");
   const [sugarInput, setSugarInput] = useState("");
+
+  // Date selector — default to today, no future dates
+  const [selectedFluidDate, setSelectedFluidDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const isToday = (d: Date) => {
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
+  const formatDateLabel = (d: Date) => {
+    if (isToday(d)) return "Today";
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (d.getFullYear() === yesterday.getFullYear() && d.getMonth() === yesterday.getMonth() && d.getDate() === yesterday.getDate()) return "Yesterday";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  const buildTimestampForDate = (date: Date): Date => {
+    if (isToday(date)) return new Date();
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
+  };
 
   const getCaloriesForFluid = (type: string, ounces: number): number => {
     const caloriesPerOz: { [key: string]: number } = {
@@ -130,7 +154,7 @@ export default function LogFluid() {
       fat,
       sugar,
       mealType: "Fluid",
-      timestamp: new Date(),
+      timestamp: buildTimestampForDate(selectedFluidDate),
     };
 
     await addMealLog(fluidLog);
@@ -253,6 +277,44 @@ export default function LogFluid() {
               </Text>
             </View>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Date consumed</Text>
+          <Pressable onPress={() => setShowDatePicker(true)} style={[styles.dateChip, !isToday(selectedFluidDate) && styles.dateChipActive]}>
+            <Calendar size={14} color={isToday(selectedFluidDate) ? "#6B8F7A" : "#004734"} />
+            <Text style={[styles.dateChipText, !isToday(selectedFluidDate) && styles.dateChipTextActive]}>
+              {formatDateLabel(selectedFluidDate)}
+            </Text>
+            {!isToday(selectedFluidDate) && (
+              <Pressable
+                onPress={(e) => { e.stopPropagation(); setSelectedFluidDate(new Date()); }}
+                hitSlop={8}
+              >
+                <X size={14} color="#004734" />
+              </Pressable>
+            )}
+          </Pressable>
+          {showDatePicker && (
+            <View style={styles.datePickerContainer}>
+              <DateTimePicker
+                value={selectedFluidDate}
+                mode="date"
+                display={Platform.OS === "ios" ? "inline" : "default"}
+                maximumDate={new Date()}
+                onChange={(event: any, date?: Date) => {
+                  if (Platform.OS === "android") setShowDatePicker(false);
+                  if (date) setSelectedFluidDate(date);
+                }}
+                style={Platform.OS === "ios" ? { alignSelf: "center" } : undefined}
+              />
+              {Platform.OS === "ios" && (
+                <Pressable onPress={() => setShowDatePicker(false)} style={styles.datePickerDoneButton}>
+                  <Text style={styles.datePickerDoneText}>Done</Text>
+                </Pressable>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={styles.section}>
@@ -484,6 +546,41 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6DCC2",
     marginHorizontal: 4,
   },
+
+  /* date picker */
+  dateChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: "#F1F8F4",
+    borderWidth: 1,
+    borderColor: "#D4E8DA",
+    marginBottom: 8,
+  },
+  dateChipActive: { backgroundColor: "#FFF3C4", borderColor: "#E6C85E" },
+  dateChipText: { fontSize: 13, fontWeight: "500", color: "#6B8F7A" },
+  dateChipTextActive: { color: "#004734", fontWeight: "600" },
+  datePickerContainer: {
+    backgroundColor: "#FFF8E7",
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#E6D8A8",
+  },
+  datePickerDoneButton: {
+    marginTop: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+    backgroundColor: "#009235",
+    borderRadius: 10,
+  },
+  datePickerDoneText: { color: "#FFFDF4", fontWeight: "600", fontSize: 15 },
 
   /* sections */
   section: {
