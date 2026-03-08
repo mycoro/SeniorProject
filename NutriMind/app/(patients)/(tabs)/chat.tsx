@@ -455,6 +455,7 @@ export default function Chat() {
           value={input}
           onChangeText={setInput}
           placeholder="Ask NutriMind AI..."
+          placeholderTextColor="#7A9C8A"
           multiline
           onSubmitEditing={handleSend}
         />
@@ -464,7 +465,7 @@ export default function Chat() {
       </View>
 
       <Text style={styles.aiDisclaimer}>
-        NutriMind is AI and can make Mistakes.
+        NutriMind is AI and can make mistakes. Always check important information.
       </Text>
       </KeyboardAvoidingView>
     </SafeAreaView>

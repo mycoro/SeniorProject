@@ -392,7 +392,7 @@ export default function History() {
             </View>
 
             <View style={styles.mealsSection}>
-              <Text style={styles.mealsTitle}>Meals, fluids & vitamins</Text>
+              <Text style={styles.mealsTitle}>Meals, Fluids, & Vitamins</Text>
               {loading ? (
                 <View style={styles.emptyMeals}>
                   <Text style={styles.emptyMealsText}>Loading...</Text>

@@ -49,8 +49,22 @@ export default function Onboarding() {
 
   const formatDateUS = (date: Date | string) => {
     if (!date) return "";
-    const d = typeof date === "string" ? new Date(date) : date;
+    
+    let d: Date;
+
+    if (typeof date === "string") {
+      if (date.includes("-") && !date.includes("T")) {
+        const[year, month, day] = date.split('-').map(Number);
+        d = new Date(year, month - 1, day);
+      } else {
+        d = new Date(date);
+      }
+    } else {
+      d = date;
+    }
+
     if (isNaN(d.getTime())) return "";
+
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     const year = d.getFullYear();
@@ -84,7 +98,14 @@ export default function Onboarding() {
 
   const formatDobDisplay = (isoDate: string) => {
     if (!isoDate || isoDate.length < 10) return "";
-    const parsed = new Date(isoDate.slice(0, 10));
+    
+    const parts = isoDate.split('-');
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+
+    const parsed = new Date(year, month, day);
+
     if (isNaN(parsed.getTime())) return "";
     return formatDateUS(parsed);
   };
@@ -417,7 +438,7 @@ export default function Onboarding() {
   const handleApplyInvite = async () => {
     const code = (inviteCodeInput || "").trim();
     if (!code) {
-      setInviteMessage("Enter a code to verify (optional).");
+      setInviteMessage("Enter a code to verify (Optional).");
       return;
     }
     setInviteApplying(true);

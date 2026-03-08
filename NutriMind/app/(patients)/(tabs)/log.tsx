@@ -515,9 +515,9 @@ export default function LogMeal() {
             )}
           </Pressable>
 
-          {/* Patient weight entry (self) */}
+          {/* Patient weight entry (self) */} 
           <View style={{marginTop:10, marginBottom:8, flexDirection:'row'}}>
-            <Pressable onPress={() => setShowWeightModal(true)} style={[styles.modeButton, {backgroundColor:'#FFFDF4', paddingHorizontal:12}] }>
+            <Pressable onPress={() => setShowWeightModal(true)} style={[styles.modeButton, {backgroundColor:"#FFF8E7", paddingHorizontal:12}] }>
               <Text style={[styles.modeButtonText, {color:'#004734'}]}>Record Weight</Text>
             </Pressable>
           </View>
@@ -529,7 +529,7 @@ export default function LogMeal() {
                 <Text style={{fontSize:16, fontWeight:'700', color:'#004734', marginBottom:8}}>Record Weight</Text>
                 <Text style={{fontSize:13, color:'#3F5E52', marginBottom:8}}>Enter your weight (lbs)</Text>
                 <View style={{backgroundColor:'#FFFDF4', borderRadius:8, padding:8, borderWidth:1, borderColor:'#D6C89A', marginBottom:8}}>
-                  <TextInput keyboardType="numeric" value={weightInput} onChangeText={setWeightInput} placeholder="e.g. 150" style={{fontSize:18, color:'#004734'}} />
+                  <TextInput keyboardType="numeric" value={weightInput} onChangeText={setWeightInput} placeholder="Weight in lbs" placeholderTextColor="#7A9C8A" style={{fontSize:18, color:'#004734'}} />
                 </View>
                 {/* Measurement date removed from modal — use header date selector instead */}
                 <View style={{flexDirection:'row', justifyContent:'flex-end', gap:12, marginTop:12}}>
@@ -579,6 +579,7 @@ export default function LogMeal() {
                   if (Platform.OS === "android") setShowDateTimePicker(false);
                   if (date) setSelectedDateTime(date);
                 }}
+                textColor="#004734"
                 style={Platform.OS === "ios" ? { alignSelf: "center" } : undefined}
               />
               {Platform.OS === "ios" && (
@@ -642,7 +643,7 @@ export default function LogMeal() {
                   <View style={styles.describeInputRow}>
                     <TextInput
                       style={styles.describeInput}
-                      placeholder="e.g. Grilled chicken with rice and veggies..."
+                      placeholder="Grilled chicken with rice and veggies..."
                       placeholderTextColor="#9CB5A6"
                       value={describeText}
                       onChangeText={setDescribeText}
@@ -941,11 +942,12 @@ export default function LogMeal() {
               <Text style={styles.manualTitle}>Manual Entry</Text>
 
               <View style={styles.proteinInput}>
-                <Text style={styles.proteinLabel}>Protein Grams</Text>
+                <Text style={styles.proteinLabel}>Protein</Text>
                 <View style={styles.proteinInputRow}>
                   <TextInput
                     style={styles.proteinInputText}
                     placeholder="25"
+                    placeholderTextColor="#7A9C8A"
                     value={protein}
                     onChangeText={setProtein}
                     keyboardType="numeric"
@@ -961,6 +963,7 @@ export default function LogMeal() {
                     <TextInput
                       style={styles.macroInputText}
                       placeholder="180"
+                      placeholderTextColor="#7A9C8A"
                       value={calories}
                       onChangeText={setCalories}
                       keyboardType="numeric"
@@ -974,6 +977,7 @@ export default function LogMeal() {
                     <TextInput
                       style={styles.macroInputText}
                       placeholder="15"
+                      placeholderTextColor="#7A9C8A"
                       value={carbs}
                       onChangeText={setCarbs}
                       keyboardType="numeric"
@@ -987,7 +991,8 @@ export default function LogMeal() {
                 <Text style={styles.foodNameLabel}>Food Name</Text>
                 <TextInput
                   style={styles.foodNameTextInput}
-                  placeholder="e.g., Greek Yogurt"
+                  placeholder="Hamburger"
+                  placeholderTextColor="#7A9C8A"
                   value={foodName}
                   onChangeText={setFoodName}
                   onFocus={() => { setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100); }}
@@ -995,10 +1000,11 @@ export default function LogMeal() {
               </View>
 
               <View style={styles.foodNameInput}>
-                <Text style={styles.foodNameLabel}>Ingredients (optional)</Text>
+                <Text style={styles.foodNameLabel}>Ingredients (Optional)</Text>
                 <TextInput
                   style={styles.foodNameTextInput}
-                  placeholder="e.g., Lettuce, Tomato, Pickles"
+                  placeholder="Lettuce, Tomato, Pickles"
+                  placeholderTextColor="#7A9C8A"
                   value={ingredients}
                   onChangeText={setIngredients}
                   onFocus={() => { setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100); }}
