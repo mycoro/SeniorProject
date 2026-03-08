@@ -18,6 +18,7 @@ export interface UserProfile {
   name?: string;
   dateOfBirth?: string;
   sex?: string; 
+  height?: number | string;
   weight?: string;
   // Weight fields (may be number in stored profile, but UI sometimes uses string during onboarding)
   currentWeight?: number | string;
@@ -109,6 +110,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
               name: (rawProfile as UserProfile).name?.trim() || nameToUse || undefined,
               dateOfBirth: (rawProfile as UserProfile).dateOfBirth,
               sex: (rawProfile as UserProfile).sex,
+              height: (rawProfile as any).height ?? undefined,
               isPreOp: rawProfile.isPreOp,
               surgeryDate: rawProfile.surgeryDate,
               surgeryType: rawProfile.surgeryType as UserProfile["surgeryType"],

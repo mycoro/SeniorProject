@@ -123,7 +123,7 @@ export default function LogVitamins() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Date consumed</Text>
+          <Text style={styles.sectionLabel}>Date Consumed</Text>
           <Pressable onPress={() => setShowDateTimePicker(true)} style={[styles.dateChip, !isToday(selectedDateTime) && styles.dateChipActive]}>
             <Calendar size={14} color={isToday(selectedDateTime) ? "#6B8F7A" : "#004734"} />
             <Text style={[styles.dateChipText, !isToday(selectedDateTime) && styles.dateChipTextActive]}>
@@ -190,8 +190,8 @@ export default function LogVitamins() {
 
         {selectedVitamins.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Amount (optional)</Text>
-            <Text style={styles.amountHint}>e.g. 500mcg, 65mg, 2000 IU</Text>
+            <Text style={styles.sectionLabel}>Amount (Optional)</Text>
+            <Text style={styles.amountHint}>500mcg, 65mg, 2000 IU</Text>
             {selectedVitamins.map((vitamin) => (
               <View key={vitamin} style={styles.amountRow}>
                 <Text style={styles.amountLabel}>{vitamin}</Text>
@@ -210,10 +210,10 @@ export default function LogVitamins() {
 
         {customVitamin.trim() && (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Amount for {customVitamin.trim()} (optional)</Text>
+            <Text style={styles.sectionLabel}>Amount for {customVitamin.trim()} (Optional)</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="e.g. 500mcg, 65mg"
+              placeholder="500mcg, 65mg"
               placeholderTextColor="#9CB5A6"
               value={amountByVitamin[customVitamin.trim()] ?? ""}
               onChangeText={(v) => setAmountForVitamin(customVitamin.trim(), v)}
@@ -226,7 +226,8 @@ export default function LogVitamins() {
           <Text style={styles.sectionLabel}>Custom Vitamin (Optional)</Text>
           <TextInput
             style={styles.textInput}
-            placeholder="e.g., Folic Acid"
+            placeholder="Folic Acid"
+            placeholderTextColor="#7A9C8A"
             value={customVitamin}
             onChangeText={setCustomVitamin}
           />
@@ -236,7 +237,8 @@ export default function LogVitamins() {
           <Text style={styles.sectionLabel}>Notes (Optional)</Text>
           <TextInput
             style={[styles.textInput, styles.notesInput]}
-            placeholder="Add any additional notes about your vitamins"
+            placeholder="Add any additional notes about your vitamins."
+            placeholderTextColor="#7A9C8A"
             value={notes}
             onChangeText={setNotes}
             multiline

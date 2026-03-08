@@ -9,6 +9,7 @@ export type UserProfile = {
   name?: string;
   dateOfBirth?: string;
   sex?: string; 
+  height?: number;
   weight?: string;
   isPreOp?: boolean;
   surgeryDate?: string;

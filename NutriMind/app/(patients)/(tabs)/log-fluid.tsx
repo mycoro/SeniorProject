@@ -275,7 +275,7 @@ export default function LogFluid() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Date consumed</Text>
+          <Text style={styles.sectionLabel}>Date Consumed</Text>
           <Pressable onPress={() => setShowDateTimePicker(true)} style={[styles.dateChip, !isToday(selectedFluidDateTime) && styles.dateChipActive]}>
             <Calendar size={14} color={isToday(selectedFluidDateTime) ? "#6B8F7A" : "#004734"} />
             <Text style={[styles.dateChipText, !isToday(selectedFluidDateTime) && styles.dateChipTextActive]}>
@@ -301,6 +301,7 @@ export default function LogFluid() {
                   if (Platform.OS === "android") setShowDateTimePicker(false);
                   if (date) setSelectedFluidDateTime(date);
                 }}
+                textColor="#004734"
                 style={Platform.OS === "ios" ? { alignSelf: "center" } : undefined}
               />
               {Platform.OS === "ios" && (
@@ -349,7 +350,7 @@ export default function LogFluid() {
             <Text style={styles.sectionLabel}>Specify Fluid Type</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="e.g., Coconut Water"
+              placeholder="Coconut Water"
               value={customType}
               onChangeText={setCustomType}
             />
@@ -357,7 +358,7 @@ export default function LogFluid() {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Amount (ounces)</Text>
+          <Text style={styles.sectionLabel}>Amount (Ounces)</Text>
           <Text style={styles.sectionHint}>
             Enter the amount of fluid consumed
           </Text>
@@ -365,6 +366,7 @@ export default function LogFluid() {
             <TextInput
               style={styles.amountInput}
               placeholder="8"
+              placeholderTextColor="#7A9C8A"
               value={amount}
               onChangeText={setAmount}
               keyboardType="numeric"
@@ -385,7 +387,7 @@ export default function LogFluid() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Nutrition (optional)</Text>
+          <Text style={styles.sectionLabel}>Nutrition (Optional)</Text>
           <Text style={styles.sectionHint}>
             Add protein, calories, fat, sugar to count toward daily totals. Leave blank to use estimates.
           </Text>
@@ -395,6 +397,7 @@ export default function LogFluid() {
               <TextInput
                 style={styles.nutritionInput}
                 placeholder="Auto"
+                placeholderTextColor="#7A9C8A"
                 value={proteinInput}
                 onChangeText={setProteinInput}
                 keyboardType="decimal-pad"
@@ -405,6 +408,7 @@ export default function LogFluid() {
               <TextInput
                 style={styles.nutritionInput}
                 placeholder="Auto"
+                placeholderTextColor="#7A9C8A"
                 value={caloriesInput}
                 onChangeText={setCaloriesInput}
                 keyboardType="decimal-pad"
@@ -417,6 +421,7 @@ export default function LogFluid() {
               <TextInput
                 style={styles.nutritionInput}
                 placeholder="Auto"
+                placeholderTextColor="#7A9C8A"
                 value={carbsInput}
                 onChangeText={setCarbsInput}
                 keyboardType="decimal-pad"
@@ -427,6 +432,7 @@ export default function LogFluid() {
               <TextInput
                 style={styles.nutritionInput}
                 placeholder="Auto"
+                placeholderTextColor="#7A9C8A"
                 value={fatInput}
                 onChangeText={setFatInput}
                 keyboardType="decimal-pad"
@@ -437,6 +443,7 @@ export default function LogFluid() {
               <TextInput
                 style={styles.nutritionInput}
                 placeholder="Auto"
+                placeholderTextColor="#7A9C8A"
                 value={sugarInput}
                 onChangeText={setSugarInput}
                 keyboardType="decimal-pad"
@@ -459,7 +466,8 @@ export default function LogFluid() {
           <Text style={styles.sectionLabel}>Notes (Optional)</Text>
           <TextInput
             style={[styles.textInput, styles.notesInput]}
-            placeholder="Add any notes about this fluid entry..."
+            placeholder="Add any notes about this fluid entry."
+            placeholderTextColor="#7A9C8A"
             value={notes}
             onChangeText={setNotes}
             multiline
