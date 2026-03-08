@@ -120,6 +120,7 @@ export default function Onboarding() {
         name: existingProfile.name || "",
         dateOfBirth: (existingProfile as UserProfile).dateOfBirth ?? "",
         sex: existingProfile.sex || "", 
+        height: (existingProfile as any).height ? String((existingProfile as any).height) : "",
         weight: existingProfile.weight ?? "",
         goalWeight: (existingProfile as any).goalWeight ? String((existingProfile as any).goalWeight) : "",
         weightDate: (existingProfile as any).weightDate ? String((existingProfile as any).weightDate) : toISODate(new Date()),
@@ -295,8 +296,17 @@ export default function Onboarding() {
         Alert.alert("Required", "Please select your sex.");
         return;
       }
+      if (!profile.height) {
+        Alert.alert("Required", "Please enter your height.");
+        return;
+      }
+      const heightNumber = Number(profile.height);
+      if (isNaN(heightNumber) || heightNumber <= 0 || heightNumber > 120) {
+        Alert.alert("Invalid Height", "Please enter a valid height in inches.")
+        return;
+      }
       if (!profile.weight) {
-        Alert.alert("Required", "Please enter your current weight.")
+        Alert.alert("Required", "Please enter your current weight in pounds.")
         return;
       }
       if (isNaN(Number(profile.weight)) || Number(profile.weight) <= 0) {
@@ -358,6 +368,7 @@ export default function Onboarding() {
             name: nameStr || undefined,
             dateOfBirth: hasValidDob ? dobIso : undefined,
             sex: profile.sex, 
+            height: profile.height ? Number(profile.height) : undefined,
             weight: profile.weight,
             goalWeight: profile.goalWeight ? Number(profile.goalWeight) : undefined,
             isPreOp: profile.isPreOp,
@@ -710,7 +721,7 @@ const addOtherCuisine = () => {
                 <Text style={styles.sectionLabel}>Invitation Code (Optional)</Text>
                 <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
                   <TextInput
-                    placeholder="Enter Code"
+                    placeholder="Code"
                     placeholderTextColor="#7A9C8A"
                     value={inviteCodeInput}
                     onChangeText={setInviteCodeInput}
@@ -843,6 +854,18 @@ const addOtherCuisine = () => {
                 ))}
               </View>
             </View>
+            
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Height (In Inches)</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter Height"
+                placeholderTextColor="#7A9C8A"
+                value={profile.height !== undefined && profile.height !== null ? String(profile.height) : ""}
+                onChangeText={(text) => setProfile({ ...profile, height: text })}
+                keyboardType="numeric"
+              />
+            </View>
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Current Weight (In Pounds)</Text>
@@ -857,7 +880,7 @@ const addOtherCuisine = () => {
             </View>        
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Weight Date (When measurement taken)</Text>
+              <Text style={styles.sectionLabel}>Date that Weight was Recorded</Text>
               <Pressable
                 onPress={() => {
                   // initialize the temp date to the profile date if available
