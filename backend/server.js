@@ -283,7 +283,7 @@ app.get("/api/doctor/patient", async (req, res) => {
     res.json({ ok: true, patient: {
       uid: patientId,
       name: data.name || null,
-      gender: data.gender || null,
+      sex: data.sex || null,
       dateOfBirth: data.dateOfBirth || null,
       surgeryType: data.surgeryType || null,
       surgeryDate: data.surgeryDate || null,
@@ -302,6 +302,277 @@ app.get("/api/doctor/patient", async (req, res) => {
   } catch (err) {
     console.error('/api/doctor/patient error:', err);
     res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+// Get patient nutrition history between start and end dates (doctors only)
+app.get("/api/doctor/patient/history", async (req, res) => {
+  try {
+    if (!isAdminInitialized()) {
+      return res.status(503).json({ error: "Server misconfigured: Firebase Admin not initialized" });
+    }
+
+    const idToken = getBearerToken(req);
+    if (!idToken) return res.status(401).json({ error: "Missing id token" });
+
+    const auth = await admin.auth().verifyIdToken(idToken);
+    if (!auth || !auth.uid) return res.status(401).json({ error: "Invalid token" });
+
+    if (!(await isDoctorUser(auth))) {
+      return res.status(403).json({ error: "Only doctors allowed" });
+    }
+
+    const patientId = String(req.query.patientId || "").trim();
+    if (!patientId) return res.status(400).json({ error: "patientId required" });
+
+    const startStr = req.query.start ? String(req.query.start) : null;
+    const endStr = req.query.end ? String(req.query.end) : null;
+
+    let startDate = startStr ? new Date(startStr) : null;
+    let endDate = endStr ? new Date(endStr) : null;
+
+    if (!startDate || isNaN(startDate.getTime())) {
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+      startDate.setHours(0, 0, 0, 0);
+    }
+
+    if (!endDate || isNaN(endDate.getTime())) {
+      endDate = new Date();
+      endDate.setHours(23, 59, 59, 999);
+    }
+
+    const perDay = {};
+
+    // Meal logs
+    const logsQ = await admin.firestore()
+      .collection("users")
+      .doc(patientId)
+      .collection("mealLogs")
+      .where("timestamp", ">=", admin.firestore.Timestamp.fromDate(startDate))
+      .where("timestamp", "<=", admin.firestore.Timestamp.fromDate(endDate))
+      .get();
+
+    logsQ.forEach((d) => {
+      const item = d.data() || {};
+      const ts =
+        item.timestamp && typeof item.timestamp.toDate === "function"
+          ? item.timestamp.toDate()
+          : (item.timestamp instanceof Date ? item.timestamp : new Date());
+
+      const dayKey = `${ts.getFullYear()}-${String(ts.getMonth() + 1).padStart(2, "0")}-${String(ts.getDate()).padStart(2, "0")}`;
+
+      if (!perDay[dayKey]) {
+        perDay[dayKey] = {
+          protein: 0,
+          calories: 0,
+          fluids: 0,
+          weight: null,
+          __weightTs: null,
+        };
+      }
+
+      perDay[dayKey].protein += Number(item.protein) || 0;
+      perDay[dayKey].calories += Number(item.calories) || 0;
+
+      let fluidAmount = 0;
+      if (item.fluids != null) {
+        fluidAmount = Number(item.fluids) || 0;
+      } else if (item.fluid != null) {
+        fluidAmount = Number(item.fluid) || 0;
+      } else if (item.name && typeof item.name === "string") {
+        const name = item.name;
+        const m =
+          name.match(/\((\d+(?:\.\d+)?)\s*oz\)/i) ||
+          name.match(/(\d+(?:\.\d+)?)\s*oz/i);
+        if (m && m[1]) {
+          fluidAmount = parseFloat(m[1]) || 0;
+        }
+      } else if (item.mealType === "Fluid" && item.amount != null) {
+        fluidAmount = Number(item.amount) || 0;
+      }
+
+      perDay[dayKey].fluids += fluidAmount;
+    });
+
+    // Weight logs
+    try {
+      const weightQ = await admin.firestore()
+        .collection("users")
+        .doc(patientId)
+        .collection("weightLogs")
+        .where("timestamp", ">=", admin.firestore.Timestamp.fromDate(startDate))
+        .where("timestamp", "<=", admin.firestore.Timestamp.fromDate(endDate))
+        .get();
+
+      weightQ.forEach((d) => {
+        const item = d.data() || {};
+        const ts =
+          item.timestamp && typeof item.timestamp.toDate === "function"
+            ? item.timestamp.toDate()
+            : (item.timestamp instanceof Date ? item.timestamp : new Date());
+
+        let dayKey;
+        if (
+          item.weightdate &&
+          typeof item.weightdate === "string" &&
+          /^\d{4}-\d{2}-\d{2}$/.test(item.weightdate)
+        ) {
+          dayKey = item.weightdate;
+        } else {
+          dayKey = `${ts.getFullYear()}-${String(ts.getMonth() + 1).padStart(2, "0")}-${String(ts.getDate()).padStart(2, "0")}`;
+        }
+
+        if (!perDay[dayKey]) {
+          perDay[dayKey] = {
+            protein: null,
+            calories: null,
+            fluids: null,
+            weight: null,
+            __weightTs: null,
+          };
+        }
+
+        const val = Number(item.value ?? item.weight);
+        if (!isNaN(val)) {
+          const tsMillis = !isNaN(ts.getTime()) ? ts.getTime() : Date.now();
+
+          // keep latest submitted weight entry for that weightdate
+          if (!perDay[dayKey].__weightTs || perDay[dayKey].__weightTs < tsMillis) {
+            perDay[dayKey].weight = val;
+            perDay[dayKey].__weightTs = tsMillis;
+          }
+        }
+      });
+    } catch (werr) {
+      console.error("failed to load weightLogs for history", werr);
+    }
+
+    // Build ordered output day-by-day
+    const out = [];
+    const cur = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    const last = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+    for (let d = new Date(cur); d <= last; d.setDate(d.getDate() + 1)) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      if (perDay[key]) {
+        out.push({
+          date: key,
+          protein: perDay[key].protein,
+          calories: perDay[key].calories,
+          fluids: perDay[key].fluids,
+          weight: perDay[key].weight ?? null,
+        });
+      } else {
+        out.push({ date: key, protein: null, calories: null, fluids: null, weight: null });
+      }
+    }
+
+    const userRef = admin.firestore().collection("users").doc(patientId);
+    const userSnap = await userRef.get();
+    const data = userSnap.exists ? (userSnap.data() || {}) : {};
+
+    return res.json({
+      ok: true,
+      patient: {
+        uid: patientId,
+        startingWeight: data.startingWeight ?? null,
+        currentWeight: data.currentWeight ?? null,
+        goalWeight: data.goalWeight ?? null,
+        proteinGoal: data.proteinGoal ?? null,
+        fluidGoal: data.fluidGoal ?? null,
+        calorieGoal: data.calorieGoal ?? null,
+      },
+      history: out,
+    });
+  } catch (err) {
+    console.error("/api/doctor/patient/history error:", err);
+    return res.status(500).json({ error: "Internal error" });
+  }
+});
+
+// Save a manual weight entry for a patient — only the patient may record their own weight
+app.post("/api/doctor/patient/weight", async (req, res) => {
+  try {
+    if (!isAdminInitialized()) {
+      return res.status(503).json({ error: "Server misconfigured: Firebase Admin not initialized" });
+    }
+
+    const idToken = getBearerToken(req);
+    if (!idToken) return res.status(401).json({ error: "Missing id token" });
+
+    const auth = await admin.auth().verifyIdToken(idToken);
+    if (!auth || !auth.uid) return res.status(401).json({ error: "Invalid token" });
+
+    const { patientId, weight, weightdate } = req.body || {};
+
+    if (!patientId) return res.status(400).json({ error: "patientId required" });
+
+    // Only the patient themselves may record their own weight
+    if (String(auth.uid) !== String(patientId)) {
+      return res.status(403).json({ error: "Only the patient may record their own weight" });
+    }
+
+    const numeric = Number(weight);
+    if (isNaN(numeric)) {
+      return res.status(400).json({ error: "weight must be a number" });
+    }
+
+    const userRef = admin.firestore().collection("users").doc(String(patientId));
+    const userSnap = await userRef.get();
+    if (!userSnap.exists) {
+      return res.status(404).json({ error: "Patient not found" });
+    }
+
+    // weightdate is the day the weight applies to, not when it was submitted
+    let weightDateIso;
+    if (typeof weightdate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(weightdate)) {
+      weightDateIso = weightdate;
+    } else {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      weightDateIso = `${y}-${m}-${d}`;
+    }
+
+    // Compare against today's local server date string
+    const now = new Date();
+    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    // Debug logs removed
+
+    // Only today's weightdate should override currentWeight
+    let respondedCurrentWeight = null;
+    if (weightDateIso === todayIso) {
+      await userRef.set(
+        { currentWeight: numeric },
+        { merge: true }
+      );
+      respondedCurrentWeight = numeric;
+    } else {
+      const refreshed = await userRef.get();
+      respondedCurrentWeight = refreshed.exists
+        ? (refreshed.data().currentWeight ?? null)
+        : null;
+    }
+
+    // timestamp = when the log entry was created
+    await userRef.collection("weightLogs").add({
+      value: numeric,
+      weightdate: weightDateIso,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      recordedBy: auth.uid,
+    });
+
+    return res.json({
+      ok: true,
+      patientId,
+      currentWeight: respondedCurrentWeight,
+    });
+  } catch (err) {
+    console.error("/api/doctor/patient/weight error:", err);
+    return res.status(500).json({ error: "Internal error" });
   }
 });
 
@@ -434,12 +705,19 @@ app.post("/api/doctor/assign", async (req, res) => {
 // Unassign a patient from the authenticated doctor
 app.post("/api/doctor/unassign", async (req, res) => {
   try {
-    if (!isAdminInitialized()) return res.status(503).json({ error: "Server misconfigured: Firebase Admin not initialized" });
+    if (!isAdminInitialized()) {
+      return res.status(503).json({ error: "Server misconfigured: Firebase Admin not initialized" });
+    }
+
     const idToken = getBearerToken(req);
     if (!idToken) return res.status(401).json({ error: "Missing id token" });
+
     const auth = await admin.auth().verifyIdToken(idToken);
     if (!auth || !auth.uid) return res.status(401).json({ error: "Invalid token" });
-    if (!auth.doctor) return res.status(403).json({ error: "Only doctors allowed" });
+
+    if (!(await isDoctorUser(auth))) {
+      return res.status(403).json({ error: "Only doctors allowed" });
+    }
 
     const { patientId } = req.body || {};
     if (!patientId) return res.status(400).json({ error: "patientId required" });
@@ -448,11 +726,14 @@ app.post("/api/doctor/unassign", async (req, res) => {
     const snap = await patientRef.get();
     if (!snap.exists) return res.status(404).json({ error: "Patient not found" });
 
-    await patientRef.update({ assignedDoctors: admin.firestore.FieldValue.arrayRemove(auth.uid) });
-    res.json({ ok: true });
+    await patientRef.update({
+      assignedDoctors: admin.firestore.FieldValue.arrayRemove(auth.uid),
+    });
+
+    return res.json({ ok: true });
   } catch (err) {
     console.error("/api/doctor/unassign error:", err);
-    res.status(500).json({ error: "Internal error" });
+    return res.status(500).json({ error: "Internal error" });
   }
 });
 
@@ -526,6 +807,49 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+// Process meal from text or audio (voice log / AI describe)
+import multer from "multer";
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
+
+app.post("/api/process-meal", upload.single("audio"), async (req, res) => {
+  try {
+    const { transcribeAudio, parseMealText } = await import("./services/mealParser.js");
+
+    let mealText;
+
+    if (req.file) {
+      const audioBuffer = req.file.buffer;
+      const mimeType = req.file.mimetype || "audio/webm";
+      mealText = await transcribeAudio(audioBuffer, mimeType);
+    } else {
+      mealText = req.body.text;
+    }
+
+    if (!mealText || !String(mealText).trim()) {
+      return res.status(400).json({ error: "No meal description provided. Speak or type what you ate." });
+    }
+
+    const userProfile = req.body.userProfile
+      ? (typeof req.body.userProfile === "string" ? JSON.parse(req.body.userProfile) : req.body.userProfile)
+      : {};
+
+    const result = await parseMealText(String(mealText).trim(), userProfile);
+
+    res.json({
+      success: true,
+      transcription: mealText,
+      ...result,
+    });
+  } catch (error) {
+    console.error("/api/process-meal error:", error);
+    const msg = error?.message || String(error);
+    if (msg.includes("API key") || msg.includes("api_key")) {
+      return res.status(500).json({ error: "OpenAI API key issue. Check backend/.env" });
+    }
+    res.status(500).json({ error: msg || "Failed to process meal. Please try again." });
+  }
+});
+
 app.post("/api/analyze-photo", async (req, res) => {
   try {
     const { imageBase64, userProfile } = req.body;
@@ -553,6 +877,21 @@ app.post("/api/analyze-photo", async (req, res) => {
 });
 
 const port = Number(process.env.PORT) || 3000;
-app.listen(port, "0.0.0.0", () => {
+
+// Prevent process from exiting on uncaught errors (keeps server running, logs instead)
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception:", err);
+});
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled rejection at:", promise, "reason:", reason);
+});
+
+const server = app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on http://localhost:${port}`);
+  console.log("Press Ctrl+C to stop.");
+});
+
+server.on("error", (err) => {
+  console.error("Server error:", err);
+  process.exit(1);
 });

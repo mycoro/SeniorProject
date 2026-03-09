@@ -8,10 +8,15 @@ export type UserProfile = {
   role: UserRole;
   name?: string;
   dateOfBirth?: string;
+  sex?: string; 
+  height?: number;
+  weight?: string;
   isPreOp?: boolean;
   surgeryDate?: string;
   surgeryType?: string;
   hasDiabetes?: boolean;
+  hasHighBloodPressure?: boolean;
+  hasHighCholesterol?: boolean;
   hasDumpingSyndrome?: boolean;
   intolerances?: string[];
   proteinGoal?: number;
@@ -21,6 +26,11 @@ export type UserProfile = {
   dislikedFoods?: string;
   favoriteCuisines?: string[];
   allergies?: string[];
+  // Weight-related fields
+  currentWeight?: number | null;
+  startingWeight?: number | null;
+  goalWeight?: number | null;
+  weightDate?: string | null;
   createdAt: any;
   updatedAt: any;
 };
@@ -43,7 +53,17 @@ export async function getUserRole(uid: string): Promise<UserRole> {
   const ref = doc(db, "users", uid);
   const snap = await getDoc(ref);
 
-  const role = snap.data()?.role;
+  if (!snap.exists()) {
+    console.log("User doc does NOT exist for:", uid);
+    return "patient";
+  }
+
+  const data = snap.data();
+  console.log("Firestore user data:", data);
+
+  const role = data?.role;
+  console.log("Firestore role value:", role);
+
   return role === "healthcare_prof" ? "healthcare_prof" : "patient";
 }
 
@@ -79,8 +99,15 @@ export async function setUserProfile(
   profile: Partial<UserProfile>
 ) {
   const ref = doc(db, "users", uid);
-  await setDoc(ref, {
-    ...profile,
-    updatedAt: serverTimestamp(),
-  }, { merge: true });
+  // Clean the profile object to remove any `undefined` values. Firestore
+  // rejects writes that contain undefined fields. Only set keys that are explicitly provided.
+  const cleaned: Record<string, any> = {};
+  Object.entries(profile).forEach(([k, v]) => {
+    if (v !== undefined) cleaned[k] = v;
+  });
+  if (Object.keys(cleaned).length === 0) {
+    await updateDoc(ref, { updatedAt: serverTimestamp() });
+    return;
+  }
+  await setDoc(ref, { ...cleaned, updatedAt: serverTimestamp() }, { merge: true });
 }

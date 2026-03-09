@@ -20,19 +20,34 @@ import { updateProfile } from "firebase/auth";
 import { setUserProfile as saveUserProfile } from "@/config/users";
 
 const surgeryTypes = ["Gastric Sleeve", "Gastric Bypass", "Duodenal Switch"] as const;
+const sexOptions = ["Male", "Female", "Other"];
 const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
-const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian"];
+const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian", "Other"];
 const defaultTastePreferences = { sweet: 3, spicy: 3, savory: 3, bitter: 3, sour: 3 };
 
-function formatDateUS(date: Date | string) {
-  if (!date) return "";
-  const d = typeof date === "string" ? new Date(date) : date;
-  if (isNaN(d.getTime())) return "";
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${month}/${day}/${year}`;
-}
+  const formatDateUS = (date: Date | string) => {
+    if (!date) return "";
+    
+    let d: Date;
+
+    if (typeof date === "string") {
+      if (date.includes("-") && !date.includes("T")) {
+        const[year, month, day] = date.split('-').map(Number);
+        d = new Date(year, month - 1, day);
+      } else {
+        d = new Date(date);
+      }
+    } else {
+      d = date;
+    }
+
+    if (isNaN(d.getTime())) return "";
+
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
 
 function parseUSDate(dateString: string) {
   if (!dateString) return null;
@@ -60,7 +75,14 @@ function toISODate(date: Date) {
 
 function formatDobDisplay(isoDate: string) {
   if (!isoDate || isoDate.length < 10) return "";
-  const parsed = new Date(isoDate.slice(0, 10));
+
+  const parts = isoDate.split('-');
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+
+  const parsed = new Date(year, month, day);
+
   if (isNaN(parsed.getTime())) return "";
   return formatDateUS(parsed);
 }
@@ -70,15 +92,19 @@ export default function EditProfile() {
   const [profile, setProfile] = useState<UserProfile>({
     name: "",
     dateOfBirth: "",
+    sex: "",
+    weight: "",
     isPreOp: false,
     surgeryDate: "",
     surgeryType: "Gastric Sleeve",
     hasDiabetes: false,
-    hasDumpingSyndrome: false,
+    hasHighBloodPressure: false,
+    hasHighCholesterol: false,
     intolerances: [],
     tastePreferences: defaultTastePreferences,
     dislikedFoods: "",
     favoriteCuisines: [],
+    allergies: [],
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
@@ -104,11 +130,14 @@ export default function EditProfile() {
     setProfile({
       name: existingProfile.name || "",
       dateOfBirth: dobRaw,
+      sex: existingProfile.sex || "", 
+      weight: existingProfile.weight ?? "",
       isPreOp: existingProfile.isPreOp ?? false,
       surgeryDate: formattedDate,
       surgeryType: (existingProfile.surgeryType as "Gastric Sleeve" | "Gastric Bypass" | "Duodenal Switch") || "Gastric Sleeve",
       hasDiabetes: existingProfile.hasDiabetes ?? false,
-      hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
+      hasHighBloodPressure: existingProfile.hasHighBloodPressure ?? false,
+      hasHighCholesterol: existingProfile.hasHighCholesterol ?? false,
       intolerances: existingProfile.intolerances ?? [],
       proteinGoal: existingProfile.proteinGoal,
       fluidGoal: existingProfile.fluidGoal,
@@ -116,6 +145,7 @@ export default function EditProfile() {
       tastePreferences: existingProfile.tastePreferences ?? defaultTastePreferences,
       dislikedFoods: existingProfile.dislikedFoods ?? "",
       favoriteCuisines: existingProfile.favoriteCuisines ?? [],
+      allergies: existingProfile.allergies ?? [],
     });
     if (parsed) setTempDate(parsed);
   }, [existingProfile]);
@@ -189,11 +219,14 @@ export default function EditProfile() {
       await saveUserProfile(user.uid, {
         name: nameStr,
         dateOfBirth: hasValidDob ? dobIso : undefined,
+        sex: profile.sex,
+        weight: profile.weight,
         isPreOp: profile.isPreOp,
         surgeryDate: isoDate,
         surgeryType: profile.surgeryType,
         hasDiabetes: profile.hasDiabetes,
-        hasDumpingSyndrome: profile.hasDumpingSyndrome,
+        hasHighBloodPressure: profile.hasHighBloodPressure,
+        hasHighCholesterol: profile.hasHighCholesterol,
         intolerances: profile.intolerances ?? [],
         proteinGoal: profile.proteinGoal,
         fluidGoal: profile.fluidGoal,
@@ -201,17 +234,21 @@ export default function EditProfile() {
         tastePreferences: profile.tastePreferences ?? defaultTastePreferences,
         dislikedFoods: profile.dislikedFoods ?? "",
         favoriteCuisines: profile.favoriteCuisines ?? [],
+        allergies: profile.allergies ?? [],
       });
 
       setUserProfile({
         ...existingProfile,
         name: nameStr,
         dateOfBirth: hasValidDob ? dobIso : undefined,
+        sex: profile.sex,
+        weight: profile.weight,
         isPreOp: profile.isPreOp,
         surgeryDate: isoDate,
         surgeryType: profile.surgeryType,
         hasDiabetes: profile.hasDiabetes,
-        hasDumpingSyndrome: profile.hasDumpingSyndrome,
+        hasHighBloodPressure: profile.hasHighBloodPressure,
+        hasHighCholesterol: profile.hasHighCholesterol,
         intolerances: profile.intolerances ?? [],
         proteinGoal: profile.proteinGoal,
         fluidGoal: profile.fluidGoal,
@@ -219,6 +256,7 @@ export default function EditProfile() {
         tastePreferences: profile.tastePreferences ?? defaultTastePreferences,
         dislikedFoods: profile.dislikedFoods ?? "",
         favoriteCuisines: profile.favoriteCuisines ?? [],
+        allergies: profile.allergies ?? [],
       } as UserProfile);
       setIsOnboarded(true);
 
@@ -263,15 +301,16 @@ export default function EditProfile() {
             </View>
             <View>
               <Text style={styles.cardTitle}>Surgery Details</Text>
-              <Text style={styles.cardSubtitle}>Name, date & procedure</Text>
+              <Text style={styles.cardSubtitle}>Name, Date & Procedure</Text>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Preferred name</Text>
+            <Text style={styles.sectionLabel}>Preferred Name</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="e.g. Alex"
+              placeholder="Alex"
+              placeholderTextColor="#7A9C8A"
               value={profile.name || ""}
               onChangeText={(text) => setProfile((p) => ({ ...p, name: text }))}
               autoCapitalize="words"
@@ -282,10 +321,11 @@ export default function EditProfile() {
             <Text style={styles.sectionLabel}>Date of Birth</Text>
             <Pressable onPress={() => { if (profile.dateOfBirth) { const d = new Date(profile.dateOfBirth.slice(0, 10)); if (!isNaN(d.getTime())) setTempDobDate(d); } setShowDobPicker(true); }} style={styles.dateInputContainer}>
               <TextInput
-                placeholder="Tap to select (for age-based advice)"
+                placeholder="MM/DD/YYYY"
+                placeholderTextColor="#7A9C8A"
                 value={profile.dateOfBirth ? formatDobDisplay(profile.dateOfBirth) : ""}
                 editable={false}
-                style={styles.textInput}
+                style={styles.textInputCalendar}
               />
               <Calendar size={20} color="#008080" />
             </Pressable>
@@ -337,6 +377,43 @@ export default function EditProfile() {
           </View>
 
           <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Sex</Text>
+            <View style={styles.optionsList}>
+              {sexOptions.map((type) => (
+                <Pressable
+                  key={type}
+                  onPress={() => setProfile({ ...profile, sex: type as any })}
+                  style={[
+                    styles.optionButton,
+                    profile.sex === type && styles.optionButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.optionButtonText,
+                      profile.sex === type && styles.optionButtonTextActive,
+                    ]}
+                  >
+                    {type}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>            
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Current Weight (In Pounds)</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Enter Weight"
+              placeholderTextColor="#7A9C8A"
+              value={profile.weight || ""}
+              onChangeText={(text) => setProfile({ ...profile, weight: text })}
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={styles.section}>
             <Text style={styles.sectionLabel}>Pre-Op or Post-Op?</Text>
             <View style={styles.toggleRow}>
               <Pressable
@@ -359,9 +436,10 @@ export default function EditProfile() {
             <Pressable onPress={() => setShowDatePicker(true)} style={styles.dateInputContainer}>
               <TextInput
                 placeholder="MM/DD/YYYY"
+                placeholderTextColor="#7A9C8A"
                 value={profile.surgeryDate ?? ""}
                 onChangeText={handleDateTextChange}
-                style={styles.textInput}
+                style={styles.textInputCalendar}
                 editable
                 keyboardType="numeric"
                 maxLength={10}
@@ -462,26 +540,44 @@ export default function EditProfile() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Dumping Syndrome?</Text>
+            <Text style={styles.sectionLabel}>Do you have High Blood Pressure?</Text>
             <View style={styles.toggleRow}>
               <Pressable
-                onPress={() => setProfile((p) => ({ ...p, hasDumpingSyndrome: true }))}
-                style={[styles.toggleButton, profile.hasDumpingSyndrome && styles.toggleButtonActive]}
+                onPress={() => setProfile((p) => ({ ...p, hasHighBloodPressure: true }))}
+                style={[styles.toggleButton, profile.hasHighBloodPressure && styles.toggleButtonActive]}
               >
-                <Text style={[styles.toggleButtonText, profile.hasDumpingSyndrome && styles.toggleButtonTextActive]}>Yes</Text>
+                <Text style={[styles.toggleButtonText, profile.hasHighBloodPressure && styles.toggleButtonTextActive]}>Yes</Text>
               </Pressable>
               <Pressable
-                onPress={() => setProfile((p) => ({ ...p, hasDumpingSyndrome: false }))}
-                style={[styles.toggleButton, !profile.hasDumpingSyndrome && styles.toggleButtonActive]}
+                onPress={() => setProfile((p) => ({ ...p, hasHighBloodPressure: false }))}
+                style={[styles.toggleButton, !profile.hasHighBloodPressure && styles.toggleButtonActive]}
               >
-                <Text style={[styles.toggleButtonText, !profile.hasDumpingSyndrome && styles.toggleButtonTextActive]}>No</Text>
+                <Text style={[styles.toggleButtonText, !profile.hasHighBloodPressure && styles.toggleButtonTextActive]}>No</Text>
               </Pressable>
             </View>
-            <Text style={styles.helpText}>Helps us customize food recommendations</Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Food Intolerances (select all that apply)</Text>
+            <Text style={styles.sectionLabel}>Do you have High Cholesterol?</Text>
+            <View style={styles.toggleRow}>
+              <Pressable
+                onPress={() => setProfile((p) => ({ ...p, hasHighCholesterol: true }))}
+                style={[styles.toggleButton, profile.hasHighCholesterol && styles.toggleButtonActive]}
+              >
+                <Text style={[styles.toggleButtonText, profile.hasHighCholesterol && styles.toggleButtonTextActive]}>Yes</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setProfile((p) => ({ ...p, hasHighCholesterol: false }))}
+                style={[styles.toggleButton, !profile.hasHighCholesterol && styles.toggleButtonActive]}
+              >
+                <Text style={[styles.toggleButtonText, !profile.hasHighCholesterol && styles.toggleButtonTextActive]}>No</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.helpText}>This helps us customize food recommendations</Text>
+          </View>          
+
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Food Intolerances (Select All That Apply)</Text>
             <View style={styles.intoleranceRow}>
               {intoleranceOptions.map((item) => (
                 <Pressable
@@ -496,6 +592,22 @@ export default function EditProfile() {
               ))}
             </View>
           </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Food Allergies</Text>
+            <TextInput
+              placeholder="Nuts, Shellfish ..."
+              placeholderTextColor="#7A9C8A"
+              value={(profile.allergies ?? []).join(", ")}
+              onChangeText={(text) =>
+                setProfile((p) => ({
+                  ...p,
+                  allergies: text.split(",").map((a) => a.trim()).filter(Boolean),
+                }))
+              }
+              style={styles.textInput}
+            />
+          </View>
         </View>
 
         {/* Food Preferences */}
@@ -506,7 +618,7 @@ export default function EditProfile() {
             </View>
             <View>
               <Text style={styles.cardTitle}>Food Preferences</Text>
-              <Text style={styles.cardSubtitle}>Taste & cuisines</Text>
+              <Text style={styles.cardSubtitle}>Taste & Cuisines</Text>
             </View>
           </View>
 
@@ -536,9 +648,10 @@ export default function EditProfile() {
           ))}
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Foods you dislike</Text>
+            <Text style={styles.sectionLabel}>Disliked Foods</Text>
             <TextInput
-              placeholder="e.g. mushrooms, seafood..."
+              placeholder="Mushrooms, seafood..."
+              placeholderTextColor="#7A9C8A"
               value={profile.dislikedFoods ?? ""}
               onChangeText={(text) => setProfile((p) => ({ ...p, dislikedFoods: text }))}
               style={styles.textInput}
@@ -546,7 +659,7 @@ export default function EditProfile() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Favorite cuisines (select all that apply)</Text>
+            <Text style={styles.sectionLabel}>Favorite Cuisines (Select All That Apply)</Text>
             <View style={styles.intoleranceRow}>
               {cuisineOptions.map((cuisine) => {
                 const selected = (profile.favoriteCuisines ?? []).includes(cuisine);
@@ -580,15 +693,16 @@ export default function EditProfile() {
             </View>
             <View>
               <Text style={styles.cardTitle}>Daily Goals</Text>
-              <Text style={styles.cardSubtitle}>Protein, fluid & calories</Text>
+              <Text style={styles.cardSubtitle}>Protein, Fluid & Calories</Text>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Protein goal (g/day)</Text>
+            <Text style={styles.sectionLabel}>Protein Goal (g/day)</Text>
             <TextInput
               style={styles.textInput}
               placeholder="e.g. 60"
+              placeholderTextColor="#7A9C8A"
               value={profile.proteinGoal != null ? String(profile.proteinGoal) : ""}
               onChangeText={(text) => {
                 const n = parseInt(text, 10);
@@ -598,10 +712,11 @@ export default function EditProfile() {
             />
           </View>
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Fluid goal (oz/day)</Text>
+            <Text style={styles.sectionLabel}>Fluid Goal (oz/day)</Text>
             <TextInput
               style={styles.textInput}
               placeholder="e.g. 64"
+              placeholderTextColor="#7A9C8A"
               value={profile.fluidGoal != null ? String(profile.fluidGoal) : ""}
               onChangeText={(text) => {
                 const n = parseInt(text, 10);
@@ -611,10 +726,11 @@ export default function EditProfile() {
             />
           </View>
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Calorie goal (cal/day)</Text>
+            <Text style={styles.sectionLabel}>Calorie Goal (cal/day)</Text>
             <TextInput
               style={styles.textInput}
               placeholder="e.g. 800"
+              placeholderTextColor="#7A9C8A"
               value={profile.calorieGoal != null ? String(profile.calorieGoal) : ""}
               onChangeText={(text) => {
                 const n = parseInt(text, 10);
@@ -784,12 +900,22 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
+    backgroundColor: '#FFFDF4',
+    borderWidth: 1,
+    borderColor: '#E6DDC8',
+    borderRadius: 12,
     paddingVertical: 14,
-    paddingHorizontal: 18,
-    fontSize: 15,
+    paddingHorizontal: 16,
+    fontSize: 16,
     color: "#004734",
   },
-
+  textInputCalendar: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: "#004734",
+  },
   optionsList: {
     gap: 10,
   },

@@ -4,7 +4,7 @@ import { auth } from "@/config/firebase";
 import { db } from "@/config/firebase";
 import { getUserProfile, updateUserProfile } from "@/config/users";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, addDoc, doc, updateDoc, deleteDoc, query, orderBy, Timestamp, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, deleteDoc, query, orderBy, Timestamp, serverTimestamp, onSnapshot } from "firebase/firestore";
 
 export interface TastePreferences {
   sweet: number;
@@ -18,10 +18,20 @@ export interface UserProfile {
   role?: "patient" | "healthcare_prof";
   name?: string;
   dateOfBirth?: string;
+  sex?: string; 
+  height?: number | string;
+  weight?: string;
+  // Weight fields (may be number in stored profile, but UI sometimes uses string during onboarding)
+  currentWeight?: number | string;
+  startingWeight?: number | string;
+  goalWeight?: number | string;
+  weightDate?: string;
   isPreOp?: boolean;
   surgeryDate?: string;
   surgeryType?: "Gastric Sleeve" | "Gastric Bypass" | "Duodenal Switch";
   hasDiabetes?: boolean;
+  hasHighBloodPressure?: boolean;
+  hasHighCholesterol?: boolean;
   hasDumpingSyndrome?: boolean;
   intolerances?: string[];
   proteinGoal?: number;
@@ -46,7 +56,7 @@ export type MealLogUpdate = Partial<Omit<MealLog, "id">>;
 interface UserContextType {
   userProfile: UserProfile | null;
   userRole: "patient" | "healthcare_prof" | null;
-  setUserProfile: (profile: UserProfile | null) => void;
+  setUserProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
   isOnboarded: boolean;
   setIsOnboarded: (value: boolean) => void;
   dailyLogs: MealLog[];
@@ -64,7 +74,7 @@ export interface MealLog {
   carbs?: number;
   fat?: number;
   sugar?: number;
-  mealType: "Breakfast" | "Lunch" | "Dinner" | "Snack" | "Fluid";
+  mealType: "Breakfast" | "Lunch" | "Dinner" | "Snack" | "Fluid" | "Vitamin";
   timestamp: Date;
 }
 
@@ -101,11 +111,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
               role: (rawProfile as any).role,
               name: (rawProfile as UserProfile).name?.trim() || nameToUse || undefined,
               dateOfBirth: (rawProfile as UserProfile).dateOfBirth,
+              sex: (rawProfile as UserProfile).sex,
+              height: (rawProfile as any).height ?? undefined,
               isPreOp: rawProfile.isPreOp,
               surgeryDate: rawProfile.surgeryDate,
               surgeryType: rawProfile.surgeryType as UserProfile["surgeryType"],
               hasDiabetes: rawProfile.hasDiabetes,
-              hasDumpingSyndrome: rawProfile.hasDumpingSyndrome,
+              hasHighBloodPressure: rawProfile.hasHighBloodPressure,
+              hasHighCholesterol: rawProfile.hasHighCholesterol,
               intolerances: rawProfile.intolerances,
               proteinGoal: rawProfile.proteinGoal,
               fluidGoal: rawProfile.fluidGoal,
@@ -114,6 +127,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
               dislikedFoods: (rawProfile as UserProfile).dislikedFoods,
               favoriteCuisines: (rawProfile as UserProfile).favoriteCuisines,
               allergies: (rawProfile as UserProfile).allergies,
+              // weight fields
+              currentWeight: (rawProfile as any).currentWeight ?? (rawProfile as any).weight ?? undefined,
+              startingWeight: (rawProfile as any).startingWeight ?? undefined,
+              goalWeight: (rawProfile as any).goalWeight ?? undefined,
+                weightDate: (rawProfile as any).weightDate ?? undefined,
+                hasDumpingSyndrome: (rawProfile as any).hasDumpingSyndrome ?? undefined,
               isDoctor: (rawProfile as any).isDoctor,
               specialty: (rawProfile as any).specialty,
               licenseNumber: (rawProfile as any).licenseNumber ?? null,
@@ -155,7 +174,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                     : new Date(ts);
                 const mealType = data.mealType;
                 const validMealType =
-                  mealType === "Breakfast" || mealType === "Lunch" || mealType === "Dinner" || mealType === "Snack" || mealType === "Fluid"
+                  mealType === "Breakfast" || mealType === "Lunch" || mealType === "Dinner" || mealType === "Snack" || mealType === "Fluid" || mealType === "Vitamin"
                     ? mealType
                     : "Snack";
                 loadedLogs.push({
@@ -218,6 +237,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         sugar: meal.sugar ?? 0,
         mealType: meal.mealType,
         timestamp: Timestamp.fromDate(meal.timestamp),
+        createdAt: serverTimestamp(),
       });
 
     } catch (error: any) {

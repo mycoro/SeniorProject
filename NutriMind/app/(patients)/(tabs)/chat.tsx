@@ -11,8 +11,9 @@ import {
   Platform,
   ActivityIndicator,
   Image,
+  Modal,
 } from "react-native";
-import { Send, AlertTriangle, Bot } from "lucide-react-native";
+import { Send, AlertTriangle, Bot, Lightbulb, X } from "lucide-react-native";
 import { useUser } from "@/context/UserContext";
 import { auth } from "@/config/firebase";
 import { API_BASE_URL } from "@/config/api";
@@ -102,6 +103,7 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showTips, setShowTips] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const [failedImageKeys, setFailedImageKeys] = useState<Record<string, number[]>>({});
   
@@ -187,10 +189,10 @@ export default function Chat() {
           userProfile: {
             name: userProfile.name,
             dateOfBirth: userProfile.dateOfBirth,
+            sex: userProfile.sex,
             surgeryDate: userProfile.surgeryDate,
             surgeryType: userProfile.surgeryType,
             isPreOp: userProfile.isPreOp ?? false,
-            hasDumpingSyndrome: userProfile.hasDumpingSyndrome,
             hasDiabetes: userProfile.hasDiabetes,
             intolerances: userProfile.intolerances || [],
             proteinGoal: userProfile.proteinGoal,
@@ -280,7 +282,62 @@ export default function Chat() {
             </Text>
           </View>
         </View>
+        <Pressable style={styles.tipsButton} onPress={() => setShowTips(true)}>
+          <Lightbulb size={18} color="#009235" />
+        </Pressable>
       </View>
+
+      <Modal
+        visible={showTips}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTips(false)}
+      >
+        <Pressable style={styles.tipsOverlay} onPress={() => setShowTips(false)}>
+          <Pressable style={styles.tipsModal} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.tipsModalHeader}>
+              <View style={styles.tipsModalTitleRow}>
+                <Lightbulb size={20} color="#009235" />
+                <Text style={styles.tipsModalTitle}>What can I help with?</Text>
+              </View>
+              <Pressable onPress={() => setShowTips(false)} style={styles.tipsCloseButton}>
+                <X size={18} color="#7A9C8A" />
+              </Pressable>
+            </View>
+            <Text style={styles.tipsModalSubtitle}>Try asking NutriMind AI:</Text>
+
+            <View style={styles.tipCard}>
+              <View style={styles.tipIconContainer}>
+                <Text style={styles.tipEmoji}>🍽️</Text>
+              </View>
+              <View style={styles.tipCardContent}>
+                <Text style={styles.tipCardTitle}>Log a Meal</Text>
+                <Text style={styles.tipCardBody}>
+                  Just describe what you ate and I'll log it for you — no tapping required.
+                </Text>
+                <View style={styles.tipExample}>
+                  <Text style={styles.tipExampleText}>"I just had a scrambled egg and half a cup of Greek yogurt"</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.tipCard}>
+              <View style={styles.tipIconContainer}>
+                <Text style={styles.tipEmoji}>✨</Text>
+              </View>
+              <View style={styles.tipCardContent}>
+                <Text style={styles.tipCardTitle}>Get Meal Ideas</Text>
+                <Text style={styles.tipCardBody}>
+                  Ask for personalized meal suggestions based on your recovery phase and preferences.
+                </Text>
+                <View style={styles.tipExample}>
+                  <Text style={styles.tipExampleText}>"What's a good high-protein lunch I can have this week?"</Text>
+                </View>
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {(hasDumpingSyndrome || showPhase1Warning) && (
         <View style={styles.alertBanner}>
@@ -398,6 +455,7 @@ export default function Chat() {
           value={input}
           onChangeText={setInput}
           placeholder="Ask NutriMind AI..."
+          placeholderTextColor="#7A9C8A"
           multiline
           onSubmitEditing={handleSend}
         />
@@ -407,7 +465,7 @@ export default function Chat() {
       </View>
 
       <Text style={styles.aiDisclaimer}>
-        NutriMind is AI and can make Mistakes.
+        NutriMind is AI and can make mistakes. Always check important information.
       </Text>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -429,6 +487,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#F2E8C9",
     backgroundColor: "#FFF8E7",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   headerLeft: {
     flexDirection: "row",
@@ -602,5 +663,117 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-});
 
+  /* Tips button */
+  tipsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#E8F5E9",
+    borderWidth: 1,
+    borderColor: "#B2DFDB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  /* Tips modal */
+  tipsOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
+    paddingTop: 80,
+    paddingRight: 16,
+  },
+  tipsModal: {
+    backgroundColor: "#FFFDF4",
+    borderRadius: 20,
+    padding: 20,
+    width: 300,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  tipsModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  tipsModalTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  tipsModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#004734",
+  },
+  tipsCloseButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#F2EDD7",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tipsModalSubtitle: {
+    fontSize: 12,
+    color: "#7A9C8A",
+    fontWeight: "500",
+    marginBottom: 14,
+  },
+  tipCard: {
+    flexDirection: "row",
+    gap: 12,
+    backgroundColor: "#FFF8E7",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#E8E3D4",
+  },
+  tipIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#E8F5E9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tipEmoji: {
+    fontSize: 18,
+  },
+  tipCardContent: {
+    flex: 1,
+    gap: 4,
+  },
+  tipCardTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#004734",
+  },
+  tipCardBody: {
+    fontSize: 12,
+    color: "#3F5E52",
+    lineHeight: 17,
+  },
+  tipExample: {
+    marginTop: 6,
+    backgroundColor: "#FFFDF4",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: "#009235",
+  },
+  tipExampleText: {
+    fontSize: 11,
+    color: "#009235",
+    fontStyle: "italic",
+    lineHeight: 15,
+  },
+});

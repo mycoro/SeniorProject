@@ -7,7 +7,6 @@ import { router } from "expo-router";
 import { useUser } from "@/context/UserContext";
 import { updateUserProfile, getUserProfile } from "@/config/users";
 import { API_BASE_URL } from "@/config/api";
-import { formatSurgeryMonthYear, calculatePostOpTime } from "@/utils/formatters";
 
 export default function Settings() {
   const { userProfile, setUserProfile } = useUser();
@@ -136,7 +135,7 @@ export default function Settings() {
             <Text style={styles.warningTitle}>Profile Incomplete</Text>
             <Text style={styles.warningText}>
               {isDoctor 
-                ? "Please complete your profile to access all doctor features."
+                ? "Please complete your profile to access all provider features."
                 : "Please complete your profile to use all features including AI photo scanning."
               }
             </Text>
@@ -175,39 +174,6 @@ export default function Settings() {
           <Text style={styles.label}>Preferred name</Text>
           <Text style={styles.value}>{userProfile?.name || "Not set"}</Text>
         </Pressable>
-        {!isDoctor && (() => {
-          const hasLinkedDoctor = Boolean(userProfile?.assignedDoctors && userProfile.assignedDoctors.length > 0);
-          if (hasLinkedDoctor) {
-            return (
-              <View style={[styles.profileCard, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}> 
-                <View>
-                  <Text style={styles.label}>Invitation code</Text>
-                  <Text style={styles.value}>Successfully linked to my doctor</Text>
-                </View>
-              </View>
-            );
-          }
-          return (
-            <Pressable
-              style={[styles.profileCard, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
-              onPress={() => setShowInviteModal(true)}
-            >
-              <View>
-                <Text style={styles.label}>Invitation code</Text>
-                <Text style={styles.value}>Apply a code from your doctor</Text>
-              </View>
-              <Text style={{ color: '#008080', fontWeight: '700' }}>Apply</Text>
-            </Pressable>
-          );
-        })()}
-        {!isDoctor && (
-          <View style={styles.profileCard}>
-            <Text style={styles.label}>Status</Text>
-            <Text style={styles.value}>
-              {userProfile?.isPreOp === true ? "Pre-Op" : userProfile?.isPreOp === false ? "Post-Op" : "Not set"}
-            </Text>
-          </View>
-        )}
         
         {isDoctor ? (
           <>
@@ -243,9 +209,7 @@ export default function Settings() {
             <View style={styles.profileCard}>
               <Text style={styles.label}>Surgery Date</Text>
               <Text style={styles.value}>
-                {userProfile?.surgeryDate
-                  ? `${formatSurgeryMonthYear(userProfile.surgeryDate)}${calculatePostOpTime(userProfile.surgeryDate) ? ` (${calculatePostOpTime(userProfile.surgeryDate)})` : ""}`
-                  : "Not set"}
+                {userProfile?.surgeryDate || "Not set"}
               </Text>
             </View>
             <View style={styles.profileCard}>

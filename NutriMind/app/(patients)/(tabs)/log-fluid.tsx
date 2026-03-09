@@ -8,8 +8,10 @@ import {
   SafeAreaView,
   StyleSheet,
   Alert,
+  Platform,
 } from "react-native";
-import { Droplets, ArrowLeft } from "lucide-react-native";
+import { Droplets, ArrowLeft, Calendar, X } from "lucide-react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useUser, MealLog } from "@/context/UserContext";
 import { router } from "expo-router";
 
@@ -43,6 +45,23 @@ export default function LogFluid() {
   const [carbsInput, setCarbsInput] = useState("");
   const [fatInput, setFatInput] = useState("");
   const [sugarInput, setSugarInput] = useState("");
+
+  // Date & time selector — default to now, no future dates
+  const [selectedFluidDateTime, setSelectedFluidDateTime] = useState(new Date());
+  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
+
+  const isToday = (d: Date) => {
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
+  const formatDateLabel = (d: Date) => {
+    if (isToday(d)) return "Today";
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (d.getFullYear() === yesterday.getFullYear() && d.getMonth() === yesterday.getMonth() && d.getDate() === yesterday.getDate()) return "Yesterday";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
 
   const getCaloriesForFluid = (type: string, ounces: number): number => {
     const caloriesPerOz: { [key: string]: number } = {
@@ -130,7 +149,7 @@ export default function LogFluid() {
       fat,
       sugar,
       mealType: "Fluid",
-      timestamp: new Date(),
+      timestamp: selectedFluidDateTime,
     };
 
     await addMealLog(fluidLog);
@@ -256,6 +275,45 @@ export default function LogFluid() {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Date Consumed</Text>
+          <Pressable onPress={() => setShowDateTimePicker(true)} style={[styles.dateChip, !isToday(selectedFluidDateTime) && styles.dateChipActive]}>
+            <Calendar size={14} color={isToday(selectedFluidDateTime) ? "#6B8F7A" : "#004734"} />
+            <Text style={[styles.dateChipText, !isToday(selectedFluidDateTime) && styles.dateChipTextActive]}>
+              {formatDateLabel(selectedFluidDateTime)}
+            </Text>
+            {!isToday(selectedFluidDateTime) && (
+              <Pressable
+                onPress={(e) => { e.stopPropagation(); setSelectedFluidDateTime(new Date()); }}
+                hitSlop={8}
+              >
+                <X size={14} color="#004734" />
+              </Pressable>
+            )}
+          </Pressable>
+          {showDateTimePicker && (
+            <View style={styles.datePickerContainer}>
+              <DateTimePicker
+                value={selectedFluidDateTime}
+                mode="datetime"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                maximumDate={new Date()}
+                onChange={(event: any, date?: Date) => {
+                  if (Platform.OS === "android") setShowDateTimePicker(false);
+                  if (date) setSelectedFluidDateTime(date);
+                }}
+                textColor="#004734"
+                style={Platform.OS === "ios" ? { alignSelf: "center" } : undefined}
+              />
+              {Platform.OS === "ios" && (
+                <Pressable onPress={() => setShowDateTimePicker(false)} style={styles.datePickerDoneButton}>
+                  <Text style={styles.datePickerDoneText}>Done</Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionLabel}>Fluid Type</Text>
           <Text style={styles.sectionHint}>
             Select the type of fluid you consumed
@@ -292,7 +350,7 @@ export default function LogFluid() {
             <Text style={styles.sectionLabel}>Specify Fluid Type</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="e.g., Coconut Water"
+              placeholder="Coconut Water"
               value={customType}
               onChangeText={setCustomType}
             />
@@ -300,7 +358,7 @@ export default function LogFluid() {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Amount (ounces)</Text>
+          <Text style={styles.sectionLabel}>Amount (Ounces)</Text>
           <Text style={styles.sectionHint}>
             Enter the amount of fluid consumed
           </Text>
@@ -308,6 +366,7 @@ export default function LogFluid() {
             <TextInput
               style={styles.amountInput}
               placeholder="8"
+              placeholderTextColor="#7A9C8A"
               value={amount}
               onChangeText={setAmount}
               keyboardType="numeric"
@@ -328,7 +387,7 @@ export default function LogFluid() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Nutrition (optional)</Text>
+          <Text style={styles.sectionLabel}>Nutrition (Optional)</Text>
           <Text style={styles.sectionHint}>
             Add protein, calories, fat, sugar to count toward daily totals. Leave blank to use estimates.
           </Text>
@@ -338,6 +397,7 @@ export default function LogFluid() {
               <TextInput
                 style={styles.nutritionInput}
                 placeholder="Auto"
+                placeholderTextColor="#7A9C8A"
                 value={proteinInput}
                 onChangeText={setProteinInput}
                 keyboardType="decimal-pad"
@@ -348,6 +408,7 @@ export default function LogFluid() {
               <TextInput
                 style={styles.nutritionInput}
                 placeholder="Auto"
+                placeholderTextColor="#7A9C8A"
                 value={caloriesInput}
                 onChangeText={setCaloriesInput}
                 keyboardType="decimal-pad"
@@ -360,6 +421,7 @@ export default function LogFluid() {
               <TextInput
                 style={styles.nutritionInput}
                 placeholder="Auto"
+                placeholderTextColor="#7A9C8A"
                 value={carbsInput}
                 onChangeText={setCarbsInput}
                 keyboardType="decimal-pad"
@@ -370,6 +432,7 @@ export default function LogFluid() {
               <TextInput
                 style={styles.nutritionInput}
                 placeholder="Auto"
+                placeholderTextColor="#7A9C8A"
                 value={fatInput}
                 onChangeText={setFatInput}
                 keyboardType="decimal-pad"
@@ -380,6 +443,7 @@ export default function LogFluid() {
               <TextInput
                 style={styles.nutritionInput}
                 placeholder="Auto"
+                placeholderTextColor="#7A9C8A"
                 value={sugarInput}
                 onChangeText={setSugarInput}
                 keyboardType="decimal-pad"
@@ -402,7 +466,8 @@ export default function LogFluid() {
           <Text style={styles.sectionLabel}>Notes (Optional)</Text>
           <TextInput
             style={[styles.textInput, styles.notesInput]}
-            placeholder="Add any notes about this fluid entry..."
+            placeholder="Add any notes about this fluid entry."
+            placeholderTextColor="#7A9C8A"
             value={notes}
             onChangeText={setNotes}
             multiline
@@ -484,6 +549,41 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6DCC2",
     marginHorizontal: 4,
   },
+
+  /* date picker */
+  dateChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: "#F1F8F4",
+    borderWidth: 1,
+    borderColor: "#D4E8DA",
+    marginBottom: 8,
+  },
+  dateChipActive: { backgroundColor: "#FFF3C4", borderColor: "#E6C85E" },
+  dateChipText: { fontSize: 13, fontWeight: "500", color: "#6B8F7A" },
+  dateChipTextActive: { color: "#004734", fontWeight: "600" },
+  datePickerContainer: {
+    backgroundColor: "#FFF8E7",
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#E6D8A8",
+  },
+  datePickerDoneButton: {
+    marginTop: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+    backgroundColor: "#009235",
+    borderRadius: 10,
+  },
+  datePickerDoneText: { color: "#FFFDF4", fontWeight: "600", fontSize: 15 },
 
   /* sections */
   section: {

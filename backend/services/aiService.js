@@ -134,6 +134,9 @@ function buildCommonPromptSuffix(userProfile, activitySummary, patientName) {
   if (age != null) {
     s += `AGE: ${patientName} is ${age} years old. Tailor advice for their age when relevant (e.g. bone health, energy needs, life stage). `;
   }
+  if (userProfile?.sex) {
+    s += `SEX: ${patientName} is ${userProfile.sex}. Consider sex-specific nutritional needs (e.g. iron for females, different caloric baselines). `;
+  }
   if (userProfile?.hasDumpingSyndrome) {
     s += `MEDICAL: ${patientName} has dumping syndrome. Never recommend high-sugar or simple carbs. `;
   }

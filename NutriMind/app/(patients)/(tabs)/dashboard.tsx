@@ -5,13 +5,25 @@ import { useUser, MealLog } from "@/context/UserContext";
 import { router } from "expo-router";
 import ProgressRing from "@/components/ProgressRing";
 import EditLogModal from "@/components/EditLogModal";
-import { getMealDisplayName } from "@/utils/mealDisplay";
+import { getMealDisplayName, getVitaminAmount, getVitaminBaseName } from "@/utils/mealDisplay";
+import { calculatePostOpTime } from "@/utils/formatters";
+
+const isSameCalendarDay = (logTimestamp: Date, ref: Date) =>
+  logTimestamp.getFullYear() === ref.getFullYear() &&
+  logTimestamp.getMonth() === ref.getMonth() &&
+  logTimestamp.getDate() === ref.getDate();
 
 export default function Dashboard() {
   const { userProfile, dailyLogs } = useUser();
   const [editLog, setEditLog] = useState<MealLog | null>(null);
 
-  const recentActivity = dailyLogs.slice(0, 3).map((log) => ({
+  const today = new Date();
+  const todayLogs = dailyLogs.filter((log) => {
+    const t = log.timestamp instanceof Date ? log.timestamp : new Date(log.timestamp);
+    return !isNaN(t.getTime()) && isSameCalendarDay(t, today);
+  });
+
+  const recentActivity = todayLogs.slice(0, 3).map((log) => ({
     ...log,
     time: log.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     mealType: log.mealType ?? "Meal",
@@ -73,18 +85,17 @@ export default function Dashboard() {
   };
 
   const phase = getPhase();
-  const displayDays =
-    typeof daysPostOp === "number" && !isNaN(daysPostOp) ? daysPostOp : 0;
+  const postOpLabel = calculatePostOpTime(userProfile?.surgeryDate);
   const subtitleText = isPreOp
     ? "Pre-Op"
-    : daysPostOp === null
-    ? "Pre-Op"
-    : `Day ${displayDays} Post-Op`;
+    : postOpLabel
+    ? postOpLabel
+    : "Pre-Op";
 
-  const totalProtein = dailyLogs.reduce((sum, log) => sum + log.protein, 0);
-  const totalCalories = dailyLogs.reduce((sum, log) => sum + log.calories, 0);
-  const totalFat = dailyLogs.reduce((sum, log) => sum + (log.fat ?? 0), 0);
-  const totalSugar = dailyLogs.reduce((sum, log) => sum + (log.sugar ?? 0), 0);
+  const totalProtein = todayLogs.reduce((sum, log) => sum + log.protein, 0);
+  const totalCalories = todayLogs.reduce((sum, log) => sum + log.calories, 0);
+  const totalFat = todayLogs.reduce((sum, log) => sum + (log.fat ?? 0), 0);
+  const totalSugar = todayLogs.reduce((sum, log) => sum + (log.sugar ?? 0), 0);
 
   const getFluidAmountFromLog = (log: any) => {
     const match = log.name.match(/\((\d+(?:\.\d+)?)oz\)/i);
@@ -94,7 +105,7 @@ export default function Dashboard() {
     return 0;
   };
   
-  const totalFluids = dailyLogs
+  const totalFluids = todayLogs
     .filter((log) => {
       const name = log.name.toLowerCase();
       return (
@@ -215,15 +226,18 @@ export default function Dashboard() {
               onPress={() => setEditLog(item)}
             >
               <View style={styles.mealLeft}>
-                <View style={styles.proteinBadge}>
-                  <Text style={styles.proteinText}>{item.protein}g</Text>
-                </View>
-                <View>
-                  <Text style={styles.mealName}>{getMealDisplayName(item.name)}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.mealName} numberOfLines={2} ellipsizeMode="tail">
+                    {item.mealType === "Vitamin" ? getVitaminBaseName(item.name) : getMealDisplayName(item.name)}
+                  </Text>
                   <Text style={styles.mealTime}>{item.mealType} · {item.time}</Text>
                 </View>
               </View>
-              <Text style={styles.mealCalories}>{item.calories} kcal</Text>
+              {item.mealType === "Vitamin" ? (
+                <Text style={styles.mealCalories}>{getVitaminAmount(item.name) ?? "—"}</Text>
+              ) : (
+                <Text style={styles.mealCalories}>{item.calories} kcal</Text>
+              )}
             </Pressable>
             ))
           )}
@@ -362,27 +376,14 @@ const styles = StyleSheet.create({
   mealLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-  },
-
-  proteinBadge: {
-    width: 36,
-    height: 36,
-    backgroundColor: "#FFBF48",
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  proteinText: {
-    color: "#004734",
-    fontSize: 12,
-    fontWeight: "700",
+    flex: 1,
   },
 
   mealName: {
     fontWeight: "600",
     color: "#004734",
     fontSize: 14,
+    flexShrink: 1,
   },
   mealTime: {
     fontSize: 12,

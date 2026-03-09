@@ -31,7 +31,8 @@ import { updateProfile } from "firebase/auth";
 import { setUserProfile as saveUserProfile, getUserProfile } from "@/config/users";
 
 const surgeryTypes = ["Gastric Sleeve", "Gastric Bypass", "Duodenal Switch"];
-const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs"];
+const sexOptions = ["Male", "Female"]; 
+const intoleranceOptions = ["Lactose", "Gluten", "Red Meat", "Eggs", "Other"];
 const cuisineOptions = ["Mexican", "Italian", "Asian", "American", "Mediterranean", "Indian", "Other"];
 const defaultTastePreferences = { sweet: 3, spicy: 3, savory: 3, bitter: 3, sour: 3 };
 
@@ -45,13 +46,25 @@ export default function Onboarding() {
   }, [step, userType]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
-  const [showOtherCuisineInput, setShowOtherCuisineInput] = useState(false);
-  const [otherCuisineText, setOtherCuisineText] = useState("");
 
   const formatDateUS = (date: Date | string) => {
     if (!date) return "";
-    const d = typeof date === "string" ? new Date(date) : date;
+    
+    let d: Date;
+
+    if (typeof date === "string") {
+      if (date.includes("-") && !date.includes("T")) {
+        const[year, month, day] = date.split('-').map(Number);
+        d = new Date(year, month - 1, day);
+      } else {
+        d = new Date(date);
+      }
+    } else {
+      d = date;
+    }
+
     if (isNaN(d.getTime())) return "";
+
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     const year = d.getFullYear();
@@ -85,7 +98,14 @@ export default function Onboarding() {
 
   const formatDobDisplay = (isoDate: string) => {
     if (!isoDate || isoDate.length < 10) return "";
-    const parsed = new Date(isoDate.slice(0, 10));
+    
+    const parts = isoDate.split('-');
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+
+    const parsed = new Date(year, month, day);
+
     if (isNaN(parsed.getTime())) return "";
     return formatDateUS(parsed);
   };
@@ -99,11 +119,17 @@ export default function Onboarding() {
       return {
         name: existingProfile.name || "",
         dateOfBirth: (existingProfile as UserProfile).dateOfBirth ?? "",
+        sex: existingProfile.sex || "", 
+        height: (existingProfile as any).height ? String((existingProfile as any).height) : "",
+        weight: existingProfile.weight ?? "",
+        goalWeight: (existingProfile as any).goalWeight ? String((existingProfile as any).goalWeight) : "",
+        weightDate: (existingProfile as any).weightDate ? String((existingProfile as any).weightDate) : toISODate(new Date()),
         isPreOp: existingProfile.isPreOp ?? false,
         surgeryDate: formattedDate,
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
         hasDiabetes: existingProfile.hasDiabetes ?? false,
-        hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
+        hasHighBloodPressure: existingProfile.hasHighBloodPressure ?? false,
+        hasHighCholesterol: existingProfile.hasHighCholesterol ?? false,
         intolerances: existingProfile.intolerances ?? [],
         proteinGoal: existingProfile.proteinGoal,
         fluidGoal: existingProfile.fluidGoal,
@@ -117,11 +143,16 @@ export default function Onboarding() {
     return {
       name: existingProfile?.name || "",
       dateOfBirth: (existingProfile as UserProfile)?.dateOfBirth ?? "",
+      sex: "", 
+      weight: "",
+      goalWeight: "",
+      weightDate: toISODate(new Date()),
       isPreOp: false,
       surgeryDate: "",
       surgeryType: "Gastric Sleeve",
       hasDiabetes: false,
-      hasDumpingSyndrome: false,
+      hasHighBloodPressure: false,
+      hasHighCholesterol: false,
       intolerances: [],
       tastePreferences: defaultTastePreferences,
       dislikedFoods: "",
@@ -137,6 +168,8 @@ export default function Onboarding() {
     d.setFullYear(d.getFullYear() - 30);
     return d;
   });
+  const [showWeightDatePicker, setShowWeightDatePicker] = useState(false);
+  const [tempWeightDate, setTempWeightDate] = useState(() => new Date());
 
   useEffect(() => {
     if (existingProfile && existingProfile.surgeryDate) {
@@ -151,7 +184,8 @@ export default function Onboarding() {
         surgeryDate: formattedDate,
         surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
         hasDiabetes: existingProfile.hasDiabetes ?? false,
-        hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
+        hasHighBloodPressure: existingProfile.hasHighBloodPressure ?? false,
+        hasHighCholesterol: existingProfile.hasHighCholesterol ?? false,
         intolerances: existingProfile.intolerances ?? [],
         proteinGoal: existingProfile.proteinGoal,
         fluidGoal: existingProfile.fluidGoal,
@@ -169,7 +203,8 @@ export default function Onboarding() {
           surgeryDate: formattedDate,
           surgeryType: existingProfile.surgeryType || "Gastric Sleeve",
           hasDiabetes: existingProfile.hasDiabetes ?? false,
-          hasDumpingSyndrome: existingProfile.hasDumpingSyndrome ?? false,
+          hasHighBloodPressure: existingProfile.hasHighBloodPressure ?? false,
+          hasHighCholesterol: existingProfile.hasHighCholesterol ?? false,
           intolerances: existingProfile.intolerances || [],
           proteinGoal: existingProfile.proteinGoal,
           fluidGoal: existingProfile.fluidGoal,
@@ -222,7 +257,7 @@ export default function Onboarding() {
     // User type selection
     if (step === 0) {
       if (!userType) {
-        Alert.alert("Required", "Please select whether you're a patient or doctor.");
+        Alert.alert("Required", "Please select whether you're a patient or provider.");
         return;
       }
       // If doctor, redirect to doctor onboarding
@@ -255,6 +290,44 @@ export default function Onboarding() {
       if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
       if (age < 13 || age > 120) {
         Alert.alert("Invalid Date", "You must be 13–120 years old.");
+        return;
+      }
+      if (!profile.sex) { 
+        Alert.alert("Required", "Please select your sex.");
+        return;
+      }
+      if (!profile.height) {
+        Alert.alert("Required", "Please enter your height.");
+        return;
+      }
+      const heightNumber = Number(profile.height);
+      if (isNaN(heightNumber) || heightNumber <= 0 || heightNumber > 120) {
+        Alert.alert("Invalid Height", "Please enter a valid height in inches.")
+        return;
+      }
+      if (!profile.weight) {
+        Alert.alert("Required", "Please enter your current weight in pounds.")
+        return;
+      }
+      if (isNaN(Number(profile.weight)) || Number(profile.weight) <= 0) {
+        Alert.alert("Invalid Weight", "Please enter a valid weight in pounds.")
+        return;
+      }
+      // validate weight date if provided (must not be in the future)
+      if (profile.weightDate) {
+        const pd = parseUSDate(profile.weightDate as string) || new Date(String(profile.weightDate));
+        if (!pd || isNaN(pd.getTime())) {
+          Alert.alert("Invalid Date", "Please select a valid weight date.");
+          return;
+        }
+        const now = new Date();
+        if (pd.getTime() > now.getTime()) {
+          Alert.alert("Invalid Date", "Weight date cannot be in the future.");
+          return;
+        }
+      }
+      if (profile.goalWeight && (isNaN(Number(profile.goalWeight)) || Number(profile.goalWeight) <= 0)) {
+        Alert.alert("Invalid Goal Weight", "Please enter a valid goal weight in pounds or leave it blank.");
         return;
       }
       if (!profile.surgeryDate) {
@@ -294,11 +367,16 @@ export default function Onboarding() {
           await saveUserProfile(user.uid, {
             name: nameStr || undefined,
             dateOfBirth: hasValidDob ? dobIso : undefined,
+            sex: profile.sex, 
+            height: profile.height ? Number(profile.height) : undefined,
+            weight: profile.weight,
+            goalWeight: profile.goalWeight ? Number(profile.goalWeight) : undefined,
             isPreOp: profile.isPreOp,
             surgeryDate: isoDate,
             surgeryType: profile.surgeryType,
             hasDiabetes: profile.hasDiabetes,
-            hasDumpingSyndrome: profile.hasDumpingSyndrome,
+            hasHighBloodPressure: profile.hasHighBloodPressure,
+            hasHighCholesterol: profile.hasHighCholesterol,
             intolerances: profile.intolerances ?? [],
             tastePreferences: profile.tastePreferences ?? defaultTastePreferences,
             dislikedFoods: profile.dislikedFoods ?? "",
@@ -318,8 +396,35 @@ export default function Onboarding() {
             console.error('Failed to refresh profile after save:', e);
             setUserProfile({ ...profile, dateOfBirth: hasValidDob ? dobIso : undefined } as UserProfile);
           }
+          // If the user provided a weight, post a weight log (allowing an explicit recorded date)
+          try {
+            if (profile.weight && user) {
+              const idToken = await user.getIdToken();
+              const body: any = { patientId: user.uid, weight: Number(profile.weight) };
+              if (profile.weightDate) {
+                // normalize any provided date into YYYY-MM-DD
+                try {
+                  const parsed = new Date(profile.weightDate);
+                  if (!isNaN(parsed.getTime())) {
+                    body.weightdate = `${parsed.getFullYear()}-${String(parsed.getMonth()+1).padStart(2,'0')}-${String(parsed.getDate()).padStart(2,'0')}`;
+                  }
+                } catch {}
+              }
+              const r = await fetch(`${API_BASE_URL}/api/doctor/patient/weight`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+                body: JSON.stringify(body),
+              });
+              if (!r.ok) {
+                const jr = await r.json().catch(() => ({}));
+                console.warn('Failed to post onboarding weight log:', jr);
+              }
+            }
+          } catch (e) {
+            console.error('Error posting onboarding weight log:', e);
+          }
           setIsOnboarded(true);
-          router.replace("/(tabs)/dashboard");
+          router.replace("/(patients)/(tabs)/dashboard" as import("expo-router").Href);
         } catch (error) {
           console.error("Error saving profile:", error);
           Alert.alert("Error", "Failed to save profile. Please try again.");
@@ -344,7 +449,7 @@ export default function Onboarding() {
   const handleApplyInvite = async () => {
     const code = (inviteCodeInput || "").trim();
     if (!code) {
-      setInviteMessage("Enter a code to verify (optional).");
+      setInviteMessage("Enter a code to verify (Optional).");
       return;
     }
     setInviteApplying(true);
@@ -437,9 +542,50 @@ export default function Onboarding() {
     }
   };
 
+  const toggleCuisine = (cuisine: string) => {
+
+  if (cuisine === "Other") {
+    setShowOtherCuisineInput((prev) => !prev);
+    return;
+  }
+
+  setProfile((prev) => {
+    const list = prev.favoriteCuisines ?? [];
+
+    return {
+      ...prev,
+      favoriteCuisines: list.includes(cuisine)
+        ? list.filter((c) => c !== cuisine)
+        : [...list, cuisine],
+    };
+  });
+};
+
+const addOtherCuisine = () => {
+  if (!otherCuisineText.trim()) return;
+
+  setProfile((prev) => ({
+    ...prev,
+    favoriteCuisines: [
+      ...(prev.favoriteCuisines ?? []),
+      otherCuisineText.trim(),
+    ],
+  }));
+
+  setOtherCuisineText("");
+  setShowOtherCuisineInput(false);
+};
+
   const toggleIntolerance = (intolerance: string) => {
+
+    if (intolerance === "Other") {
+      setShowOtherIntoleranceInput((prev) => !prev);
+      return;
+    }
+
     setProfile((prev) => {
       const list = prev.intolerances ?? [];
+
       return {
         ...prev,
         intolerances: list.includes(intolerance)
@@ -448,6 +594,27 @@ export default function Onboarding() {
       };
     });
   };
+
+  const addOtherIntolerance = () => {
+  if (!otherIntoleranceText.trim()) return;
+
+  setProfile((prev) => ({
+    ...prev,
+    intolerances: [
+      ...(prev.intolerances ?? []),
+      otherIntoleranceText.trim(),
+    ],
+  }));
+
+  setOtherIntoleranceText("");
+  setShowOtherIntoleranceInput(false);
+};
+
+  const [showOtherCuisineInput, setShowOtherCuisineInput] = useState(false);
+  const [otherCuisineText, setOtherCuisineText] = useState("");
+
+  const [showOtherIntoleranceInput, setShowOtherIntoleranceInput] = useState(false);
+  const [otherIntoleranceText, setOtherIntoleranceText] = useState("");
 
   return (
     <SafeAreaView style={styles.container}>
@@ -526,7 +693,7 @@ export default function Onboarding() {
                   styles.userTypeCardTitle,
                   userType === "doctor" && styles.userTypeCardTitleActive,
                 ]}>
-                  Doctor
+                  Provider
                 </Text>
                 <Text style={styles.userTypeDescription}>
                   Monitor and support your patients
@@ -551,10 +718,11 @@ export default function Onboarding() {
             {/* Optional invite code for patients */}
             {userType !== "doctor" && (
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Invitation Code (optional)</Text>
+                <Text style={styles.sectionLabel}>Invitation Code (Optional)</Text>
                 <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
                   <TextInput
-                    placeholder="Enter code"
+                    placeholder="Code"
+                    placeholderTextColor="#7A9C8A"
                     value={inviteCodeInput}
                     onChangeText={setInviteCodeInput}
                     style={[styles.textInput, { flex: 1 }]}
@@ -583,10 +751,11 @@ export default function Onboarding() {
             )}
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Preferred name</Text>
+              <Text style={styles.sectionLabel}>Preferred Name</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="e.g. Alex"
+                placeholder="Alex"
+                placeholderTextColor="#7A9C8A"
                 value={profile.name || ""}
                 onChangeText={(text) => setProfile({ ...profile, name: text })}
                 autoCapitalize="words"
@@ -606,10 +775,11 @@ export default function Onboarding() {
                 style={styles.dateInputContainer}
               >
                 <TextInput
-                  placeholder="Tap to select (for age-based advice)"
+                  placeholder="MM/DD/YYYY"
+                  placeholderTextColor="#7A9C8A"
                   value={profile.dateOfBirth ? formatDobDisplay(profile.dateOfBirth) : ""}
                   editable={false}
-                  style={styles.textInput}
+                  style={styles.textInputCalendar}
                 />
                 <Calendar size={20} color="#008080" />
               </Pressable>
@@ -651,6 +821,124 @@ export default function Onboarding() {
                       onChange={(_, selectedDate) => {
                         setShowDobPicker(false);
                         if (selectedDate) setProfile({ ...profile, dateOfBirth: toISODate(selectedDate) });
+                      }}
+                      maximumDate={new Date()}
+                      minimumDate={new Date(1900, 0, 1)}
+                    />
+                  )}
+                </>
+              )}
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Sex</Text>
+              <View style={styles.optionsList}>
+                {sexOptions.map((type) => (
+                  <Pressable
+                    key={type}
+                    onPress={() => setProfile({ ...profile, sex: type as any })}
+                    style={[
+                      styles.optionButton,
+                      profile.sex === type && styles.optionButtonActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.optionButtonText,
+                        profile.sex === type && styles.optionButtonTextActive,
+                      ]}
+                    >
+                      {type}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+            
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Height (In Inches)</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter Height"
+                placeholderTextColor="#7A9C8A"
+                value={profile.height !== undefined && profile.height !== null ? String(profile.height) : ""}
+                onChangeText={(text) => setProfile({ ...profile, height: text })}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Current Weight (In Pounds)</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter Weight"
+                placeholderTextColor="#7A9C8A"
+                value={profile.weight || ""}
+                onChangeText={(text) => setProfile({ ...profile, weight: text })}
+                keyboardType="numeric"
+              />
+            </View>        
+
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Date that Weight was Recorded</Text>
+              <Pressable
+                onPress={() => {
+                  // initialize the temp date to the profile date if available
+                  if (profile.weightDate) {
+                    const d = new Date(profile.weightDate.slice(0,10));
+                    if (!isNaN(d.getTime())) setTempWeightDate(d);
+                  }
+                  setShowWeightDatePicker(true);
+                }}
+                style={styles.dateInputContainer}
+              >
+                <TextInput
+                  placeholder="MM/DD/YYYY"
+                  placeholderTextColor="#7A9C8A"
+                  value={profile.weightDate ? formatDateUS(profile.weightDate) : formatDateUS(tempWeightDate)}
+                  editable={false}
+                  style={styles.textInputCalendar}
+                />
+                <Calendar size={20} color="#008080" />
+              </Pressable>
+              {showWeightDatePicker && (
+                <>
+                  {Platform.OS === "ios" && (
+                    <View style={styles.datePickerContainer}>
+                      <View style={styles.datePickerHeader}>
+                        <Pressable onPress={() => setShowWeightDatePicker(false)} style={styles.datePickerCancel}>
+                          <Text style={styles.datePickerCancelText}>Cancel</Text>
+                        </Pressable>
+                        <Text style={styles.datePickerTitle}>Weight Date</Text>
+                        <Pressable
+                          onPress={() => {
+                            setProfile({ ...profile, weightDate: toISODate(tempWeightDate) });
+                            setShowWeightDatePicker(false);
+                          }}
+                          style={styles.datePickerDone}
+                        >
+                          <Text style={styles.datePickerDoneText}>Done</Text>
+                        </Pressable>
+                      </View>
+                      <DateTimePicker
+                        value={tempWeightDate}
+                        mode="date"
+                        display="spinner"
+                        onChange={(_, d) => d && setTempWeightDate(d)}
+                        maximumDate={new Date()}
+                        minimumDate={new Date(1900, 0, 1)}
+                        textColor="#1e293b"
+                      />
+                    </View>
+                  )}
+                  {Platform.OS === "android" && (
+                    <DateTimePicker
+                      value={tempWeightDate}
+                      mode="date"
+                      display="default"
+                      onChange={(_, selectedDate) => {
+                        setShowWeightDatePicker(false);
+                        if (selectedDate) setProfile({ ...profile, weightDate: toISODate(selectedDate) });
                       }}
                       maximumDate={new Date()}
                       minimumDate={new Date(1900, 0, 1)}
@@ -706,9 +994,10 @@ export default function Onboarding() {
               >
                 <TextInput
                   placeholder="MM/DD/YYYY"
+                  placeholderTextColor="#7A9C8A"
                   value={profile.surgeryDate}
                   onChangeText={handleDateTextChange}
-                  style={styles.textInput}
+                  style={styles.textInputCalendar}
                   editable={true}
                   keyboardType="numeric"
                   maxLength={10}
@@ -850,22 +1139,22 @@ export default function Onboarding() {
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>
-                Do you suffer from Dumping Syndrome?
+                Do you have High Blood Pressure?
               </Text>
               <View style={styles.toggleRow}>
                 <Pressable
                   onPress={() =>
-                    setProfile({ ...profile, hasDumpingSyndrome: true })
+                    setProfile({ ...profile, hasHighBloodPressure: true })
                   }
                   style={[
                     styles.toggleButton,
-                    profile.hasDumpingSyndrome && styles.toggleButtonActive,
+                    profile.hasHighBloodPressure && styles.toggleButtonActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.toggleButtonText,
-                      profile.hasDumpingSyndrome && styles.toggleButtonTextActive,
+                      profile.hasHighBloodPressure && styles.toggleButtonTextActive,
                     ]}
                   >
                     Yes
@@ -873,17 +1162,61 @@ export default function Onboarding() {
                 </Pressable>
                 <Pressable
                   onPress={() =>
-                    setProfile({ ...profile, hasDumpingSyndrome: false })
+                    setProfile({ ...profile, hasHighBloodPressure: false })
                   }
                   style={[
                     styles.toggleButton,
-                    !profile.hasDumpingSyndrome && styles.toggleButtonActive,
+                    !profile.hasHighBloodPressure && styles.toggleButtonActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.toggleButtonText,
-                      !profile.hasDumpingSyndrome && styles.toggleButtonTextActive,
+                      !profile.hasHighBloodPressure && styles.toggleButtonTextActive,
+                    ]}
+                  >
+                    No
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>
+                Do you have High Cholesterol?
+              </Text>
+              <View style={styles.toggleRow}>
+                <Pressable
+                  onPress={() =>
+                    setProfile({ ...profile, hasHighCholesterol: true })
+                  }
+                  style={[
+                    styles.toggleButton,
+                    profile.hasHighCholesterol && styles.toggleButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.toggleButtonText,
+                      profile.hasHighCholesterol && styles.toggleButtonTextActive,
+                    ]}
+                  >
+                    Yes
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    setProfile({ ...profile, hasHighCholesterol: false })
+                  }
+                  style={[
+                    styles.toggleButton,
+                    !profile.hasHighCholesterol && styles.toggleButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.toggleButtonText,
+                      !profile.hasHighCholesterol && styles.toggleButtonTextActive,
                     ]}
                   >
                     No
@@ -893,36 +1226,77 @@ export default function Onboarding() {
               <Text style={styles.helpText}>
                 This helps us customize food recommendations
               </Text>
-            </View>
+            </View>            
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>
-                Food Intolerances (select all that apply)
+                Food Intolerances (Select All That Apply)
               </Text>
               <View style={styles.intoleranceRow}>
                 {intoleranceOptions.map((item) => (
                   <Pressable
                     key={item}
-                    onPress={() => toggleIntolerance(item)}
+                    onPress={() => {
+                      if (item === "Other") {
+                        setShowOtherIntoleranceInput((prev) => !prev);
+                        return;
+                      }
+                      toggleIntolerance(item);
+                    }}
                     style={[
                       styles.intoleranceButton,
-                      (profile.intolerances ?? []).includes(item) &&
-                        styles.intoleranceButtonActive,
+                      item === "Other"
+                        ? showOtherIntoleranceInput && styles.intoleranceButtonActive
+                        : (profile.intolerances ?? []).includes(item) &&
+                          styles.intoleranceButtonActive,
                     ]}
                   >
                     <Text
                       style={[
                         styles.intoleranceButtonText,
-                        (profile.intolerances ?? []).includes(item) &&
-                          styles.intoleranceButtonTextActive,
+                        item === "Other"
+                          ? showOtherIntoleranceInput && styles.intoleranceButtonTextActive
+                          : (profile.intolerances ?? []).includes(item) &&
+                            styles.intoleranceButtonTextActive,
                       ]}
                     >
-                      {(profile.intolerances ?? []).includes(item) && "✓ "}
-                      {item}
+                      {item === "Other" && showOtherIntoleranceInput && "✓ "}
+                      {item !== "Other" &&
+                        (profile.intolerances ?? []).includes(item) &&
+                          "✓ "}
+                        {item}
                     </Text>
                   </Pressable>
                 ))}
               </View>
+              {showOtherIntoleranceInput && (
+  <View style={{ marginTop: 10 }}>
+    <TextInput
+      placeholder="Shellfish, Mushrooms ..."
+      placeholderTextColor="#7A9C8A"
+      value={otherIntoleranceText}
+      onChangeText={(text) => {
+        setOtherIntoleranceText(text);
+
+        const parsed = text
+          .split(",")
+          .map((i) => i.trim())
+          .filter(Boolean);
+
+        setProfile({
+          ...profile,
+          intolerances: [
+            ...(profile.intolerances ?? []).filter((i) =>
+              intoleranceOptions.includes(i)
+            ),
+            ...parsed,
+          ],
+        });
+      }}
+      style={styles.textInput}
+    />
+  </View>
+)}
             </View>
           </View>
         )}
@@ -936,7 +1310,7 @@ export default function Onboarding() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.cardTitle}>Food Preferences</Text>
                 <Text style={styles.cardSubtitle}>Help us personalize your meals</Text>
-                <Text style={styles.cardSubtitle}>With each taste preference, rank them from 1 (Do not like) to 5 (Do like)</Text>
+                <Text style={styles.cardSubtitle}>For each taste preference, rank them from 1 (Dislike) to 5 (Favor)</Text>
               </View>
             </View>
 
@@ -972,9 +1346,10 @@ export default function Onboarding() {
             ))}
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Foods you Dislike</Text>
+              <Text style={styles.sectionLabel}>Disliked Foods</Text>
               <TextInput
-                placeholder="e.g. mushrooms, seafood..."
+                placeholder="Mushrooms, Sardines ..."
+                placeholderTextColor="#7A9C8A"
                 value={profile.dislikedFoods ?? ""}
                 onChangeText={(text) =>
                   setProfile({ ...profile, dislikedFoods: text })
@@ -985,7 +1360,7 @@ export default function Onboarding() {
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>
-                Favorite Cuisines (select all that apply)
+                Favorite Cuisines (Select All That Apply)
               </Text>
               <View style={styles.intoleranceRow}>
                 {cuisineOptions.map((cuisine) => (
@@ -1023,35 +1398,41 @@ export default function Onboarding() {
                 ))}
               </View>
 
-              {showOtherCuisineInput && (
-                <View style={{ marginTop: 10 }}>
-                  <TextInput
-                    placeholder="Enter other cuisines (comma separated)"
-                    value={otherCuisineText}
-                    onChangeText={(text) => {
-                      setOtherCuisineText(text);
-                      const parsed = text
-                        .split(",")
-                        .map((c) => c.trim())
-                        .filter(Boolean);
-                      setProfile({
-                        ...profile,
-                        favoriteCuisines: [
-                          ...(profile.favoriteCuisines ?? []).filter(c => c !== "Other"),
-                          ...parsed,
-                        ],
-                      });
-                    }}
-                    style={styles.textInput}
-                  />
-                </View>
-              )}
+             {showOtherCuisineInput && (
+  <View style={{ marginTop: 10 }}>
+    <TextInput
+      placeholder="Thai, Ethiopian ..."
+      placeholderTextColor="#7A9C8A"
+      value={otherCuisineText}
+      onChangeText={(text) => {
+        setOtherCuisineText(text);
+
+        const parsed = text
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean);
+
+        setProfile({
+          ...profile,
+          favoriteCuisines: [
+            ...(profile.favoriteCuisines ?? []).filter((c) =>
+              cuisineOptions.includes(c)
+            ),
+            ...parsed,
+          ],
+        });
+      }}
+      style={styles.textInput}
+    />
+  </View>
+)}
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Allergies</Text>
+              <Text style={styles.sectionLabel}>Food Allergies</Text>
               <TextInput
-                placeholder="e.g. nuts, seafood..."
+                placeholder="Nuts, Shellfish ..."
+                placeholderTextColor="#7A9C8A"
                 value={(profile.allergies ?? []).join(", ")}
                 onChangeText={(text) =>
                   setProfile({
@@ -1287,9 +1668,21 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
+    backgroundColor: '#FFFDF4',
+    borderWidth: 1,
+    borderColor: '#E6DDC8',
+    borderRadius: 12,
     paddingVertical: 14,
-    paddingHorizontal: 18,
-    fontSize: 15,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: "#004734",
+  },
+
+  textInputCalendar: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
     color: "#004734",
   },
 
@@ -1433,4 +1826,18 @@ const styles = StyleSheet.create({
   datePickerDone: {
     padding: 6,
   },
+  addButton: {
+  backgroundColor: "#5DAF6A",
+  paddingVertical: 10,
+  paddingHorizontal: 16,
+  borderRadius: 8,
+  alignItems: "center",
+  marginTop: 8,
+},
+
+addButtonText: {
+  color: "#FFFFFF",
+  fontWeight: "600",
+  fontSize: 14,
+},
 });
