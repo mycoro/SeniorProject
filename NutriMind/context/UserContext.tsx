@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { Alert } from "react-native";
 import { auth } from "@/config/firebase";
 import { db } from "@/config/firebase";
 import { getUserProfile, updateUserProfile } from "@/config/users";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, addDoc, doc, updateDoc, query, orderBy, Timestamp, serverTimestamp, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, deleteDoc, query, orderBy, Timestamp, serverTimestamp, onSnapshot } from "firebase/firestore";
 
 export interface TastePreferences {
   sweet: number;
@@ -61,6 +62,7 @@ interface UserContextType {
   dailyLogs: MealLog[];
   addMealLog: (meal: MealLog) => void;
   updateMealLog: (logId: string, updates: MealLogUpdate) => Promise<void>;
+  deleteMealLog: (logId: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -267,6 +269,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
     await updateDoc(docRef, payload);
   };
 
+  const deleteMealLog = async (logId: string) => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.error("Cannot delete meal log: user not authenticated");
+      return;
+    }
+    try {
+      const docRef = doc(db, "users", user.uid, "mealLogs", logId);
+      await deleteDoc(docRef);
+    } catch (error) {
+      console.error("Error deleting meal log:", error);
+      Alert.alert("Error", "Failed to delete entry. Please try again.");
+    }
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -278,6 +295,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         dailyLogs,
         addMealLog,
         updateMealLog,
+        deleteMealLog,
         loading,
       }}
     >
