@@ -24,7 +24,7 @@ type Props = {
 };
 
 export default function EditLogModal({ visible, log, onClose, onSaved }: Props) {
-  const { updateMealLog } = useUser();
+  const { updateMealLog, deleteMealLog } = useUser();
   const [name, setName] = useState("");
   const [ingredients, setIngredients] = useState("");
   const [protein, setProtein] = useState("");
@@ -111,6 +111,34 @@ export default function EditLogModal({ visible, log, onClose, onSaved }: Props) 
   const handleDateChange = (_event: unknown, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDatePicker(false);
     if (selectedDate) setTimestamp(selectedDate);
+  };
+
+  const handleDelete = () => {
+    if (!log) return;
+    Alert.alert(
+      "Delete Entry",
+      "Are you sure you want to delete this entry? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteMealLog(log.id);
+              onSaved();
+              onClose();
+            } catch (e) {
+              console.error("Error deleting log:", e);
+              Alert.alert("Error", "Failed to delete entry. Please try again.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (!log) return null;
@@ -288,6 +316,13 @@ export default function EditLogModal({ visible, log, onClose, onSaved }: Props) 
           >
             <Text style={styles.saveBtnText}>{saving ? "Saving…" : "Save changes"}</Text>
           </Pressable>
+
+          <Pressable
+            onPress={handleDelete}
+            style={styles.deleteBtn}
+          >
+            <Text style={styles.deleteBtnText}>Delete Entry</Text>
+          </Pressable>
         </View>
       </View>
     </Modal>
@@ -435,5 +470,20 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "700",
+  },
+  deleteBtn: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    paddingVertical: 14,
+    borderRadius: 18,
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "#dc2626",
+  },
+  deleteBtnText: {
+    color: "#dc2626",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });
