@@ -525,7 +525,7 @@ export default function LogMeal() {
           {/* Patient weight modal */}
           <Modal visible={showWeightModal} transparent animationType="fade" onRequestClose={() => setShowWeightModal(false)}>
             <View style={{flex:1, backgroundColor:'rgba(0,0,0,0.4)', justifyContent:'center', alignItems:'center'}}>
-              <View style={{width:'90%', backgroundColor:'#fff', borderRadius:12, padding:14}}>
+              <View style={{width:'90%', backgroundColor:"#FFF8E7", borderRadius:12, padding:14, borderWidth:1, borderColor:'#D6C89A'}}>
                 <Text style={{fontSize:16, fontWeight:'700', color:'#004734', marginBottom:8}}>Record Weight</Text>
                 <Text style={{fontSize:13, color:'#3F5E52', marginBottom:8}}>Enter your weight (lbs)</Text>
                 <View style={{backgroundColor:'#FFFDF4', borderRadius:8, padding:8, borderWidth:1, borderColor:'#D6C89A', marginBottom:8}}>
