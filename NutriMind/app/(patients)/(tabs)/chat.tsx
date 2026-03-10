@@ -70,11 +70,11 @@ export default function Chat() {
 
   const getInitialMessage = () => {
     if (!userProfile?.surgeryDate) {
-      return "Hi! I'm here to help you with your nutrition journey. Once you complete your profile setup, I can provide personalized guidance based on your recovery phase.";
+      return "Hi! I'm here to help you with your nutrition journey. Once you complete your profile setup, I can provide personalized guidance based on your recovery phase!";
     }
     const isPreOp = userProfile?.isPreOp === true;
     if (isPreOp) {
-      return `Hi ${userName}! You're preparing for surgery—I have your surgery date and profile. Ask me anything about pre-op diet, what to expect, or nutrition. How can I help you today?`;
+      return `Hi ${userName}! You're preparing for surgery — I have your surgery date and profile. Ask me anything about pre-op diet, what to expect, or nutrition. How can I help you today?`;
     }
     const daysPostOp = getDaysPostOp();
     if (daysPostOp === null || daysPostOp === 0) {
@@ -399,7 +399,7 @@ export default function Chat() {
                 const visibleUrls = urls.map((uri, idx) => ({ uri, idx })).filter(({ idx }) => !failed.includes(idx));
                 if (visibleUrls.length === 0) return (
                   <View style={styles.messageImageRowWrap}>
-                    <Text style={styles.messageImageUnavailable}>Image unavailable</Text>
+                    <Text style={styles.messageImageUnavailable}>Image Unavailable</Text>
                   </View>
                 );
                 return (

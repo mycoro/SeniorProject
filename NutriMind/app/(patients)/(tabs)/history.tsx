@@ -369,7 +369,7 @@ export default function History() {
                 label="Protein"
                 current={selectedDayData.protein}
                 target={proteinGoal ?? undefined}
-                unit="g"
+                unit=" g"
                 color="#008080"
                 size={60}
               />
@@ -377,7 +377,7 @@ export default function History() {
                 label="Fluids"
                 current={selectedDayData.water}
                 target={fluidGoal ?? undefined}
-                unit="oz"
+                unit=" oz"
                 color="#3b82f6"
                 size={60}
               />
@@ -385,14 +385,14 @@ export default function History() {
                 label="Calories"
                 current={selectedDayData.calories}
                 target={calorieGoal ?? undefined}
-                unit=""
+                unit=" cal"
                 color="#f97316"
                 size={60}
               />
             </View>
 
             <View style={styles.mealsSection}>
-              <Text style={styles.mealsTitle}>Meals, Fluids, & Vitamins</Text>
+              <Text style={styles.mealsTitle}>Meals, Fluids & Vitamins</Text>
               {loading ? (
                 <View style={styles.emptyMeals}>
                   <Text style={styles.emptyMealsText}>Loading...</Text>
@@ -401,7 +401,7 @@ export default function History() {
                 <View style={styles.mealsList}>
                   {selectedMeals.length === 0 ? (
                     <View style={styles.emptyMeals}>
-                      <Text style={styles.emptyMealsText}>No meals, fluids or vitamins logged for this day</Text>
+                      <Text style={styles.emptyMealsText}>No meals, fluids, or vitamins logged for this day</Text>
                       {dailyLogs.length > 0 && (
                         <Text style={[styles.emptyMealsText, { fontSize: 12, marginTop: 4 }]}>
                           ({dailyLogs.length} total meals in database)

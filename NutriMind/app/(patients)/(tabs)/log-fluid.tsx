@@ -351,6 +351,7 @@ export default function LogFluid() {
             <TextInput
               style={styles.textInput}
               placeholder="Coconut Water"
+              placeholderTextColor="#7A9C8A"
               value={customType}
               onChangeText={setCustomType}
             />

@@ -153,7 +153,7 @@ export default function EditLogModal({ visible, log, onClose, onSaved }: Props) 
       <View style={styles.overlay}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.title}>Edit entry</Text>
+            <Text style={styles.title}>Edit Entry</Text>
             <Pressable onPress={onClose} hitSlop={12}>
               <Text style={styles.cancelText}>Cancel</Text>
             </Pressable>
@@ -171,18 +171,18 @@ export default function EditLogModal({ visible, log, onClose, onSaved }: Props) 
                 style={styles.input}
                 value={name}
                 onChangeText={setName}
-                placeholder="e.g. Grilled chicken"
+                placeholder="Grilled Chicken"
                 placeholderTextColor="#9ca3af"
               />
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>Ingredients (optional)</Text>
+              <Text style={styles.label}>Ingredients (Optional)</Text>
               <TextInput
                 style={styles.input}
                 value={ingredients}
                 onChangeText={setIngredients}
-                placeholder="e.g. Lettuce, Tomato, Pickles"
+                placeholder="Lettuce, Tomato, Pickles"
                 placeholderTextColor="#9ca3af"
               />
             </View>
@@ -249,7 +249,7 @@ export default function EditLogModal({ visible, log, onClose, onSaved }: Props) 
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>Meal type</Text>
+              <Text style={styles.label}>Meal Type</Text>
               <View style={styles.mealTypeRow}>
                 {mealTypes.map((type) => (
                   <Pressable
@@ -266,7 +266,7 @@ export default function EditLogModal({ visible, log, onClose, onSaved }: Props) 
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>Date & time</Text>
+              <Text style={styles.label}>Date & Time</Text>
               <Pressable
                 onPress={() => setShowDatePicker(true)}
                 style={styles.dateBtn}

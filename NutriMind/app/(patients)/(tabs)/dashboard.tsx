@@ -151,14 +151,14 @@ export default function Dashboard() {
             label="Protein"
             current={totalProtein}
             target={proteinGoal || undefined}
-            unit="g"
+            unit=" g"
             color="#FFBF48"
           />
           <ProgressRing
             label="Total Fluids"
             current={totalFluids}
             target={fluidGoal || undefined}
-            unit="oz"
+            unit=" oz"
             color="#ff7739"
           />
           <ProgressRing
