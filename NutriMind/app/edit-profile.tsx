@@ -131,6 +131,7 @@ export default function EditProfile() {
       name: existingProfile.name || "",
       dateOfBirth: dobRaw,
       sex: existingProfile.sex || "", 
+      height: (existingProfile as any).height ? String((existingProfile as any).height) : "", 
       weight: existingProfile.weight ?? "",
       isPreOp: existingProfile.isPreOp ?? false,
       surgeryDate: formattedDate,
@@ -220,6 +221,7 @@ export default function EditProfile() {
         name: nameStr,
         dateOfBirth: hasValidDob ? dobIso : undefined,
         sex: profile.sex,
+        height: profile.height ? Number(profile.height) : undefined, 
         weight: profile.weight,
         isPreOp: profile.isPreOp,
         surgeryDate: isoDate,
@@ -242,6 +244,7 @@ export default function EditProfile() {
         name: nameStr,
         dateOfBirth: hasValidDob ? dobIso : undefined,
         sex: profile.sex,
+        height: profile.height ? Number(profile.height) : undefined, 
         weight: profile.weight,
         isPreOp: profile.isPreOp,
         surgeryDate: isoDate,
@@ -297,7 +300,7 @@ export default function EditProfile() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.cardIcon}>
-              <Calendar size={20} color="#008080" />
+              <Calendar size={20} color='#FFFDF4' />
             </View>
             <View>
               <Text style={styles.cardTitle}>Surgery Details</Text>
@@ -399,6 +402,18 @@ export default function EditProfile() {
                 </Pressable>
               ))}
             </View>            
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Height (In Inches)</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Enter Height"
+              placeholderTextColor="#7A9C8A"
+              value={profile.height !== undefined && profile.height !== null ? String(profile.height) : ""}
+              onChangeText={(text) => setProfile({ ...profile, height: text })}
+              keyboardType="numeric"
+            />
           </View>
 
           <View style={styles.section}>
@@ -513,7 +528,7 @@ export default function EditProfile() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.cardIcon}>
-              <Pill size={20} color="#008080" />
+              <Pill size={20} color='#FFFDF4' />
             </View>
             <View>
               <Text style={styles.cardTitle}>Medical & Intolerances</Text>
@@ -614,7 +629,7 @@ export default function EditProfile() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.cardIcon}>
-              <Target size={20} color="#008080" />
+              <Target size={20} color='#FFFDF4'/>
             </View>
             <View>
               <Text style={styles.cardTitle}>Food Preferences</Text>
@@ -650,7 +665,7 @@ export default function EditProfile() {
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Disliked Foods</Text>
             <TextInput
-              placeholder="Mushrooms, seafood..."
+              placeholder="Mushrooms, Seafood..."
               placeholderTextColor="#7A9C8A"
               value={profile.dislikedFoods ?? ""}
               onChangeText={(text) => setProfile((p) => ({ ...p, dislikedFoods: text }))}
@@ -689,7 +704,7 @@ export default function EditProfile() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.cardIcon}>
-              <Target size={20} color="#008080" />
+              <Target size={20} color='#FFFDF4' />
             </View>
             <View>
               <Text style={styles.cardTitle}>Daily Goals</Text>

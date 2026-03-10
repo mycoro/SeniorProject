@@ -105,20 +105,20 @@ export default function EditDoctor() {
 
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.card}>
-          <Text style={styles.sectionLabel}>Full name</Text>
-          <TextInput style={styles.input} value={form.name} onChangeText={(t) => setForm((s) => ({ ...s, name: t }))} placeholder="Dr. Jane Doe" />
+          <Text style={styles.sectionLabel}>Full Name</Text>
+          <TextInput style={styles.input} value={form.name} onChangeText={(t) => setForm((s) => ({ ...s, name: t }))} placeholder="Dr. Jane Doe" placeholderTextColor="#7A9C8A" />
 
           <Text style={styles.sectionLabel}>Specialty</Text>
-          <TextInput style={styles.input} value={form.specialty} onChangeText={(t) => setForm((s) => ({ ...s, specialty: t }))} placeholder="Bariatric Surgery" />
+          <TextInput style={styles.input} value={form.specialty} onChangeText={(t) => setForm((s) => ({ ...s, specialty: t }))} placeholder="Bariatric Surgery" placeholderTextColor="#7A9C8A" />
 
           <Text style={styles.sectionLabel}>Practice Type</Text>
-          <TextInput style={styles.input} value={form.practiceType} onChangeText={(t) => setForm((s) => ({ ...s, practiceType: t }))} placeholder="Private Clinic" />
+          <TextInput style={styles.input} value={form.practiceType} onChangeText={(t) => setForm((s) => ({ ...s, practiceType: t }))} placeholder="Private Clinic" placeholderTextColor="#7A9C8A" />
 
           <Text style={styles.sectionLabel}>Years of Experience</Text>
-          <TextInput style={styles.input} value={form.yearsExperience} onChangeText={(t) => setForm((s) => ({ ...s, yearsExperience: t }))} placeholder="5" keyboardType="numeric" />
+          <TextInput style={styles.input} value={form.yearsExperience} onChangeText={(t) => setForm((s) => ({ ...s, yearsExperience: t }))} placeholder="5" keyboardType="numeric" placeholderTextColor="#7A9C8A" />
 
-          <Text style={styles.sectionLabel}>License Number (optional)</Text>
-          <TextInput style={styles.input} value={form.licenseNumber} onChangeText={(t) => setForm((s) => ({ ...s, licenseNumber: t }))} placeholder="12345678" />
+          <Text style={styles.sectionLabel}>License Number (Optional)</Text>
+          <TextInput style={styles.input} value={form.licenseNumber} onChangeText={(t) => setForm((s) => ({ ...s, licenseNumber: t }))} placeholder="12345678" placeholderTextColor="#7A9C8A" />
         </View>
 
         <View style={styles.footer}>

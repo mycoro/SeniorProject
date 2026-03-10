@@ -149,6 +149,7 @@ export default function LogVitamins() {
                   if (Platform.OS === "android") setShowDateTimePicker(false);
                   if (date) setSelectedDateTime(date);
                 }}
+                textColor="#004734"
                 style={Platform.OS === "ios" ? { alignSelf: "center" } : undefined}
               />
               {Platform.OS === "ios" && (

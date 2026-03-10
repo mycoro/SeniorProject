@@ -707,7 +707,7 @@ const addOtherCuisine = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIcon}>
-                <Calendar size={20} color="#008080" />
+                <Calendar size={20} color='#FFFDF4' />
               </View>
               <View>
                 <Text style={styles.cardTitle}>Surgery Details</Text>
@@ -1089,7 +1089,7 @@ const addOtherCuisine = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIcon}>
-                <Pill size={20} color="#008080" />
+                <Pill size={20} color='#FFFDF4' />
               </View>
               <View>
                 <Text style={styles.cardTitle}>Medical Risks</Text>
@@ -1305,7 +1305,7 @@ const addOtherCuisine = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIcon}>
-                <Target size={20} color="#008080" />
+                <Target size={20} color='#FFFDF4' />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.cardTitle}>Food Preferences</Text>

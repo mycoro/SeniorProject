@@ -52,7 +52,7 @@ export default function DoctorInvites() {
   }, []);
 
   const handleGenerateInvite = async () => {
-    if (!inviteName.trim()) return Alert.alert("Invite name", "Please enter the invitee's name.");
+    if (!inviteName.trim()) return Alert.alert("Invite Name", "Please enter the invitee's name.");
     setInviteLoading(true);
     try {
       const user = auth.currentUser;
@@ -109,13 +109,13 @@ export default function DoctorInvites() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.subGreeting}>Invite patients</Text>
+          <Text style={styles.greeting}>Invite Patients</Text>
         </View>
 
         <View style={styles.inviteForm}>
-          <TextInput style={[styles.searchInput, { paddingLeft: 12 }]} placeholder="Invitee name" placeholderTextColor="#7A9C8A" value={inviteName} onChangeText={setInviteName} autoCapitalize="words" />
+          <TextInput style={[styles.searchInput, { paddingLeft: 12 }]} placeholder="Invitee Name" placeholderTextColor="#7A9C8A" value={inviteName} onChangeText={setInviteName} autoCapitalize="words" />
           <View style={{ height: 8 }} />
-          <TextInput style={[styles.searchInput, { paddingLeft: 12 }]} placeholder="Optional email (will auto-assign if exists)" placeholderTextColor="#7A9C8A" value={inviteEmail} onChangeText={setInviteEmail} autoCapitalize="none" keyboardType="email-address" />
+          <TextInput style={[styles.searchInput, { paddingLeft: 12 }]} placeholder="Optional Email (Will auto-assign if exists)" placeholderTextColor="#7A9C8A" value={inviteEmail} onChangeText={setInviteEmail} autoCapitalize="none" keyboardType="email-address" />
           <View style={{ height: 8 }} />
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
             <Pressable onPress={() => { setInviteName(''); setInviteEmail(''); setInviteCode(null); setCopied(false); }} style={{ paddingVertical: 8, paddingHorizontal: 12, marginRight: 8 }}>
@@ -139,7 +139,7 @@ export default function DoctorInvites() {
           ) : invitesError ? (
             <Text style={{ padding: 12, color: '#ff4d4f' }}>Error loading invites: {invitesError}</Text>
           ) : invites.length === 0 ? (
-            <Text style={{ padding: 12, color: '#7A9C8A' }}>No invites yet</Text>
+            <Text style={{ padding: 12, color: '#7A9C8A' }}>No Invites Yet</Text>
           ) : (
             invites.map((inv) => (
               <View key={inv.inviteId} style={styles.inviteCard}>
@@ -166,15 +166,15 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 100, flexGrow: 1 },
   header: { marginBottom: 12 },
-  greeting: { fontSize: 22, fontWeight: "700", color: "#0B6E4F", marginBottom: 4 },
+  greeting: { fontSize: 24, fontWeight: "700", color: "#004734", marginBottom: 4 },
   subGreeting: { fontSize: 14, color: "#666" },
-  inviteForm: { marginTop: 10, padding: 12, backgroundColor: '#FFFDF4', borderRadius: 12, borderWidth: 1, borderColor: '#E8E3D4' },
-  searchInput: { flex: 1, fontSize: 16, color: '#004734', backgroundColor: '#FFFDF4' },
+  inviteForm: { marginTop: 10, padding: 12, backgroundColor: '#FFF8E7', borderRadius: 12, borderWidth: 1, borderColor: '#E8E3D4' },
+  searchInput: { flex: 1, fontSize: 16, color: '#004734', backgroundColor: '#FFFDF4', borderWidth: 1, borderColor: '#E8E3D4', borderRadius: 10, paddingVertical: 10 },
   generateButton: { backgroundColor: '#009235', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10 },
   generateButtonText: { color: '#fff', fontWeight: '800' },
   codeDisplay: { marginTop: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E8E3D4' },
   codeText: { fontSize: 18, fontWeight: '900', color: '#004734', letterSpacing: 2 },
-  inviteSection: { padding: 12, borderBottomWidth: 1, borderBottomColor: '#E8E3D4', backgroundColor: '#FFF8E7' },
+  inviteSection: { marginTop: 20, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#E8E3D4', backgroundColor: '#FFF8E7' },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#004734', marginBottom: 8 },
   inviteCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, backgroundColor: '#FFFFFF', marginHorizontal: 12, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: '#E8E3D4' },
   inviteCardLeft: { flex: 1, paddingRight: 8 },

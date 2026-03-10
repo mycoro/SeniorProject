@@ -199,7 +199,7 @@ export default function Settings() {
             setShowNameModal(true);
           }}
         >
-          <Text style={styles.label}>Preferred name</Text>
+          <Text style={styles.label}>Preferred Name</Text>
           <Text style={styles.value}>{userProfile?.name || "Not set"}</Text>
         </Pressable>
         <View style={styles.profileCard}>
@@ -212,8 +212,8 @@ export default function Settings() {
             return (
               <View style={[styles.profileCard, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}> 
                 <View>
-                  <Text style={styles.label}>Invitation code</Text>
-                  <Text style={styles.value}>Successfully linked to my provider</Text>
+                  <Text style={styles.label}>Invitation Code</Text>
+                  <Text style={styles.value}>Successfully linked to provider</Text>
                 </View>
               </View>
             );
@@ -224,7 +224,7 @@ export default function Settings() {
               onPress={() => setShowInviteModal(true)}
             >
               <View>
-                <Text style={styles.label}>Invitation code</Text>
+                <Text style={styles.label}>Invitation Code</Text>
                 <Text style={styles.value}>Apply a code from your provider</Text>
               </View>
               <Text style={{ color: '#008080', fontWeight: '700' }}>Apply</Text>
@@ -245,7 +245,7 @@ export default function Settings() {
             setShowGoalWeightModal(true);
           }}
         >
-          <Text style={styles.label}>Goal Weight</Text>
+          <Text style={styles.label}>Weight Goal</Text>
           <Text style={styles.value}>{userProfile?.goalWeight ? `${userProfile.goalWeight} lbs` : "Not set - Tap to set"}</Text>
         </Pressable>
         
@@ -318,19 +318,19 @@ export default function Settings() {
           <View style={styles.profileCard}>
             <Text style={styles.label}>Protein Goal</Text>
             <Text style={styles.value}>
-              {userProfile?.proteinGoal ? `${userProfile.proteinGoal}g/day` : "Not set - Tap 'Set Goals' to configure"}
+              {userProfile?.proteinGoal ? `${userProfile.proteinGoal} g/day` : "Not Set - Tap 'Set Goals' to Configure"}
             </Text>
           </View>
           <View style={styles.profileCard}>
             <Text style={styles.label}>Fluid Goal</Text>
             <Text style={styles.value}>
-              {userProfile?.fluidGoal ? `${userProfile.fluidGoal}oz/day` : "Not set - Tap 'Set Goals' to configure"}
+              {userProfile?.fluidGoal ? `${userProfile.fluidGoal} oz/day` : "Not Set - Tap 'Set Goals' to Configure"}
             </Text>
           </View>
           <View style={styles.profileCard}>
             <Text style={styles.label}>Calorie Goal</Text>
             <Text style={styles.value}>
-              {userProfile?.calorieGoal ? `${userProfile.calorieGoal} cal/day` : "Not set - Tap 'Set Goals' to configure"}
+              {userProfile?.calorieGoal ? `${userProfile.calorieGoal} cal/day` : "Not Set - Tap 'Set Goals' to Configure"}
             </Text>
           </View>
         </View>
@@ -344,11 +344,12 @@ export default function Settings() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Preferred name</Text>
+            <Text style={styles.modalTitle}>Preferred Name</Text>
             <View style={styles.inputGroup}>
               <TextInput
                 style={styles.textInput}
-                placeholder="e.g. Alex"
+                placeholder="Alex"
+                placeholderTextColor="#7A9C8A"
                 value={nameInput}
                 onChangeText={setNameInput}
                 autoCapitalize="words"
@@ -380,11 +381,12 @@ export default function Settings() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Goal Weight</Text>
+            <Text style={styles.modalTitle}>Weight Goal</Text>
             <View style={styles.inputGroup}>
               <TextInput
                 style={styles.textInput}
-                placeholder="e.g. 140"
+                placeholder="Enter weight goal (in lbs)"
+                placeholderTextColor="#7A9C8A"
                 value={goalWeightInput}
                 onChangeText={setGoalWeightInput}
                 keyboardType="numeric"
@@ -420,7 +422,8 @@ export default function Settings() {
             <View style={styles.inputGroup}>
               <TextInput
                 style={styles.textInput}
-                placeholder="Enter code (e.g. ABC123)"
+                placeholder="Enter Code"
+                placeholderTextColor="#7A9C8A"
                 value={inviteCodeInput}
                 onChangeText={(t) => setInviteCodeInput(t.toUpperCase())}
                 autoCapitalize="characters"
@@ -528,6 +531,7 @@ export default function Settings() {
               <TextInput
                 style={styles.textInput}
                 placeholder="e.g., 60"
+                placeholderTextColor="#7A9C8A"
                 value={proteinGoal}
                 onChangeText={setProteinGoal}
                 keyboardType="numeric"
@@ -539,6 +543,7 @@ export default function Settings() {
               <TextInput
                 style={styles.textInput}
                 placeholder="e.g., 64"
+                placeholderTextColor="#7A9C8A"
                 value={fluidGoal}
                 onChangeText={setFluidGoal}
                 keyboardType="numeric"
@@ -550,6 +555,7 @@ export default function Settings() {
               <TextInput
                 style={styles.textInput}
                 placeholder="e.g., 800"
+                placeholderTextColor="#7A9C8A"
                 value={calorieGoal}
                 onChangeText={setCalorieGoal}
                 keyboardType="numeric"
