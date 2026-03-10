@@ -92,12 +92,18 @@ export default function Auth() {
         errorMessage = "No account found with this email. Please sign up first.";
       } else if (error.code === "auth/wrong-password") {
         errorMessage = "Incorrect password. Please try again.";
+      } else if (error.code === "auth/invalid-credential" || error.code === "auth/invalid-login-credentials") {
+        errorMessage = "Incorrect email or password. Please try again.";
       } else if (error.code === "auth/weak-password") {
         errorMessage = "Password should be at least 6 characters long.";
       } else if (error.code === "auth/invalid-email") {
         errorMessage = "Invalid email address. Please check and try again.";
-      } else if (error.message) {
-        errorMessage = error.message;
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many failed attempts. Please try again later or reset your password.";
+      } else if (error.code === "auth/user-disabled") {
+        errorMessage = "This account has been disabled. Please contact support.";
+      } else if (error.code === "auth/network-request-failed") {
+        errorMessage = "Network error. Please check your internet connection.";
       }
       
       if (error.code !== "auth/email-already-in-use") {
