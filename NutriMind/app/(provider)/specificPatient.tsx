@@ -19,7 +19,7 @@ import { useUser } from "@/context/UserContext";
 import { getUserProfile } from "@/config/users";
 import { auth } from "@/config/firebase";
 import { API_BASE_URL } from "@/config/api";
-import { formatSurgeryMonthYear, calculatePostOpTime } from "@/utils/formatters";
+import { formatSurgeryMonthYear } from "@/utils/formatters";
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
 import { PinchGestureHandler, State as GestureState, GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -40,6 +40,81 @@ type PatientData = {
   calorieGoal?: number | null;
   notes?: string | null;
 };
+
+/** Convert any date-like input into a JS Date (or null if invalid). */
+function toDate(input: unknown): Date | null {
+  if (!input) return null;
+  if (typeof input === "object" && input !== null && "toDate" in input && typeof (input as any).toDate === "function") {
+    const d = (input as any).toDate();
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (input instanceof Date) {
+    return isNaN(input.getTime()) ? null : input;
+  }
+  if (typeof input === "string") {
+    if (input.includes("/")) {
+      const parts = input.split("/");
+      if (parts.length === 3) {
+        const month = parseInt(parts[0], 10) - 1;
+        const day = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
+        const d = new Date(year, month, day);
+        return isNaN(d.getTime()) ? null : d;
+      }
+    }
+    const d = new Date(input);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+
+/**
+ * Calculate a human-friendly post/pre-op time string for the provider view.
+ *
+ * - Future date  →  "X Weeks Pre-Op" / "X Months Pre-Op"
+ * - < 4 weeks    →  "X Days Post-Op"
+ * - 4–12 weeks   →  "X Weeks Post-Op"
+ * - > 12 weeks   →  "X Months Post-Op"
+ *
+ * Returns null when the date is missing / invalid.
+ */
+function calculateProviderPostOpTime(dateInput: unknown): string | null {
+  const surgeryDate = toDate(dateInput);
+  if (!surgeryDate) return null;
+
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const sd = new Date(surgeryDate);
+  sd.setHours(0, 0, 0, 0);
+
+  const diffMs = now.getTime() - sd.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    // Pre-op: use absolute days
+    const absDays = Math.abs(diffDays);
+    if (absDays < 28) {
+      return `${absDays} ${absDays === 1 ? "Day" : "Days"} Pre-Op`;
+    }
+    if (absDays <= 84) {
+      const weeks = Math.floor(absDays / 7);
+      return `${weeks} ${weeks === 1 ? "Week" : "Weeks"} Pre-Op`;
+    }
+    const months = Math.floor(absDays / 30);
+    return `${months} ${months === 1 ? "Month" : "Months"} Pre-Op`;
+  }
+
+  // Post-op
+  if (diffDays < 28) {
+    return `${diffDays} ${diffDays === 1 ? "Day" : "Days"} Post-Op`;
+  }
+  if (diffDays <= 84) {
+    const weeks = Math.floor(diffDays / 7);
+    return `${weeks} ${weeks === 1 ? "Week" : "Weeks"} Post-Op`;
+  }
+  const months = Math.floor(diffDays / 30);
+  return `${months} ${months === 1 ? "Month" : "Months"} Post-Op`;
+}
 
 export default function SpecificPatient() {
   const { id } = useLocalSearchParams();
@@ -864,7 +939,7 @@ export default function SpecificPatient() {
               </View>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Status</Text>
-                <Text style={styles.detailValue}>{patient?.surgeryDate ? (calculatePostOpTime(patient.surgeryDate) ?? "n/a") : "n/a"}</Text>
+                <Text style={styles.detailValue}>{patient?.surgeryDate ? (calculateProviderPostOpTime(patient.surgeryDate) ?? "n/a") : "n/a"}</Text>
               </View>
             </View>
             {/* Chart Modal */}
@@ -981,10 +1056,6 @@ export default function SpecificPatient() {
               )
             )}
 
-            {/* Manual weight input modal */}
-
-            
-
             {/* Weight Progress Card */}
             <View style={styles.card}>
                 <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
@@ -1018,7 +1089,6 @@ export default function SpecificPatient() {
                     <Pressable onPress={() => setTimeframe('month')} style={[styles.pill, timeframe==='month'&&styles.pillActive]}><Text style={styles.pillText}>Month</Text></Pressable>
                     <Pressable onPress={() => setTimeframe('year')} style={[styles.pill, timeframe==='year'&&styles.pillActive]}><Text style={styles.pillText}>Year</Text></Pressable>
                     <Pressable onPress={() => setTimeframe('custom')} style={[styles.pill, timeframe==='custom'&&styles.pillActive]}><Text style={styles.pillText}>Custom</Text></Pressable>
-                    {auth.currentUser && auth.currentUser.uid === patientId ? null : null}
                   </View>
                   {timeframe === 'custom' && (
                     <View style={{width:'100%', marginTop:10, alignItems:'center'}}>
@@ -1070,7 +1140,6 @@ export default function SpecificPatient() {
                             <View style={{width:18, height:6, borderStyle:'dashed', borderWidth:1, borderColor:'#9CA3AF'}} />
                             <Text style={{color:'#3F5E52'}}>Goal</Text>
                           </View>
-                          {/* "Met" legend intentionally removed for weight progress (not meaningful over short timeframes) */}
                         <View style={{marginTop:8, alignItems:'center'}}>
                           {(() => {
                             const vals = history.map(h => {
@@ -1112,7 +1181,6 @@ export default function SpecificPatient() {
                             );
                           })()}
                         </View>
-                        {/* x-axis labels removed per design */}
                       </>
                     )}
                   </View>
@@ -1149,7 +1217,6 @@ export default function SpecificPatient() {
                     <Pressable onPress={() => setTimeframe('month')} style={[styles.pill, timeframe==='month'&&styles.pillActive]}><Text style={styles.pillText}>Month</Text></Pressable>
                     <Pressable onPress={() => setTimeframe('year')} style={[styles.pill, timeframe==='year'&&styles.pillActive]}><Text style={styles.pillText}>Year</Text></Pressable>
                     <Pressable onPress={() => setTimeframe('custom')} style={[styles.pill, timeframe==='custom'&&styles.pillActive]}><Text style={styles.pillText}>Custom</Text></Pressable>
-                    {auth.currentUser && auth.currentUser.uid === patientId ? null : null}
                   </View>
                   {timeframe === 'custom' && (
                     <View style={{width:'100%', marginTop:10, alignItems:'center'}}>
@@ -1249,7 +1316,6 @@ export default function SpecificPatient() {
                             );
                           })()}
                         </View>
-                        {/* x-axis labels removed per design */}
                       </>
                   )}
                 </View>
