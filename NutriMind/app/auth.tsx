@@ -104,6 +104,9 @@ export default function Auth() {
         errorMessage = "This account has been disabled. Please contact support.";
       } else if (error.code === "auth/network-request-failed") {
         errorMessage = "Network error. Please check your internet connection.";
+      } else {
+        // Fallback for any unhandled errors - use the default friendly message
+        errorMessage = "Authentication failed. Please try again.";
       }
       
       if (error.code !== "auth/email-already-in-use") {
