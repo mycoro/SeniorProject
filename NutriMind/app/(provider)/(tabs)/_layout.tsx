@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Plus, Stethoscope } from "lucide-react-native";
+import { Home, Plus, Stethoscope, Settings  } from "lucide-react-native";
 import { Platform } from "react-native";
 
 export default function ProviderTabsLayout() {
@@ -49,6 +49,13 @@ export default function ProviderTabsLayout() {
         options={{
           title: "Patients",
           tabBarIcon: ({ color, size }) => <Stethoscope size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="providerSettings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
         }}
       />
     </Tabs>
