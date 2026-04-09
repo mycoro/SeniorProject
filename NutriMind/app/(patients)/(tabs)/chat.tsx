@@ -308,21 +308,6 @@ export default function Chat() {
 
             <View style={styles.tipCard}>
               <View style={styles.tipIconContainer}>
-                <Text style={styles.tipEmoji}>🍽️</Text>
-              </View>
-              <View style={styles.tipCardContent}>
-                <Text style={styles.tipCardTitle}>Log a Meal</Text>
-                <Text style={styles.tipCardBody}>
-                  Just describe what you ate and I'll log it for you — no tapping required.
-                </Text>
-                <View style={styles.tipExample}>
-                  <Text style={styles.tipExampleText}>"I just had a scrambled egg and half a cup of Greek yogurt"</Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.tipCard}>
-              <View style={styles.tipIconContainer}>
                 <Text style={styles.tipEmoji}>✨</Text>
               </View>
               <View style={styles.tipCardContent}>
